@@ -45,6 +45,16 @@
 @media (prefers-reduced-motion: reduce) {
   .hero__hint i { animation: none; }
 }
+/* On portrait phones the film sits behind the copy; give the copy a paper backdrop. */
+@media (max-width: 720px) {
+  .hero {
+    position: relative;
+    z-index: 1;
+    padding-block: 8px 14px;
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    box-shadow: 0 0 24px 18px color-mix(in srgb, var(--paper) 90%, transparent);
+  }
+}
 
 .section--flush-top {
   padding-block-start: 0;
