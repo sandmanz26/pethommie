@@ -20,7 +20,9 @@ public/
   frames/            181 WebP frames of the ink film (12 fps, 1280px)
   video/             source video from Higgsfield (15 s, 720p) — not loaded by the page
 src/
-  content/landing.ts All copy, chapter timings, prices. Edit text here, not in components.
+  i18n/              en.ts (default) and id.ts: all copy, chapter timings, prices.
+                     Edit text here, not in components. LocaleProvider + EN/ID switch.
+  content/film.ts    Frame count, duration, frame paths
   styles/            tokens.css (colors, type scale) and global.css
   components/
     ink/             InkFilm: sticky canvas that scrubs the frames with scroll
@@ -41,7 +43,7 @@ forwards and backwards on every browser, which seeking a `<video>` does not.
 
 - Frames load coarse-to-fine (every 30th, 10th, 3rd, then all) so a fast scroll shows the whole story early.
 - Scroll handling runs once per animation frame and never re-renders React.
-- Caption positions come from `chapters[].at` (seconds into the film) in `content/landing.ts`.
+- Caption positions come from `chapters[].at` (seconds into the film) in each `i18n/*.ts` file.
 
 To replace the film with a new video:
 
@@ -49,7 +51,14 @@ To replace the film with a new video:
 ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/frames/f%04d.webp
 ```
 
-Then update `film.frameCount` and the chapter/clock timings in `content/landing.ts`.
+Then update `frameCount` in `content/film.ts` and the chapter/clock timings in `i18n/en.ts` and `i18n/id.ts`.
+
+## Languages
+
+English is the default. Indonesian is available from the EN / ID switch in the
+top bar; the choice is remembered in the browser. `en.ts` defines the shape of
+the copy, and TypeScript fails the build if `id.ts` is missing a key. To add a
+language, copy `en.ts`, translate it, and register it in `i18n/locales.ts`.
 
 ## Waitlist (no backend yet)
 

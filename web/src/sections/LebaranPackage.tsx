@@ -1,10 +1,11 @@
-import { lebaran } from "../content/landing";
+import { useLocale } from "../i18n/LocaleProvider";
 import { Button } from "../components/ui/Button";
 import "./sections.css";
 
 export function LebaranPackage() {
+  const lebaran = useLocale().t.peakSeason;
   return (
-    <section className="section lebaran" id="lebaran">
+    <section className="section lebaran" id="peak-season">
       <div className="wrap">
         <div className="section-head">
           <span className="eyebrow">{lebaran.eyebrow}</span>

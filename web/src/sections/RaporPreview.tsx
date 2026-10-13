@@ -1,14 +1,15 @@
-import { rapor } from "../content/landing";
+import { useLocale } from "../i18n/LocaleProvider";
 import { Hanko } from "../components/ui/Hanko";
 import "./sections.css";
 
 /** Rapor Anabul shown as it arrives in the owner's WhatsApp. */
 export function RaporPreview() {
+  const rapor = useLocale().t.report;
   const s = rapor.sample;
   return (
-    <section className="section section--flush-top" id="rapor">
+    <section className="section section--flush-top" id="report">
       <div className="wrap rapor">
-        <div className="phone" aria-label="Contoh Rapor Anabul di WhatsApp">
+        <div className="phone" aria-label={rapor.phoneAriaLabel}>
           <div className="chat">
             <div className="chat__top">
               <Hanko />

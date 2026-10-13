@@ -1,12 +1,13 @@
-import { footer } from "../../content/landing";
+import { useLocale } from "../../i18n/LocaleProvider";
 import "./layout.css";
 
 export function Footer() {
+  const { t } = useLocale();
   return (
     <footer className="footer">
       <div className="wrap footer__inner">
-        <span>{footer.left}</span>
-        <span>{footer.right}</span>
+        <span>{t.footer.left}</span>
+        <span>{t.footer.right}</span>
       </div>
     </footer>
   );

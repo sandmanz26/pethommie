@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
-import { chapters, film } from "../../content/landing";
+import { film } from "../../content/film";
+import { useLocale } from "../../i18n/LocaleProvider";
 import { drawFrame } from "../../lib/drawFrame";
 import { nearestLoaded, useFrameSequence } from "../../hooks/useFrameSequence";
 import { useScrollProgress } from "../../hooks/useScrollProgress";
@@ -25,6 +26,7 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fillRef = useRef<HTMLSpanElement>(null);
   const clockRef = useRef<HTMLSpanElement>(null);
+  const { t } = useLocale();
   const current = useRef(-1);
   const wanted = useRef(0);
 
@@ -48,11 +50,17 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
     paint(wanted.current);
     if (fillRef.current) fillRef.current.style.width = `${(p * 100).toFixed(2)}%`;
     if (clockRef.current) {
-      const t = p * film.durationSeconds;
-      const beat = [...film.clock].reverse().find((b) => t >= b.at) ?? film.clock[0];
+      const seconds = p * film.durationSeconds;
+      const clock = t.film.clock;
+      const beat = [...clock].reverse().find((b) => seconds >= b.at) ?? clock[0];
       clockRef.current.textContent = beat.label;
     }
   });
+
+  // Re-run the scroll handler when the language changes so the clock relabels.
+  useEffect(() => {
+    window.dispatchEvent(new Event("scroll"));
+  }, [t]);
 
   // Keep the canvas backing store matched to its CSS size.
   useEffect(() => {
@@ -77,21 +85,22 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
       ref={trackRef}
       className="film"
       style={{ height: `${TRACK_VH}vh` }}
-      aria-label="Perjalanan anabul selama menginap"
+      aria-label={t.film.ariaLabel}
     >
       <div className="film__stage">
         <canvas ref={canvasRef} className="film__canvas" aria-hidden="true" />
         <div className={`film__veil${ready ? " is-done" : ""}`} aria-hidden={ready}>
-          <span>Menyiapkan tinta… {percent}%</span>
+          <span>
+            {t.film.loading}… {percent}%
+          </span>
         </div>
         <div className="film__progress" aria-hidden="true">
-          <span>{film.label}</span>
+          <span>{t.film.label}</span>
           <span className="film__rail">
             <span ref={fillRef} className="film__fill" />
           </span>
-          <span ref={clockRef} className="film__clock">
-            {film.clock[0].label}
-          </span>
+          {/* Text is set from the scroll handler, not by React. */}
+          <span ref={clockRef} className="film__clock" />
         </div>
       </div>
 
@@ -99,9 +108,9 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
         <div className="chapter" style={{ top: "16vh" }}>
           {intro}
         </div>
-        {chapters.map((c) => (
+        {t.chapters.map((c) => (
           <Chapter
-            key={c.when}
+            key={c.at}
             chapter={c}
             top={`${(c.at / film.durationSeconds) * SCRUB_VH + CAPTION_OFFSET_VH}vh`}
           />

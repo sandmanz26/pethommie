@@ -1,9 +1,10 @@
-import { hero } from "../content/landing";
+import { useLocale } from "../i18n/LocaleProvider";
 import { Button } from "../components/ui/Button";
 import "./sections.css";
 
 /** Opening inscription, sits over the first frames of the ink film. */
 export function Hero() {
+  const { hero } = useLocale().t;
   return (
     <div className="hero">
       <h1>

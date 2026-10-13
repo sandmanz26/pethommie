@@ -1,10 +1,11 @@
-import { features } from "../content/landing";
+import { useLocale } from "../i18n/LocaleProvider";
 import { BrushLine } from "../components/ui/BrushLine";
 import "./sections.css";
 
 export function Features() {
+  const { features } = useLocale().t;
   return (
-    <section className="section" id="fitur">
+    <section className="section" id="features">
       <div className="wrap">
         <div className="section-head">
           <span className="eyebrow">{features.eyebrow}</span>
