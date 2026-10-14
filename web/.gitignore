@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Raw Higgsfield transition clips (intermediate; the assembled film is committed)
+public/video/turntable-hd/
