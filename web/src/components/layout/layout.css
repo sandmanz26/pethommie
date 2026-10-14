@@ -16,7 +16,7 @@
   align-items: center;
   gap: 10px;
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--display-weight);
   font-size: 1.2rem;
   text-decoration: none;
 }

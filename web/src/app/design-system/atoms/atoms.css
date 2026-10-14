@@ -80,7 +80,7 @@
   border-radius: 50%;
   line-height: 1;
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--display-weight);
   color: var(--ink);
 }
 .ds-avatar--cat { background: #f6d6b8; }
@@ -89,7 +89,7 @@
 .ds-avatar--other { background: var(--surface-sunk); }
 
 /* ---------- Text ---------- */
-.ds-heading { margin: 0; font-family: var(--font-display); font-weight: 800; line-height: 1.2; text-wrap: balance; }
+.ds-heading { margin: 0; font-family: var(--font-display); font-weight: var(--display-weight); line-height: 1.2; text-wrap: balance; }
 .ds-heading--xl { font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.2rem); }
 .ds-heading--lg { font-size: clamp(1.3rem, 1.15rem + 0.6vw, 1.6rem); }
 .ds-heading--md { font-size: 1.1rem; }

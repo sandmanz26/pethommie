@@ -31,7 +31,7 @@
   border-top: 3px solid var(--line);
   min-width: 0;
 }
-.ds-stat__value { font-family: var(--font-display); font-weight: 800; font-size: 1.9em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.ds-stat__value { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 1.9em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .ds-stat__label { font-size: 0.85em; color: var(--ink-soft); }
 .ds-stat--ok { border-top-color: var(--ok); }
 .ds-stat--warn { border-top-color: #d79a2b; }

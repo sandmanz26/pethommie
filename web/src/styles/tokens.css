@@ -11,8 +11,10 @@
   --seal-soft: #e36a52;  /* seal on dark ground */
   --ink-line: #3a3833;   /* hairline on dark ground */
 
-  --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Songti SC", Georgia, serif;
-  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  /* Round, friendly type: Fredoka for headings, Nunito for text. Both support Indonesian. */
+  --font-display: "Fredoka", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Nunito", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --display-weight: 600; /* Fredoka tops out at 700; 600 keeps headings soft, not shouty */
 
   --step--1: clamp(0.8rem, 0.76rem + 0.2vw, 0.9rem);
   --step-0: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);

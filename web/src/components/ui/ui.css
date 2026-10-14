@@ -43,7 +43,7 @@
   background: var(--seal);
   color: var(--paper);
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--display-weight);
   transform: rotate(-4deg);
 }
 

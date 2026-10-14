@@ -26,7 +26,10 @@ npm run lint
 public/
   films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
   films/turntable/   V2: 213 WebP frames of the illustrated turntable (17.75 s, 12 fps, 1600 px)
+  illustrations/     generated from resources/illustrations (transparent WebP cut-outs)
 media/             source videos from Higgsfield (kept out of public/, so not deployed)
+resources/         raw images and photos you drop in; scripts/prepare-resources.py makes the
+                   web versions in public/illustrations and public/photos (see resources/README.md)
 src/
   i18n/              en.ts (default) and id.ts: all copy, chapter timings, prices.
                      Edit text here, not in components. LocaleProvider + EN/ID switch.
