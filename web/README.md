@@ -18,7 +18,7 @@ npm run lint
 ```
 public/
   films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
-  films/turntable/   V2: 144 WebP frames of the illustrated turntable (12 s, 12 fps)
+  films/turntable/   V2: 213 WebP frames of the illustrated turntable (17.75 s, 12 fps, 1600 px)
   video/             source videos from Higgsfield — not loaded by the page
 src/
   i18n/              en.ts (default) and id.ts: all copy, chapter timings, prices.
@@ -55,7 +55,13 @@ ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/fil
 ```
 
 Then register it in `content/film.ts` and add its chapter/clock timings in `i18n/en.ts` and `i18n/id.ts`.
-The V2 frames had two faint vertical lines (copied from the reference board) painted out at x<300 and x>990.
+V2 is built from 10 HD keyframes: 9 Wan 3.0 clips (1080p, 2 s, start frame → end frame),
+joined with the duplicate first frame of each later clip dropped, then cut at 1600 px
+(`pethommie-turntable-hd.mp4` is the joined source). Each scene holds about 1.5 s, so
+scene *k* sits at roughly 2k−1 to 2k+0.5 s; chapter and clock timings follow that.
+
+`lib/drawFrame.ts` never enlarges a frame past 1.25× its own pixels, so big screens
+get paper around the film instead of a soft, stretched image.
 
 ## Languages
 

@@ -29,7 +29,7 @@
 
 /* V2 turntable film: warmer paper so the page matches the video ground. */
 :root[data-film="turntable"] {
-  --paper: #eadac2;
-  --paper-deep: #e0caa9;
-  --wash: #bda98a;
+  --paper: #f6ebd8;
+  --paper-deep: #ecdbbf;
+  --wash: #c9baa0;
 }

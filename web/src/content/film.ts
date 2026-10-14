@@ -24,14 +24,14 @@ export const films: Record<FilmId, Film> = {
     frameSrc: frames("ink"),
     poster: "/films/ink/f0084.webp",
   },
-  // v2: flat illustrated pop-up turntable, 12 s (Wan 3.0)
+  // v2: flat illustrated pop-up turntable, 17.75 s: 9 HD keyframe-to-keyframe clips (Wan 3.0, 1080p)
   turntable: {
     id: "turntable",
-    frameCount: 144,
-    durationSeconds: 12,
-    paper: "#eadac2",
+    frameCount: 213,
+    durationSeconds: 17.75,
+    paper: "#f6ebd8",
     frameSrc: frames("turntable"),
-    poster: "/films/turntable/f0060.webp",
+    poster: "/films/turntable/f0205.webp",
   },
 };
 
