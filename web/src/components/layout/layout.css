@@ -57,6 +57,24 @@
   align-items: center;
   gap: 10px;
 }
+.topbar__actions .btn {
+  white-space: nowrap;
+}
+/* Narrow phones: the seal alone carries the brand, so the actions keep their size. */
+@media (max-width: 374px) {
+  .topbar {
+    gap: 8px;
+  }
+  .topbar__name {
+    display: none;
+  }
+  .topbar__actions {
+    gap: 8px;
+  }
+  .topbar__actions .btn {
+    padding-inline: 14px;
+  }
+}
 
 .lang {
   display: inline-flex;

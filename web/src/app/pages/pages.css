@@ -1,5 +1,5 @@
 /* Page-level layout only. Components style themselves. */
-.pg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px; }
+.pg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr)); gap: 12px; }
 .pg-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 22px; align-items: start; }
 .pg-section { display: grid; gap: 10px; align-content: start; min-width: 0; }
 .pg-list { display: grid; gap: 10px; }

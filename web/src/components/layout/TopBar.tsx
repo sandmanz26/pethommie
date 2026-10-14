@@ -8,9 +8,9 @@ export function TopBar() {
   const { t } = useLocale();
   return (
     <header className="topbar">
-      <a className="topbar__brand" href="#top">
+      <a className="topbar__brand" href="#top" aria-label={t.brand.name}>
         <Hanko />
-        {t.brand.name}
+        <span className="topbar__name">{t.brand.name}</span>
       </a>
       <nav className="topbar__nav" aria-label={t.nav.ariaLabel}>
         {t.nav.links.map((item) => (

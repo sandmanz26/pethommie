@@ -34,6 +34,28 @@ export function FilmSwitcher({ value, onChange }: { value: FilmId; onChange: (id
   const drag = useRef<{ dx: number; dy: number } | null>(null);
   const [pos, setPos] = useState<Pos | null>(loadPos);
   const [dragging, setDragging] = useState(false);
+  const [away, setAway] = useState(false);
+
+  // The switch only matters while the film is on screen; step aside over the rest of the page.
+  useEffect(() => {
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      const film = document.querySelector(".film");
+      setAway(!!film && film.getBoundingClientRect().bottom < window.innerHeight * 0.5);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
 
   /** Keep the panel fully on screen. */
   const clamp = useCallback((p: Pos): Pos => {
@@ -95,7 +117,7 @@ export function FilmSwitcher({ value, onChange }: { value: FilmId; onChange: (id
   return (
     <div
       ref={boxRef}
-      className={`film-switcher${dragging ? " is-dragging" : ""}`}
+      className={`film-switcher${dragging ? " is-dragging" : ""}${away && !dragging ? " is-away" : ""}`}
       style={pos ? { left: pos.x, top: pos.y } : { visibility: "hidden" }}
       role="group"
       aria-label={s.label}

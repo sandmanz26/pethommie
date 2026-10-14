@@ -94,11 +94,44 @@
   color: var(--paper);
 }
 
+.film-switcher {
+  transition:
+    opacity 0.3s ease,
+    visibility 0s;
+}
+/* Past the film: fade out and leave the tab order. */
+.film-switcher.is-away {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0s 0.3s;
+}
+
+/* Phones and portrait tablets: one compact row, so it fits under the caption deck. */
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1100px) {
+  .film-switcher {
+    grid-template-areas: "grip options";
+    padding: 5px 6px 5px 4px;
+    border-radius: 12px;
+  }
+  .film-switcher__label {
+    display: none;
+  }
+}
+
 @media (max-width: 420px) {
   .film-switcher__option img {
     display: none;
   }
   .film-switcher__option {
-    padding: 7px 10px;
+    padding: 8px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-switcher,
+  .film-switcher.is-away {
+    transition: none;
   }
 }

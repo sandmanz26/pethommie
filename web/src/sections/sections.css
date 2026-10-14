@@ -45,6 +45,18 @@
 @media (prefers-reduced-motion: reduce) {
   .hero__hint i { animation: none; }
 }
+/* Short phones: the whole hero, buttons included, fits above the film switcher. */
+@media (max-width: 720px) and (max-height: 700px) {
+  .hero > p {
+    font-size: 1rem;
+  }
+  .hero__cta {
+    margin-top: 16px;
+  }
+  .hero__hint {
+    display: none;
+  }
+}
 /* On portrait phones the film sits behind the copy; give the copy a paper backdrop. */
 @media (max-width: 720px) {
   .hero {

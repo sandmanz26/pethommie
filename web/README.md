@@ -47,6 +47,10 @@ forwards and backwards on every browser, which seeking a `<video>` does not.
 - Scroll handling runs once per animation frame and never re-renders React.
 - Caption positions come from `chapters.<film>[].at` (seconds into that film) in each `i18n/*.ts` file.
 - Two films ship today. The floating switcher picks one; `<html data-film>` swaps the page palette to match.
+- Phones and portrait tablets (≤720 px, or portrait up to 1100 px): the scene sits above a caption
+  deck that shows the current chapter, so captions never cover the illustration. The drifting
+  captions stay in the page for screen readers. The V1/V2 switcher compacts to one row there and
+  fades out once the film has scrolled past.
 
 To replace the film with a new video:
 

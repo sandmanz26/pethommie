@@ -100,6 +100,9 @@
 .chapter--right {
   justify-content: flex-end;
 }
+.chapter--intro {
+  top: 16vh;
+}
 
 .inscription {
   max-width: 26rem;
@@ -130,17 +133,99 @@
   color: var(--ink-soft);
 }
 
+/* Where the scene sits. The whole stage on wide screens; above the caption deck on phones. */
+.film__framebox {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Caption deck: phones and portrait tablets only. */
+.film__deck {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .chapter,
   .chapter--right {
     justify-content: flex-start;
   }
-  .chapter--right .inscription {
-    border-right: 0;
-    border-left: 3px solid var(--ink);
-    text-align: left;
-  }
   .inscription {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1100px) {
+  .film__framebox {
+    top: calc(env(safe-area-inset-top, 0px) + 64px);
+  }
+
+  /* The drifting captions stay in the page for screen readers but are drawn in the deck. */
+  .chapter--story {
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* All items share one grid cell, so the deck is as tall as its longest caption and never jumps. */
+  .film__deck {
+    display: grid;
+    position: absolute;
+    z-index: 3;
+    left: var(--gutter);
+    right: var(--gutter);
+    /* clears the progress line and the compact film switcher */
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 116px);
+    align-items: end;
+    pointer-events: none;
+  }
+  /* The outgoing caption leaves quickly; the next one arrives after it, so they never stack. */
+  .film__deck-item {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+  }
+  .film__deck-item.is-active {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.3s ease 0.15s,
+      transform 0.3s ease 0.15s;
+  }
+  .film__deck .inscription {
+    max-width: 34rem;
+    padding: 14px 18px 16px;
+    background: var(--paper);
+    backdrop-filter: none;
+  }
+  .film__deck .inscription h2 {
+    font-size: var(--step-1);
+    margin-bottom: 6px;
+  }
+  .film__deck .inscription p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
+
+/* Short phones: keep the scene readable by trimming long captions. */
+@media (max-width: 720px) and (max-height: 700px) {
+  .chapter--intro {
+    top: calc(env(safe-area-inset-top, 0px) + 72px);
+  }
+  .film__deck .inscription p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film__deck-item {
+    transition: none;
   }
 }
