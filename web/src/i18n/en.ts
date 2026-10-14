@@ -30,7 +30,7 @@ export const en = {
     titleAccent: "calm",
     titleEnd: ".",
     lead: "Pethommie is pet hotel management software for operators in Indonesia. Bookings with QRIS deposits, a cage calendar, check-in, and daily reports to owners on WhatsApp, all from one Android phone.",
-    primaryCta: { href: "#join", label: "Try free for 30 days" },
+    primaryCta: { href: "/app", label: "Try free for 30 days" },
     secondaryCta: { href: "#features", label: "See the features" },
     scrollHint: "Scroll to follow one stay from the operator's side",
   },

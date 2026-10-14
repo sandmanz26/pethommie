@@ -1,0 +1,146 @@
+import type { Booking, Cage, CageSize, HotelData, ISODate, Pet } from "./types";
+
+// ---------- dates (local calendar days, no time zones) ----------
+
+export function todayISO(now = new Date()): ISODate {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function addDays(date: ISODate, days: number): ISODate {
+  const [y, m, d] = date.split("-").map(Number);
+  return todayISO(new Date(y, m - 1, d + days));
+}
+
+/** Whole nights between two dates (checkOut - checkIn). */
+export function nights(checkIn: ISODate, checkOut: ISODate): number {
+  const [a, b] = [checkIn, checkOut].map((s) => {
+    const [y, m, d] = s.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  });
+  return Math.round((b - a) / 86_400_000);
+}
+
+// ---------- availability ----------
+
+/** A booking holds its cage from check-in night up to (not including) check-out day. */
+export function holdsCage(b: Booking) {
+  return b.status === "booked" || b.status === "checked_in";
+}
+
+export function overlaps(aIn: ISODate, aOut: ISODate, bIn: ISODate, bOut: ISODate) {
+  return aIn < bOut && bIn < aOut;
+}
+
+export function cageIsFree(
+  data: HotelData,
+  cageId: string,
+  checkIn: ISODate,
+  checkOut: ISODate,
+  ignoreBookingId?: string,
+) {
+  return !data.bookings.some(
+    (b) =>
+      b.cageId === cageId &&
+      b.id !== ignoreBookingId &&
+      holdsCage(b) &&
+      overlaps(checkIn, checkOut, b.checkIn, b.checkOut),
+  );
+}
+
+export function freeCages(data: HotelData, checkIn: ISODate, checkOut: ISODate, size?: CageSize) {
+  return data.cages.filter(
+    (c) => (!size || c.size === size) && cageIsFree(data, c.id, checkIn, checkOut),
+  );
+}
+
+/** The booking occupying a cage on a given night, if any. */
+export function occupantOn(data: HotelData, cageId: string, night: ISODate) {
+  return data.bookings.find(
+    (b) => b.cageId === cageId && holdsCage(b) && b.checkIn <= night && night < b.checkOut,
+  );
+}
+
+// ---------- money ----------
+
+export function bookingTotal(booking: Pick<Booking, "checkIn" | "checkOut">, cage: Cage | undefined) {
+  if (!cage) return 0;
+  return Math.max(0, nights(booking.checkIn, booking.checkOut)) * cage.pricePerNight;
+}
+
+export function formatRupiah(amount: number, locale: string) {
+  return new Intl.NumberFormat(locale === "id" ? "id-ID" : "en-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export function formatDate(iso: ISODate, locale: string, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(locale === "id" ? "id-ID" : "en-GB", opts);
+}
+
+// ---------- vaccines ----------
+
+export type VaccineState = "ok" | "soon" | "expired" | "unknown";
+
+/** "soon" means it expires within 30 days of the given date. */
+export function vaccineState(pet: Pet, on: ISODate): VaccineState {
+  if (!pet.vaccineExpiry) return "unknown";
+  if (pet.vaccineExpiry < on) return "expired";
+  if (pet.vaccineExpiry < addDays(on, 30)) return "soon";
+  return "ok";
+}
+
+// ---------- today board ----------
+
+export function todayBoard(data: HotelData, today: ISODate) {
+  const live = data.bookings.filter(holdsCage);
+  return {
+    arriving: live.filter((b) => b.status === "booked" && b.checkIn === today),
+    lateArrivals: live.filter((b) => b.status === "booked" && b.checkIn < today),
+    leaving: live.filter((b) => b.status === "checked_in" && b.checkOut <= today),
+    inHouse: live.filter((b) => b.status === "checked_in"),
+    freeTonight: data.cages.filter((c) => !occupantOn(data, c.id, today)).length,
+  };
+}
+
+// ---------- ids & phone ----------
+
+export function newId() {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/** Normalises Indonesian WhatsApp numbers to 62xxxxxxxxxx; returns null if it doesn't look valid. */
+export function normaliseWhatsapp(input: string): string | null {
+  let digits = input.replace(/\D/g, "");
+  if (digits.startsWith("0")) digits = "62" + digits.slice(1);
+  else if (digits.startsWith("8")) digits = "62" + digits;
+  return /^628\d{7,11}$/.test(digits) ? digits : null;
+}
+
+export function formatWhatsapp(normalised: string) {
+  if (!normalised) return "";
+  const local = "0" + normalised.slice(2);
+  return local.replace(/(\d{4})(\d{4})(\d+)/, "$1 $2 $3");
+}
+
+// ---------- cage generation for onboarding ----------
+
+export const SIZE_ORDER: CageSize[] = ["S", "M", "L"];
+
+export function generateCages(spec: Record<CageSize, { count: number; price: number }>): Cage[] {
+  return SIZE_ORDER.flatMap((size) =>
+    Array.from({ length: spec[size].count }, (_, i) => ({
+      id: newId(),
+      name: `${size}-${String(i + 1).padStart(2, "0")}`,
+      size,
+      pricePerNight: spec[size].price,
+    })),
+  );
+}

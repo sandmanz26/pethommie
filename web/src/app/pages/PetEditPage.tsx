@@ -1,0 +1,69 @@
+import { useState } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { newId } from "../domain/logic";
+import { useStore } from "../store/AppStore";
+import { useAppT } from "../i18n/useAppT";
+import { Button } from "../design-system/atoms/Button";
+import { ConfirmDialog } from "../design-system/molecules/ConfirmDialog";
+import { PageHeader } from "../design-system/organisms/PageHeader";
+import { PetForm } from "../design-system/organisms/PetForm";
+
+/** Handles both /app/pets/new and /app/pets/:id. */
+export function PetEditPage() {
+  const { id } = useParams();
+  const { data, savePet, saveOwner, deletePet } = useStore();
+  const { t } = useAppT();
+  const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const pet = id ? data.pets.find((p) => p.id === id) : undefined;
+  if (id && !pet) return <Navigate to="/app/pets" replace />;
+  const owner = pet ? data.owners.find((o) => o.id === pet.ownerId) : undefined;
+
+  return (
+    <>
+      <PageHeader
+        title={pet ? `${t.petForm.editTitle}: ${pet.name}` : t.petForm.newTitle}
+        back={{ to: "/app/pets", label: t.common.back }}
+        actions={
+          pet && (
+            <Button to={`/app/bookings/new?pet=${pet.id}`} variant="secondary" icon="bookings">
+              {t.nav.newBooking}
+            </Button>
+          )
+        }
+      />
+      <PetForm
+        pet={pet}
+        owner={owner}
+        submitLabel={t.petForm.save}
+        onCancel={() => navigate("/app/pets")}
+        extraActions={
+          pet && (
+            <Button variant="danger" icon="trash" onClick={() => setConfirmDelete(true)}>
+              {t.common.delete}
+            </Button>
+          )
+        }
+        onSubmit={(draft, ownerDraft) => {
+          // Keep the same owner record when editing; otherwise match by WhatsApp or create one.
+          const ownerId = saveOwner({ ...ownerDraft, id: owner && (!ownerDraft.whatsapp || ownerDraft.whatsapp === owner.whatsapp) ? owner.id : undefined });
+          savePet({ ...draft, id: pet?.id ?? newId(), ownerId });
+          navigate("/app/pets");
+        }}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        message={t.petForm.confirmDelete}
+        confirmLabel={t.common.delete}
+        cancelLabel={t.common.cancel}
+        danger
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          if (pet) deletePet(pet.id);
+          navigate("/app/pets");
+        }}
+      />
+    </>
+  );
+}

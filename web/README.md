@@ -70,3 +70,37 @@ language, copy `en.ts`, translate it, and register it in `i18n/locales.ts`.
 implementation saves entries to `localStorage` and the form shows a "demo mode"
 note. When an API exists, add a store that calls it and export it as
 `waitlistStore`; the form does not need to change.
+
+## Operator app (`/app`, no backend yet)
+
+The SaaS lives under `/app` as its own lazily-loaded bundle. First visit goes to a
+3-step onboarding (hotel name → cages by size → first task), or "Explore with
+sample data" to try every screen at once.
+
+Pages: Today (arrivals, departures, vaccine alerts), Bookings (upcoming / staying /
+past, check-in/out, cancel), New booking (only free cages are offered, so a cage
+can't be double-booked; a new pet + owner can be added inline), Pets (search,
+vaccine status), Cages (tonight's status, add/edit), Settings (hotel profile,
+language, JSON backup, reset).
+
+```
+src/app/
+  domain/          types.ts (Hotel, Cage, Owner, Pet, Booking) and logic.ts (pure: dates,
+                   availability, totals, vaccine state, WhatsApp numbers)
+  store/           AppStore (React context + reducer), storage.ts (HotelRepository:
+                   localStorage today, swap for an API later), sampleData.ts
+  i18n/            en.ts (default) / id.ts app copy; follows the site's EN/ID switch
+  design-system/   Atomic design
+    atoms/         Button, Icon, Input/Select/Textarea, Badge, Avatar, Heading/Muted
+    molecules/     Field, Stepper, StatCard, EmptyState, Segmented, SearchField,
+                   Alert, ConfirmDialog, ProgressSteps
+    organisms/     AppNav, PageHeader, BookingCard, PetRow, CageTile,
+                   BookingForm, PetForm, CageForm
+    templates/     AppLayout (sidebar / phone tab bar), OnboardingLayout
+    tokens.css     app tokens incl. semantic status colours
+  pages/           one file per route + AppRoutes.tsx
+```
+
+Rules of thumb: atoms and molecules never touch the store; organisms get data and
+callbacks as props; pages connect the store to organisms. Business rules live in
+`domain/logic.ts` so the future backend can share them.

@@ -27,7 +27,7 @@ export const id: Messages = {
     titleAccent: "tenang",
     titleEnd: ".",
     lead: "Pethommie adalah aplikasi manajemen pet hotel untuk operator di Indonesia. Booking dengan DP QRIS, kalender kandang, check-in, dan rapor harian ke WhatsApp pemilik, cukup dari HP Android.",
-    primaryCta: { href: "#join", label: "Coba gratis 30 hari" },
+    primaryCta: { href: "/app", label: "Coba gratis 30 hari" },
     secondaryCta: { href: "#features", label: "Lihat fiturnya" },
     scrollHint: "Gulir untuk melihat satu masa inap dari sisi operator",
   },

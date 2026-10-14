@@ -21,7 +21,7 @@ export function TopBar() {
       </nav>
       <div className="topbar__actions">
         <LanguageSwitch />
-        <Button href="#join">{t.nav.cta}</Button>
+        <Button href="/app">{t.nav.cta}</Button>
       </div>
     </header>
   );

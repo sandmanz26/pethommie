@@ -1,0 +1,38 @@
+/* Operator app tokens. Same ink-and-paper family as the website, tuned for long working
+   sessions: a lighter work surface, stronger contrast, and semantic colours for status. */
+.app-root {
+  --paper: #f4efe6;        /* page ground */
+  --surface: #fffcf6;      /* cards, inputs */
+  --surface-sunk: #ebe4d6; /* wells, hover */
+  --line: #ddd4c3;         /* hairlines, input borders */
+  --ink: #1b1a17;
+  --ink-soft: #5a564c;
+  --ink-faint: #8a8476;
+  --seal: #b8321f;         /* brand accent, primary actions */
+  --seal-ink: #fffcf6;
+
+  --ok: #2f6e46;
+  --ok-bg: #e2efe3;
+  --warn: #8a5a0b;
+  --warn-bg: #f7e9c9;
+  --danger: #a3271a;
+  --danger-bg: #f8dfd9;
+  --info: #24507a;
+  --info-bg: #dde8f2;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow: 0 1px 0 rgba(27, 26, 23, 0.04), 0 8px 24px -16px rgba(27, 26, 23, 0.35);
+  --tap: 44px;             /* minimum touch target */
+
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-size: 15px;
+  line-height: 1.5;
+}
+@media (min-width: 900px) {
+  .app-root { font-size: 15.5px; }
+}

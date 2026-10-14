@@ -1,0 +1,24 @@
+/* ---------- AppLayout ---------- */
+.tpl-app { display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+.tpl-app__main { padding: 28px clamp(16px, 3vw, 40px) 40px; min-width: 0; }
+.tpl-app__content { max-width: 1040px; margin-inline: auto; display: grid; gap: 22px; }
+.tpl-app__demo { max-width: 1040px; margin: 32px auto 0; font-size: 0.8em; color: var(--ink-faint); }
+@media (max-width: 899px) {
+  .tpl-app { grid-template-columns: minmax(0, 1fr); }
+  .tpl-app__main { padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 92px); }
+}
+
+/* ---------- OnboardingLayout ---------- */
+.tpl-onb { display: grid; grid-template-rows: auto 1fr; }
+.tpl-onb__bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; }
+.tpl-onb__brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 1.1em; }
+.tpl-onb__main { display: grid; justify-items: center; align-content: start; gap: 14px; padding: clamp(8px, 4vh, 48px) 16px 48px; }
+.tpl-onb__card {
+  width: min(100%, 560px);
+  display: grid; gap: 20px;
+  padding: clamp(20px, 4vw, 32px);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.tpl-onb__aside { width: min(100%, 560px); text-align: center; }
