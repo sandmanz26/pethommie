@@ -17,15 +17,17 @@ npm run lint
 
 ```
 public/
-  frames/            181 WebP frames of the ink film (12 fps, 1280px)
-  video/             source video from Higgsfield (15 s, 720p) — not loaded by the page
+  films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
+  films/turntable/   V2: 144 WebP frames of the illustrated turntable (12 s, 12 fps)
+  video/             source videos from Higgsfield — not loaded by the page
 src/
   i18n/              en.ts (default) and id.ts: all copy, chapter timings, prices.
                      Edit text here, not in components. LocaleProvider + EN/ID switch.
-  content/film.ts    Frame count, duration, frame paths
+  content/film.ts    Film registry: frame count, duration, paper colour per film
   styles/            tokens.css (colors, type scale) and global.css
   components/
-    ink/             InkFilm: sticky canvas that scrubs the frames with scroll
+    ink/             InkFilm: sticky canvas that scrubs a film's frames with scroll
+    film-switcher/   Floating, draggable V1/V2 switch (choice + position remembered)
     layout/          TopBar, Footer
     ui/              Button, Hanko (seal mark), BrushLine
   sections/          Hero, Features, RaporPreview, LebaranPackage, WaitlistForm
@@ -43,15 +45,17 @@ forwards and backwards on every browser, which seeking a `<video>` does not.
 
 - Frames load coarse-to-fine (every 30th, 10th, 3rd, then all) so a fast scroll shows the whole story early.
 - Scroll handling runs once per animation frame and never re-renders React.
-- Caption positions come from `chapters[].at` (seconds into the film) in each `i18n/*.ts` file.
+- Caption positions come from `chapters.<film>[].at` (seconds into that film) in each `i18n/*.ts` file.
+- Two films ship today. The floating switcher picks one; `<html data-film>` swaps the page palette to match.
 
 To replace the film with a new video:
 
 ```bash
-ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/frames/f%04d.webp
+ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/films/<id>/f%04d.webp
 ```
 
-Then update `frameCount` in `content/film.ts` and the chapter/clock timings in `i18n/en.ts` and `i18n/id.ts`.
+Then register it in `content/film.ts` and add its chapter/clock timings in `i18n/en.ts` and `i18n/id.ts`.
+The V2 frames had two faint vertical lines (copied from the reference board) painted out at x<300 and x>990.
 
 ## Languages
 

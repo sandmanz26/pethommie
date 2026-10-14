@@ -1,9 +1,42 @@
-/** The ink film: 15 s generated with Higgsfield, extracted to 12 fps WebP frames. */
-export const film = {
-  frameCount: 181,
-  durationSeconds: 15,
-  frameSrc: (i: number) => `/frames/f${String(i + 1).padStart(4, "0")}.webp`,
+/** Scroll films. Each one is a Higgsfield video pre-split into 12 fps WebP frames under public/films/<id>/. */
+export type FilmId = "ink" | "turntable";
+
+export type Film = {
+  id: FilmId;
+  frameCount: number;
+  durationSeconds: number;
+  /** Background colour of the video, used to fill around the frame. Matches --paper for this film. */
+  paper: string;
+  frameSrc: (i: number) => string;
+  /** A representative frame for the switcher thumbnail. */
+  poster: string;
 };
+
+const frames = (id: FilmId) => (i: number) => `/films/${id}/f${String(i + 1).padStart(4, "0")}.webp`;
+
+export const films: Record<FilmId, Film> = {
+  // v1: sumi-e ink handscroll, 15 s (Seedance 2.5)
+  ink: {
+    id: "ink",
+    frameCount: 181,
+    durationSeconds: 15,
+    paper: "#f2ede2",
+    frameSrc: frames("ink"),
+    poster: "/films/ink/f0084.webp",
+  },
+  // v2: flat illustrated pop-up turntable, 12 s (Wan 3.0)
+  turntable: {
+    id: "turntable",
+    frameCount: 144,
+    durationSeconds: 12,
+    paper: "#eadac2",
+    frameSrc: frames("turntable"),
+    poster: "/films/turntable/f0060.webp",
+  },
+};
+
+export const FILM_ORDER: FilmId[] = ["ink", "turntable"];
+export const DEFAULT_FILM: FilmId = "ink";
 
 /** The hanko mark: 宿, "inn". Same in every language. */
 export const SEAL = "宿";

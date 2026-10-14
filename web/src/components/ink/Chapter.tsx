@@ -1,6 +1,4 @@
-import type { Messages } from "../../i18n/en";
-
-type ChapterData = Messages["chapters"][number];
+import type { Chapter as ChapterData } from "../../i18n/en";
 
 /** A caption inscribed on the scroll, positioned at its moment in the film. */
 export function Chapter({ chapter, top }: { chapter: ChapterData; top: string }) {

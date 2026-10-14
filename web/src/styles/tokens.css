@@ -26,3 +26,10 @@
 
   color-scheme: light;
 }
+
+/* V2 turntable film: warmer paper so the page matches the video ground. */
+:root[data-film="turntable"] {
+  --paper: #eadac2;
+  --paper-deep: #e0caa9;
+  --wash: #bda98a;
+}

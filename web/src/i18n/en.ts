@@ -1,6 +1,9 @@
 // English copy (default locale). This file defines the shape every locale must match.
 // Edit text here, not in components.
 
+/** A caption over the film. `at` is the second in the film where it sits mid-screen. */
+export type Chapter = { at: number; side: "left" | "right"; when: string; title: string; body: string };
+
 export const en = {
   meta: {
     htmlLang: "en",
@@ -33,56 +36,98 @@ export const en = {
   },
   film: {
     ariaLabel: "One pet's stay, from booking to pickup",
-    loading: "Preparing the ink",
+    loading: "Loading the film",
     label: "One stay",
-    /** Story clock under the film, keyed to the video's beats (seconds). */
-    clock: [
-      { at: 0, label: "D-3 · Booking in" },
-      { at: 3, label: "Day 1 · 08:30" },
-      { at: 5.5, label: "Day 1 · 09:15" },
-      { at: 8, label: "Day 1 · 21:00" },
-      { at: 10.8, label: "Day 2 · 07:30" },
-      { at: 12.8, label: "Day 5 · 16:00" },
-    ],
+    switcher: { label: "Hero film", options: { ink: "V1 · Ink", turntable: "V2 · Turntable" }, drag: "Drag to move" },
+    /** Story clock under each film, keyed to the video's beats (seconds). */
+    clock: {
+      ink: [
+        { at: 0, label: "D-3 · Booking in" },
+        { at: 3, label: "Day 1 · 08:30" },
+        { at: 5.5, label: "Day 1 · 09:15" },
+        { at: 8, label: "Day 1 · 21:00" },
+        { at: 10.8, label: "Day 2 · 07:30" },
+        { at: 12.8, label: "Day 5 · 16:00" },
+      ],
+      turntable: [
+        { at: 0, label: "D-3 · Booking in" },
+        { at: 2.3, label: "Day 1 · 08:30" },
+        { at: 4.6, label: "Day 1 · 09:15" },
+        { at: 6.9, label: "Day 2 · 10:00" },
+        { at: 9.3, label: "Day 3 · 15:00" },
+      ],
+    },
   },
-  /** `at` is the second in the film where the caption sits mid-screen. */
-  chapters: [
-    {
-      at: 3.8,
-      side: "right",
-      when: "Day 1 · 08:30 · Drop-off",
-      title: "The booking is done before the owner arrives.",
-      body: "Owners book from the link in your Instagram bio, upload their pet's vaccine card, and pay a deposit by QRIS. The cage is locked on your calendar right away. No back-and-forth chats, no double bookings.",
-    },
-    {
-      at: 6.5,
-      side: "left",
-      when: "Day 1 · 09:15 · Check-in",
-      title: "Check-in in under a minute.",
-      body: "Staff photograph the pet's condition on arrival, check vaccines, and note any food the owner brought. Everything is timestamped, so if there's ever a complaint, you have a record.",
-    },
-    {
-      at: 9.5,
-      side: "right",
-      when: "Day 1 · 21:00 · Night shift",
-      title: "The night shift knows what to do.",
-      body: "Feeding and medication schedules for every cage show up on staff phones. Finished tasks get ticked off, so shift handovers don't depend on anyone's memory.",
-    },
-    {
-      at: 12,
-      side: "left",
-      when: "Day 2 · 07:30 · Morning report",
-      title: "Reports go out. Chats go down.",
-      body: "One tap sends a photo and a daily summary to each owner on WhatsApp. They relax, and you stop answering \"how is my baby doing?\" one message at a time.",
-    },
-    {
-      at: 14,
-      side: "right",
-      when: "Day 5 · 16:00 · Pickup",
-      title: "Paid in full, and they'll be back.",
-      body: "The remaining balance goes out by QRIS at pickup. Every stay is on record, so you know who your regulars are and their next booking takes seconds.",
-    },
-  ] as { at: number; side: "left" | "right"; when: string; title: string; body: string }[],
+  /** Captions per film. */
+  chapters: {
+    ink: [
+      {
+        at: 3.8,
+        side: "right",
+        when: "Day 1 · 08:30 · Drop-off",
+        title: "The booking is done before the owner arrives.",
+        body: "Owners book from the link in your Instagram bio, upload their pet's vaccine card, and pay a deposit by QRIS. The cage is locked on your calendar right away. No back-and-forth chats, no double bookings.",
+      },
+      {
+        at: 6.5,
+        side: "left",
+        when: "Day 1 · 09:15 · Check-in",
+        title: "Check-in in under a minute.",
+        body: "Staff photograph the pet's condition on arrival, check vaccines, and note any food the owner brought. Everything is timestamped, so if there's ever a complaint, you have a record.",
+      },
+      {
+        at: 9.5,
+        side: "right",
+        when: "Day 1 · 21:00 · Night shift",
+        title: "The night shift knows what to do.",
+        body: "Feeding and medication schedules for every cage show up on staff phones. Finished tasks get ticked off, so shift handovers don't depend on anyone's memory.",
+      },
+      {
+        at: 12,
+        side: "left",
+        when: "Day 2 · 07:30 · Morning report",
+        title: "Reports go out. Chats go down.",
+        body: "One tap sends a photo and a daily summary to each owner on WhatsApp. They relax, and you stop answering \"how is my baby doing?\" one message at a time.",
+      },
+      {
+        at: 14,
+        side: "right",
+        when: "Day 5 · 16:00 · Pickup",
+        title: "Paid in full, and they'll be back.",
+        body: "The remaining balance goes out by QRIS at pickup. Every stay is on record, so you know who your regulars are and their next booking takes seconds.",
+      },
+    ],
+    turntable: [
+      {
+        at: 3.4,
+        side: "right",
+        when: "Day 1 · 08:30 · Arrival",
+        title: "The booking is done before they walk in.",
+        body: "Owners book from the link in your Instagram bio, upload their pet's vaccine card, and pay a deposit by QRIS. The cage is locked on your calendar right away. No back-and-forth chats, no double bookings.",
+      },
+      {
+        at: 5.8,
+        side: "left",
+        when: "Day 1 · 09:15 · Check-in",
+        title: "Check-in in under a minute.",
+        body: "Staff photograph the pet's condition on arrival, check vaccines, and note any food the owner brought. Everything is timestamped, so if there's ever a complaint, you have a record.",
+      },
+      {
+        at: 8.1,
+        side: "right",
+        when: "Day 2 · 10:00 · Playtime",
+        title: "Every play session, on the record.",
+        body: "Staff log play, meals, toilet breaks, and medication for each pet from their phone. Shift handovers stay tidy and nothing gets missed.",
+      },
+      {
+        at: 10.6,
+        side: "left",
+        when: "Day 3 · 15:00 · Grooming",
+        title: "Groomed, photographed, reported.",
+        body: "Add grooming to a stay as an extra service. When it's done, one tap sends the photo and daily summary to the owner on WhatsApp.",
+      },
+    ],
+  } as Record<"ink" | "turntable", Chapter[]>,
   features: {
     eyebrow: "Built for operators",
     title: "Your whole boarding workflow in one app.",
@@ -109,7 +154,7 @@ export const en = {
     sample: {
       hotel: "Rumah Meong Bintaro",
       subtitle: "Daily report · example",
-      image: "/frames/f0084.webp",
+      image: "/films/ink/f0084.webp",
       imageAlt: "Illustration of a caretaker petting a dog",
       heading: "Mochi's report · Day 2",
       lines: ["Finished breakfast (owner's Royal Canin)", "Played 20 min, napped 3 hours", "Mood: relaxed, happy to be petted"],

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
-import { film } from "../../content/film";
+import type { Film } from "../../content/film";
 import { useLocale } from "../../i18n/LocaleProvider";
 import { drawFrame } from "../../lib/drawFrame";
 import { nearestLoaded, useFrameSequence } from "../../hooks/useFrameSequence";
@@ -7,21 +7,20 @@ import { useScrollProgress } from "../../hooks/useScrollProgress";
 import { Chapter } from "./Chapter";
 import "./ink.css";
 
-/** Total height of the scroll track in vh. The stage is 100vh, so the film scrubs over the rest. */
-const TRACK_VH = 820;
-const SCRUB_VH = TRACK_VH - 100;
+/** Scroll distance per second of film, in vh. The stage itself is 100vh tall. */
+const VH_PER_SECOND = 48;
 /** Where a caption sits relative to the moment it belongs to (vh below the scroll position). */
 const CAPTION_OFFSET_VH = 35;
 /** Frames needed before the loading veil lifts. */
 const READY_FRAMES = 8;
 
-const PAPER = "#f2ede2"; // keep in sync with --paper
-
 /**
- * The emaki handscroll: a sticky canvas that scrubs the ink film with scroll,
- * captions that drift past it, and a story clock along the bottom.
+ * A sticky canvas that scrubs a film's frames with scroll, captions that drift
+ * past it, and a story clock along the bottom. Remount it (key by film id) to switch films.
  */
-export function InkFilm({ intro }: { intro: ReactNode }) {
+export function InkFilm({ film, intro }: { film: Film; intro: ReactNode }) {
+  const scrubVh = film.durationSeconds * VH_PER_SECOND;
+  const trackVh = scrubVh + 100;
   const trackRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fillRef = useRef<HTMLSpanElement>(null);
@@ -35,9 +34,9 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
     if (!canvas || (!force && index === current.current)) return;
     const img = nearestLoaded(frames.current, index);
     if (!img) return;
-    drawFrame(canvas, img, PAPER);
+    drawFrame(canvas, img, film.paper);
     current.current = index;
-    // frames is a stable ref from the hook below
+    // frames is a stable ref from the hook below; film is fixed for this mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -51,7 +50,7 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
     if (fillRef.current) fillRef.current.style.width = `${(p * 100).toFixed(2)}%`;
     if (clockRef.current) {
       const seconds = p * film.durationSeconds;
-      const clock = t.film.clock;
+      const clock = t.film.clock[film.id];
       const beat = [...clock].reverse().find((b) => seconds >= b.at) ?? clock[0];
       clockRef.current.textContent = beat.label;
     }
@@ -84,7 +83,7 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
     <section
       ref={trackRef}
       className="film"
-      style={{ height: `${TRACK_VH}vh` }}
+      style={{ height: `${trackVh}vh` }}
       aria-label={t.film.ariaLabel}
     >
       <div className="film__stage">
@@ -108,11 +107,11 @@ export function InkFilm({ intro }: { intro: ReactNode }) {
         <div className="chapter" style={{ top: "16vh" }}>
           {intro}
         </div>
-        {t.chapters.map((c) => (
+        {t.chapters[film.id].map((c) => (
           <Chapter
             key={c.at}
             chapter={c}
-            top={`${(c.at / film.durationSeconds) * SCRUB_VH + CAPTION_OFFSET_VH}vh`}
+            top={`${(c.at / film.durationSeconds) * scrubVh + CAPTION_OFFSET_VH}vh`}
           />
         ))}
       </div>
