@@ -3,6 +3,13 @@
 Frontend foundation for Pethommie, a pet hotel app for Indonesian operators.
 React 19 + TypeScript + Vite, no backend yet.
 
+## Deploy (Vercel)
+
+`vercel.json` at the repo root builds this folder and serves it as one site: the landing
+page at `/` and the operator app at `/app`. All paths fall back to `index.html`, so
+refreshing `/app/bookings` works. In Vercel: import the GitHub repo, keep the defaults
+(no root directory change needed), and deploy. Pushes to `main` go to production.
+
 ## Run
 
 ```bash
@@ -19,7 +26,7 @@ npm run lint
 public/
   films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
   films/turntable/   V2: 213 WebP frames of the illustrated turntable (17.75 s, 12 fps, 1600 px)
-  video/             source videos from Higgsfield — not loaded by the page
+media/             source videos from Higgsfield (kept out of public/, so not deployed)
 src/
   i18n/              en.ts (default) and id.ts: all copy, chapter timings, prices.
                      Edit text here, not in components. LocaleProvider + EN/ID switch.
@@ -61,7 +68,7 @@ ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/fil
 Then register it in `content/film.ts` and add its chapter/clock timings in `i18n/en.ts` and `i18n/id.ts`.
 V2 is built from 10 HD keyframes: 9 Wan 3.0 clips (1080p, 2 s, start frame → end frame),
 joined with the duplicate first frame of each later clip dropped, then cut at 1600 px
-(`pethommie-turntable-hd.mp4` is the joined source). Each scene holds about 1.5 s, so
+(`media/pethommie-turntable-hd.mp4` is the joined source). Each scene holds about 1.5 s, so
 scene *k* sits at roughly 2k−1 to 2k+0.5 s; chapter and clock timings follow that.
 
 `lib/drawFrame.ts` never enlarges a frame past 1.25× its own pixels, so big screens
