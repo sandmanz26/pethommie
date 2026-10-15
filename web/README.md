@@ -5,15 +5,9 @@ React 19 + TypeScript + Vite, no backend yet.
 
 ## Deploy (Vercel)
 
-The app is a single-page app: `/app/...` is not a real file, so the host must send every path to
-`index.html`. That rule lives in two places, so it works whichever way the Vercel project is set up:
-
-- **Root Directory = `web`** (the project name `pethommie-web` suggests this): Vercel reads
-  `web/vercel.json` and auto-detects Vite.
-- **Root Directory = repo root**: Vercel reads `vercel.json` at the root, which also builds `web/`.
-
-Without the rule, `/` works but `/app` and a refresh on any `/app/...` page return 404.
-Pushes to `main` go to production.
+Root Directory must be `web`. `vercel.json` here sends every path to `index.html` (so `/app/...`
+survives a refresh; without it only `/` works), sets the security headers and cache rules.
+Pushes to `main` go to production. Details: `../docs/ARCHITECTURE.md` §8.
 
 ## Run
 
@@ -23,6 +17,8 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # type-check + production build to dist/
 npm run lint
+npm test         # unit + flow tests (Vitest)
+npm run check    # typecheck, lint, tests, build: what CI runs
 ```
 
 ## Structure
@@ -119,10 +115,13 @@ language, JSON backup, reset).
 
 ```
 src/app/
-  domain/          types.ts (Hotel, Cage, Owner, Pet, Booking) and logic.ts (pure: dates,
-                   availability, totals, vaccine state, WhatsApp numbers)
-  store/           AppStore (React context + reducer), storage.ts (HotelRepository:
-                   localStorage today, swap for an API later), sampleData.ts
+  domain/          types.ts (Hotel, Cage, Owner, Pet, Booking), logic.ts (pure: dates,
+                   availability, totals, vaccine state) and bookingRules.ts (what makes a
+                   booking valid, how a stay moves, when a cage can go). No React.
+  store/           actions.ts (pure state changes that enforce the rules), AppStore.tsx
+                   (React wiring, autosave), storage.ts (HotelRepository: validated
+                   localStorage with a backup; swap for an API later), sampleData.ts
+  testing/         test fixtures
   i18n/            en.ts (default) / id.ts app copy; follows the site's EN/ID switch
   design-system/   Atomic design
     atoms/         Button, Icon, Input/Select/Textarea, Badge, Avatar, Heading/Muted
