@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { formatWhatsapp, normaliseWhatsapp } from "@/app/domain/logic";
+import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";

@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import type { CageSize } from "@/app/domain/types";
-import { formatRupiah, generateCages, normaliseWhatsapp, SIZE_ORDER } from "@/app/domain/logic";
+import { formatRupiah, generateCages, SIZE_ORDER } from "@/app/domain/logic";
+import { normaliseWhatsapp } from "@/shared/lib/phone";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";

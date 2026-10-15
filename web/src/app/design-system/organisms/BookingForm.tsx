@@ -1,14 +1,14 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { scheduleIssues } from "@/app/domain/bookingRules";
+import { normaliseWhatsapp } from "@/shared/lib/phone";
 import type { Booking, CageSize, HotelData, Species } from "@/app/domain/types";
 import {
   addDays,
   bookingTotal,
-  cageIsFree,
   formatRupiah,
   freeCages,
   newId,
   nights,
-  normaliseWhatsapp,
   SIZE_ORDER,
   todayISO,
   vaccineState,
@@ -75,9 +75,10 @@ export function BookingForm({
       if (!np.ownerName.trim()) err.npOwner = t.petForm.errOwner;
       if (np.whatsapp.trim() && !normaliseWhatsapp(np.whatsapp)) err.npWa = t.petForm.errWhatsapp;
     } else if (!petId) err.pet = f.errPet;
-    if (!validDates) err.dates = f.errDates;
-    if (!selectedCageId) err.cage = f.errCage;
-    else if (!cageIsFree(data, selectedCageId, checkIn, checkOut)) err.cage = f.errTaken;
+    const issues = scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut });
+    if (issues.includes("dates")) err.dates = f.errDates;
+    if (issues.includes("cage")) err.cage = f.errCage;
+    if (issues.includes("cage_taken")) err.cage = f.errTaken;
     setErrors(err);
     if (Object.keys(err).length) return;
 

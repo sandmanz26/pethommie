@@ -1,94 +1,58 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
-import { newId } from "@/app/domain/logic";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import type { BookingIssue } from "@/app/domain/bookingRules";
 import type { Booking, BookingStatus, Cage, Hotel, HotelData, Owner, Pet } from "@/app/domain/types";
 import { emptyData } from "@/app/domain/types";
+import * as actions from "./actions";
 import { sampleData } from "./sampleData";
 import { localRepository, type HotelRepository } from "./storage";
 
-type Action =
-  | { type: "replace"; data: HotelData }
-  | { type: "setHotel"; hotel: Hotel }
-  | { type: "upsertCage"; cage: Cage }
-  | { type: "deleteCage"; id: string }
-  | { type: "upsertOwner"; owner: Owner }
-  | { type: "upsertPet"; pet: Pet }
-  | { type: "deletePet"; id: string }
-  | { type: "upsertBooking"; booking: Booking }
-  | { type: "setBookingStatus"; id: string; status: BookingStatus };
-
-function upsert<T extends { id: string }>(list: T[], item: T) {
-  const i = list.findIndex((x) => x.id === item.id);
-  return i === -1 ? [...list, item] : list.map((x) => (x.id === item.id ? item : x));
-}
-
-function reducer(state: HotelData, a: Action): HotelData {
-  switch (a.type) {
-    case "replace":
-      return a.data;
-    case "setHotel":
-      return { ...state, hotel: a.hotel };
-    case "upsertCage":
-      return { ...state, cages: upsert(state.cages, a.cage) };
-    case "deleteCage":
-      return { ...state, cages: state.cages.filter((c) => c.id !== a.id) };
-    case "upsertOwner":
-      return { ...state, owners: upsert(state.owners, a.owner) };
-    case "upsertPet":
-      return { ...state, pets: upsert(state.pets, a.pet) };
-    case "deletePet":
-      return {
-        ...state,
-        pets: state.pets.filter((p) => p.id !== a.id),
-        bookings: state.bookings.filter((b) => b.petId !== a.id),
-      };
-    case "upsertBooking":
-      return { ...state, bookings: upsert(state.bookings, a.booking) };
-    case "setBookingStatus":
-      return {
-        ...state,
-        bookings: state.bookings.map((b) => (b.id === a.id ? { ...b, status: a.status } : b)),
-      };
-  }
-}
-
 function useStoreValue(repo: HotelRepository) {
-  const [data, dispatch] = useReducer(reducer, undefined, () => repo.load());
+  const [data, setData] = useState<HotelData>(() => repo.load());
+  const [saveFailed, setSaveFailed] = useState(false);
+
+  // Every action reads the latest state from here, not from a render's closure, so several actions
+  // in one event (save an owner, then the pet, then its booking) each see the one before.
+  const latest = useRef(data);
+  const commit = useCallback((next: HotelData) => {
+    if (next === latest.current) return;
+    latest.current = next;
+    setData(next);
+  }, []);
 
   useEffect(() => {
-    repo.save(data);
+    setSaveFailed(!repo.save(data));
   }, [data, repo]);
 
-  /** Saves an owner, reusing an existing one with the same WhatsApp number. Returns the owner id. */
-  const saveOwner = useCallback(
-    (owner: Omit<Owner, "id"> & { id?: string }) => {
-      const existing = owner.whatsapp ? data.owners.find((o) => o.whatsapp === owner.whatsapp && o.id !== owner.id) : undefined;
-      const id = owner.id ?? existing?.id ?? newId();
-      dispatch({ type: "upsertOwner", owner: { ...owner, id } });
-      return id;
-    },
-    [data.owners],
-  );
-
-  return useMemo(
-    () => ({
-      data,
-      setHotel: (hotel: Hotel) => dispatch({ type: "setHotel", hotel }),
-      setCages: (cages: Cage[]) => dispatch({ type: "replace", data: { ...data, cages } }),
-      saveCage: (cage: Cage) => dispatch({ type: "upsertCage", cage }),
-      deleteCage: (id: string) => dispatch({ type: "deleteCage", id }),
-      saveOwner,
-      savePet: (pet: Pet) => dispatch({ type: "upsertPet", pet }),
-      deletePet: (id: string) => dispatch({ type: "deletePet", id }),
-      saveBooking: (booking: Booking) => dispatch({ type: "upsertBooking", booking }),
-      setBookingStatus: (id: string, status: BookingStatus) => dispatch({ type: "setBookingStatus", id, status }),
-      loadSample: () => dispatch({ type: "replace", data: sampleData() }),
+  const api = useMemo(() => {
+    /** Applies an action that may refuse, and returns its result. */
+    const run = <R,>(fn: (s: HotelData) => actions.Outcome<R>): R => {
+      const { state, result } = fn(latest.current);
+      commit(state);
+      return result;
+    };
+    return {
+      setHotel: (hotel: Hotel) => commit(actions.setHotel(latest.current, hotel)),
+      setCages: (cages: Cage[]) => commit(actions.setCages(latest.current, cages)),
+      saveCage: (cage: Cage) => commit(actions.upsertCage(latest.current, cage)),
+      /** False if the cage has a pending or current stay. */
+      deleteCage: (id: string): boolean => run((s) => actions.removeCage(s, id)),
+      /** Returns the owner's id; an owner with the same WhatsApp number is reused. */
+      saveOwner: (owner: Omit<Owner, "id"> & { id?: string }): string => run((s) => actions.upsertOwner(s, owner)),
+      savePet: (pet: Pet) => commit(actions.upsertPet(latest.current, pet)),
+      deletePet: (id: string) => commit(actions.removePet(latest.current, id)),
+      /** Empty when saved; otherwise what is wrong with the booking. */
+      saveBooking: (booking: Booking): BookingIssue[] => run((s) => actions.upsertBooking(s, booking)),
+      /** False if the stay can't move to that status. */
+      setBookingStatus: (id: string, status: BookingStatus): boolean => run((s) => actions.changeBookingStatus(s, id, status)),
+      loadSample: () => commit(sampleData()),
       reset: () => {
         repo.clear();
-        dispatch({ type: "replace", data: emptyData() });
+        commit(emptyData());
       },
-    }),
-    [data, repo, saveOwner],
-  );
+    };
+  }, [commit, repo]);
+
+  return useMemo(() => ({ data, saveFailed, ...api }), [data, saveFailed, api]);
 }
 
 type Store = ReturnType<typeof useStoreValue>;

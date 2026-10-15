@@ -31,11 +31,3 @@ export const localWaitlistStore: WaitlistStore = {
 };
 
 export const waitlistStore: WaitlistStore = localWaitlistStore;
-
-/** Normalises Indonesian WhatsApp numbers to 62xxxxxxxxxx; returns null if it doesn't look valid. */
-export function normaliseWhatsapp(input: string): string | null {
-  let digits = input.replace(/\D/g, "");
-  if (digits.startsWith("0")) digits = "62" + digits.slice(1);
-  else if (digits.startsWith("8")) digits = "62" + digits;
-  return /^628\d{7,11}$/.test(digits) ? digits : null;
-}

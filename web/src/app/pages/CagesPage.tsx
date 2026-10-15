@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Cage, CageSize } from "@/app/domain/types";
-import { holdsCage, newId, occupantOn, SIZE_ORDER, todayISO } from "@/app/domain/logic";
+import { newId, occupantOn, SIZE_ORDER, todayISO } from "@/app/domain/logic";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -47,8 +47,7 @@ export function CagesPage() {
             onDelete={
               editing !== "new"
                 ? () => {
-                    if (data.bookings.some((b) => b.cageId === editing.id && holdsCage(b))) return setBlocked(true);
-                    deleteCage(editing.id);
+                    if (!deleteCage(editing.id)) return setBlocked(true);
                     setEditing(null);
                   }
                 : undefined

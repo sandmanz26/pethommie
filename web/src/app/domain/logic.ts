@@ -108,26 +108,12 @@ export function todayBoard(data: HotelData, today: ISODate) {
   };
 }
 
-// ---------- ids & phone ----------
+// ---------- ids ----------
 
 export function newId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-/** Normalises Indonesian WhatsApp numbers to 62xxxxxxxxxx; returns null if it doesn't look valid. */
-export function normaliseWhatsapp(input: string): string | null {
-  let digits = input.replace(/\D/g, "");
-  if (digits.startsWith("0")) digits = "62" + digits.slice(1);
-  else if (digits.startsWith("8")) digits = "62" + digits;
-  return /^628\d{7,11}$/.test(digits) ? digits : null;
-}
-
-export function formatWhatsapp(normalised: string) {
-  if (!normalised) return "";
-  const local = "0" + normalised.slice(2);
-  return local.replace(/(\d{4})(\d{4})(\d+)/, "$1 $2 $3");
 }
 
 // ---------- cage generation for onboarding ----------

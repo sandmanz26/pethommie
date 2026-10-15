@@ -4,6 +4,7 @@ export const appEn = {
   common: {
     save: "Save",
     cancel: "Cancel",
+    saveFailed: "Your changes can't be saved in this browser (storage is full or blocked). Export a backup from Settings before you close this tab.",
     delete: "Delete",
     edit: "Edit",
     back: "Back",

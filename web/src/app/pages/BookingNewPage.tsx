@@ -25,8 +25,7 @@ export function BookingNewPage() {
             petId = newId();
             savePet({ id: petId, name: newPet.name, species: newPet.species, breed: "", ownerId, vaccineExpiry: "", notes: "" });
           }
-          saveBooking({ ...booking, petId });
-          navigate("/app/bookings");
+          if (saveBooking({ ...booking, petId }).length === 0) navigate("/app/bookings");
         }}
       />
     </>

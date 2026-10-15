@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Owner, Pet } from "@/app/domain/types";
-import { formatWhatsapp, vaccineState, type VaccineState } from "@/app/domain/logic";
+import { vaccineState, type VaccineState } from "@/app/domain/logic";
+import { formatWhatsapp } from "@/shared/lib/phone";
 import { Avatar } from "@/app/design-system/atoms/Avatar";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
 import { Icon } from "@/app/design-system/atoms/Icon";

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useSiteT } from "@/site/i18n/useSiteT";
-import { normaliseWhatsapp, waitlistStore } from "@/site/lib/waitlist";
+import { normaliseWhatsapp } from "@/shared/lib/phone";
+import { waitlistStore } from "@/site/lib/waitlist";
 import { Button } from "@/site/components/ui/Button";
 import "./sections.css";
 

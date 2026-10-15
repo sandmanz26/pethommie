@@ -5,6 +5,7 @@ export const appId: AppMessages = {
   common: {
     save: "Simpan",
     cancel: "Batal",
+    saveFailed: "Perubahanmu tidak bisa disimpan di browser ini (penyimpanan penuh atau diblokir). Ekspor cadangan dari Pengaturan sebelum menutup tab ini.",
     delete: "Hapus",
     edit: "Ubah",
     back: "Kembali",
