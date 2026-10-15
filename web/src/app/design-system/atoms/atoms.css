@@ -95,3 +95,8 @@
 .ds-heading--md { font-size: 1.1rem; }
 .ds-heading--sm { font-size: 0.95rem; font-family: var(--font-body); font-weight: 700; }
 .ds-muted { margin: 0; color: var(--ink-soft); }
+
+/* ---------- Illustration ---------- */
+.ds-illus { display: flex; justify-content: center; align-items: center; height: var(--illus-h, 150px); }
+.ds-illus img { display: block; height: 100%; width: auto; max-width: 100%; min-height: 0; object-fit: contain; }
+@media (max-height: 700px) { .ds-illus { height: calc(var(--illus-h, 150px) * 0.75); } }

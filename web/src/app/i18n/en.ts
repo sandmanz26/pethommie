@@ -28,6 +28,16 @@ export const appEn = {
   onboarding: {
     stepOf: (i: number, n: number) => `Step ${i} of ${n}`,
     sample: "Explore with sample data instead",
+    welcome: {
+      title: "Welcome to Pethommie",
+      lead: "Let's set up your pet hotel. Three quick steps, about two minutes. You can change everything later.",
+      items: [
+        { title: "Your hotel", body: "Name and WhatsApp number for owner reports." },
+        { title: "Your cages", body: "How many, and the price per night." },
+        { title: "Your first booking", body: "Or just look around first. Up to you." },
+      ],
+      start: "Start setup",
+    },
     hotel: {
       title: "What's your pet hotel called?",
       lead: "This shows on booking links and reports to owners. You can change it later.",
@@ -45,6 +55,7 @@ export const appEn = {
       title: "How many cages do you have?",
       lead: "Set a count and nightly price for each size. We'll name them for you (S-01, M-01…). You can rename or add more later.",
       count: "Cages",
+      presets: { label: "Quick start", home: "Home-based", small: "Small hotel", large: "Large hotel", custom: "Custom" },
       price: "Price per night",
       total: (n: number) => `${n} cages in total`,
       next: "Finish setup",
@@ -53,6 +64,7 @@ export const appEn = {
     done: {
       title: (name: string) => `${name} is ready.`,
       lead: "Start with the thing you do most. Everything else can wait.",
+      summary: (cages: number, from: string) => `${cages} cages · from ${from} per night`,
       firstBooking: "Add your first booking",
       firstBookingHint: "Pet, dates, cage. About 30 seconds.",
       firstPet: "Add a pet and owner",

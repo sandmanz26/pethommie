@@ -93,9 +93,12 @@ note. When an API exists, add a store that calls it and export it as
 
 ## Operator app (`/app`, no backend yet)
 
-The SaaS lives under `/app` as its own lazily-loaded bundle. First visit goes to a
-3-step onboarding (hotel name → cages by size → first task), or "Explore with
-sample data" to try every screen at once.
+The SaaS lives under `/app` as its own lazily-loaded bundle. A first visit goes to
+`/app/onboarding`: a welcome screen, then hotel name and WhatsApp → cages (one-tap
+Home / Small / Large presets, then counts and nightly prices per size) → a done screen with
+the first task to pick. Each step has an illustration from `public/illustrations`. "Explore
+with sample data" skips it and fills every screen. Once a hotel exists, `/app/onboarding`
+redirects to `/app`; Settings → Delete all data brings the onboarding back.
 
 Pages: Today (arrivals, departures, vaccine alerts), Bookings (upcoming / staying /
 past, check-in/out, cancel), New booking (only free cages are offered, so a cage

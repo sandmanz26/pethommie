@@ -13,8 +13,24 @@
 .pg-settings { max-width: 720px; }
 
 /* ---------- Onboarding ---------- */
-.pg-onb { display: grid; gap: 18px; }
+.pg-onb { display: grid; gap: 18px; animation: pg-onb-in 0.35s ease both; }
+@keyframes pg-onb-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pg-onb { animation: none; } }
 .pg-onb__head { display: grid; gap: 8px; }
+.pg-onb__head--center { text-align: center; justify-items: center; }
+.pg-onb__head--center > p { max-width: 38ch; }
+.pg-onb__presets { display: grid; }
+.pg-onb__presets .ds-segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; overflow: visible; }
+.pg-onb__presets .ds-segmented__item { justify-content: center; }
+@media (max-width: 520px) {
+  .pg-onb__presets .ds-segmented { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+}
+.pg-onb__plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pg-onb__plan li { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 12px 14px; border-radius: var(--radius); background: var(--paper); }
+.pg-onb__plan li > span:last-child { display: grid; gap: 1px; }
+.pg-onb__plan small { color: var(--ink-soft); font-size: 0.88em; }
+.pg-onb__num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--seal); color: var(--seal-ink); font: 700 0.95em var(--font-display); }
+.pg-onb__summary { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 700; font-size: 0.9em; }
 .pg-onb__sizes { display: grid; gap: 12px; }
 .pg-onb__size {
   display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name stepper" "price price";
@@ -29,7 +45,6 @@
 }
 .pg-onb__total { margin: 0; font-weight: 700; }
 .pg-onb__actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.pg-onb__done { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--ok-bg); color: var(--ok); }
 .pg-onb__choices { display: grid; gap: 10px; }
 .pg-onb__choice {
   display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;

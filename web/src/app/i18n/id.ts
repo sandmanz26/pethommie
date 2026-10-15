@@ -29,6 +29,16 @@ export const appId: AppMessages = {
   onboarding: {
     stepOf: (i, n) => `Langkah ${i} dari ${n}`,
     sample: "Coba dengan data contoh dulu",
+    welcome: {
+      title: "Selamat datang di Pethommie",
+      lead: "Ayo siapkan pet hotel-mu. Tiga langkah singkat, sekitar dua menit. Semuanya bisa diubah nanti.",
+      items: [
+        { title: "Hotel-mu", body: "Nama dan nomor WhatsApp untuk rapor ke pemilik." },
+        { title: "Kandang-mu", body: "Berapa jumlahnya dan harga per malam." },
+        { title: "Booking pertama", body: "Atau lihat-lihat dulu. Terserah kamu." },
+      ],
+      start: "Mulai setup",
+    },
     hotel: {
       title: "Apa nama pet hotel-mu?",
       lead: "Nama ini muncul di link booking dan rapor ke pemilik. Bisa diubah nanti.",
@@ -46,6 +56,7 @@ export const appId: AppMessages = {
       title: "Berapa kandang yang kamu punya?",
       lead: "Atur jumlah dan harga per malam untuk tiap ukuran. Kami beri nama otomatis (S-01, M-01…). Bisa diubah atau ditambah nanti.",
       count: "Kandang",
+      presets: { label: "Pilih cepat", home: "Rumahan", small: "Hotel kecil", large: "Hotel besar", custom: "Atur sendiri" },
       price: "Harga per malam",
       total: (n) => `Total ${n} kandang`,
       next: "Selesaikan setup",
@@ -54,6 +65,7 @@ export const appId: AppMessages = {
     done: {
       title: (name) => `${name} siap dipakai.`,
       lead: "Mulai dari yang paling sering kamu kerjakan. Sisanya bisa menyusul.",
+      summary: (cages, from) => `${cages} kandang · mulai ${from} per malam`,
       firstBooking: "Tambah booking pertama",
       firstBookingHint: "Anabul, tanggal, kandang. Sekitar 30 detik.",
       firstPet: "Tambah anabul dan pemilik",
