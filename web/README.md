@@ -27,7 +27,25 @@ npm run lint
 
 ## Structure
 
+Three folders under `src/`, with one-way dependencies (enforced by ESLint, see
+`docs/ARCHITECTURE.md`):
+
 ```
+src/
+  shared/    used by both surfaces; depends on neither
+    i18n/      LocaleProvider (which language), locales list
+    hooks/     useBodyTheme, useDocumentMeta
+    ui/        Hanko (seal mark), LanguageSwitch
+    styles/    base.css: resets, type tokens, focus ring
+  site/      the marketing site (landing page)
+    i18n/      en.ts (default) and id.ts: all copy, chapter timings, prices; useSiteT
+    content/   film registry: frame count, duration, paper colour per film
+    components/  ink (the scroll film), film-switcher, layout (TopBar, Footer), ui
+    sections/  Hero, Features, RaporPreview, LebaranPackage, WaitlistForm
+    hooks/ lib/ pages/ styles/
+  app/       the operator product (see below)
+  App.tsx    routes: site pages, and /app/* lazy-loaded
+  main.tsx   entry; loads base + site CSS before any component CSS
 public/
   films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
   films/turntable/   V2: 213 WebP frames of the illustrated turntable (17.75 s, 12 fps, 1600 px)
@@ -35,22 +53,10 @@ public/
 media/             source videos from Higgsfield (kept out of public/, so not deployed)
 resources/         raw images and photos you drop in; scripts/prepare-resources.py makes the
                    web versions in public/illustrations and public/photos (see resources/README.md)
-src/
-  i18n/              en.ts (default) and id.ts: all copy, chapter timings, prices.
-                     Edit text here, not in components. LocaleProvider + EN/ID switch.
-  content/film.ts    Film registry: frame count, duration, paper colour per film
-  styles/            tokens.css (colors, type scale) and global.css
-  components/
-    ink/             InkFilm: sticky canvas that scrubs a film's frames with scroll
-    film-switcher/   Floating, draggable V1/V2 switch (choice + position remembered)
-    layout/          TopBar, Footer
-    ui/              Button, Hanko (seal mark), BrushLine
-  sections/          Hero, Features, RaporPreview, LebaranPackage, WaitlistForm
-  hooks/             useScrollProgress, useFrameSequence (preloading)
-  lib/               drawFrame (canvas fit), waitlist (storage adapter)
-  pages/             LandingPage, NotFoundPage
-  App.tsx            Routes. Operator app routes get added here.
 ```
+
+Import rules: `./x` only for files in the same folder; everything else through the `@/` alias
+(`@/shared/ui/Hanko`). Each surface scopes its CSS to `body.site` or `body.app`, so styles never leak.
 
 ## How the scroll film works
 
@@ -60,7 +66,7 @@ forwards and backwards on every browser, which seeking a `<video>` does not.
 
 - Frames load coarse-to-fine (every 30th, 10th, 3rd, then all) so a fast scroll shows the whole story early.
 - Scroll handling runs once per animation frame and never re-renders React.
-- Caption positions come from `chapters.<film>[].at` (seconds into that film) in each `i18n/*.ts` file.
+- Caption positions come from `chapters.<film>[].at` (seconds into that film) in each `site/i18n/*.ts` file.
 - Two films ship today. The floating switcher picks one; `<html data-film>` swaps the page palette to match.
 - Phones and portrait tablets (≤720 px, or portrait up to 1100 px): the scene sits above a caption
   deck that shows the current chapter, so captions never cover the illustration. The drifting
@@ -73,13 +79,13 @@ To replace the film with a new video:
 ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/films/<id>/f%04d.webp
 ```
 
-Then register it in `content/film.ts` and add its chapter/clock timings in `i18n/en.ts` and `i18n/id.ts`.
+Then register it in `site/content/film.ts` and add its chapter/clock timings in `site/i18n/en.ts` and `site/i18n/id.ts`.
 V2 is built from 10 HD keyframes: 9 Wan 3.0 clips (1080p, 2 s, start frame → end frame),
 joined with the duplicate first frame of each later clip dropped, then cut at 1600 px
 (`media/pethommie-turntable-hd.mp4` is the joined source). Each scene holds about 1.5 s, so
 scene *k* sits at roughly 2k−1 to 2k+0.5 s; chapter and clock timings follow that.
 
-`lib/drawFrame.ts` never enlarges a frame past 1.25× its own pixels, so big screens
+`site/lib/drawFrame.ts` never enlarges a frame past 1.25× its own pixels, so big screens
 get paper around the film instead of a soft, stretched image.
 
 ## Languages
@@ -91,7 +97,7 @@ language, copy `en.ts`, translate it, and register it in `i18n/locales.ts`.
 
 ## Waitlist (no backend yet)
 
-`lib/waitlist.ts` defines a `WaitlistStore` interface. The current
+`site/lib/waitlist.ts` defines a `WaitlistStore` interface. The current
 implementation saves entries to `localStorage` and the form shows a "demo mode"
 note. When an API exists, add a store that calls it and export it as
 `waitlistStore`; the form does not need to change.

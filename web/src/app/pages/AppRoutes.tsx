@@ -1,7 +1,9 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { AppStoreProvider, useStore } from "../store/AppStore";
-import { AppLayout } from "../design-system/templates/AppLayout";
-import "../design-system/tokens.css";
+import { useBodyTheme } from "@/shared/hooks/useBodyTheme";
+import { useDocumentMeta } from "@/shared/hooks/useDocumentMeta";
+import { AppStoreProvider, useStore } from "@/app/store/AppStore";
+import { AppLayout } from "@/app/design-system/templates/AppLayout";
+import "@/app/design-system/tokens.css";
 import { OnboardingPage } from "./OnboardingPage";
 import { TodayPage } from "./TodayPage";
 import { BookingsPage } from "./BookingsPage";
@@ -24,6 +26,8 @@ function Workspace() {
 
 /** Everything under /app. Mounted from the top-level router. */
 export default function AppRoutes() {
+  useBodyTheme("app");
+  useDocumentMeta({ title: "Pethommie", robots: "noindex", themeColor: "#f4efe6" });
   return (
     <AppStoreProvider>
       <Routes>

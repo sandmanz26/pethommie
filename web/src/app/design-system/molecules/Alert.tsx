@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Icon } from "../atoms/Icon";
+import { Icon } from "@/app/design-system/atoms/Icon";
 import "./molecules.css";
 
 export function Alert({ tone = "warn", children }: { tone?: "warn" | "danger" | "info" | "ok"; children: ReactNode }) {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { AppNav } from "../organisms/AppNav";
-import { useAppT } from "../../i18n/useAppT";
+import { AppNav } from "@/app/design-system/organisms/AppNav";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./templates.css";
 
 /** Signed-in workspace: navigation + one content column. */

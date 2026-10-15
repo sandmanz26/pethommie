@@ -1,4 +1,4 @@
-import { emptyData, type HotelData } from "../domain/types";
+import { emptyData, type HotelData } from "@/app/domain/types";
 
 /**
  * Where hotel data lives. Today: this browser's localStorage.

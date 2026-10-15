@@ -1,5 +1,6 @@
 /* Operator app tokens. Same ink-and-paper family as the website, tuned for long working
    sessions: a lighter work surface, stronger contrast, and semantic colours for status. */
+body.app,
 .app-root {
   --paper: #f4efe6;        /* page ground */
   --surface: #fffcf6;      /* cards, inputs */
@@ -25,7 +26,14 @@
   --radius-lg: 18px;
   --shadow: 0 1px 0 rgba(27, 26, 23, 0.04), 0 8px 24px -16px rgba(27, 26, 23, 0.35);
   --tap: 44px;             /* minimum touch target */
+}
 
+/* The page canvas behind the app, so overscroll matches the work surface. */
+body.app {
+  background: var(--paper);
+}
+
+.app-root {
   background: var(--paper);
   color: var(--ink);
   min-height: 100vh;

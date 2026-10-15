@@ -1,0 +1,11 @@
+.hanko {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 6px;
+  background: var(--seal);
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  transform: rotate(-4deg);
+}

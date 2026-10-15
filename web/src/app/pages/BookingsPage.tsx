@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
-import type { Booking } from "../domain/types";
-import { todayISO } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { Button } from "../design-system/atoms/Button";
-import { ConfirmDialog } from "../design-system/molecules/ConfirmDialog";
-import { EmptyState } from "../design-system/molecules/EmptyState";
-import { Segmented } from "../design-system/molecules/Segmented";
-import { BookingCard } from "../design-system/organisms/BookingCard";
-import { PageHeader } from "../design-system/organisms/PageHeader";
+import type { Booking } from "@/app/domain/types";
+import { todayISO } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { Button } from "@/app/design-system/atoms/Button";
+import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
+import { EmptyState } from "@/app/design-system/molecules/EmptyState";
+import { Segmented } from "@/app/design-system/molecules/Segmented";
+import { BookingCard } from "@/app/design-system/organisms/BookingCard";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
 
 type Filter = "upcoming" | "inHouse" | "past";

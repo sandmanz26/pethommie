@@ -1,0 +1,52 @@
+/* Shared base for the marketing site and the app: resets, type tokens, focus ring.
+   Nothing here says anything visual about either surface; each defines its own palette. */
+:root {
+  /* Round, friendly type: Fredoka for headings, Nunito for text. Both support Indonesian. */
+  --font-display: "Fredoka", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Nunito", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --display-weight: 600; /* Fredoka tops out at 700; 600 keeps headings soft, not shouty */
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 3px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

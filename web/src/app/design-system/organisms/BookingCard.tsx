@@ -1,9 +1,9 @@
-import type { Booking, Cage, Owner, Pet } from "../../domain/types";
-import { bookingTotal, formatDate, formatRupiah, formatWhatsapp, nights } from "../../domain/logic";
-import { Avatar } from "../atoms/Avatar";
-import { Badge, type Tone } from "../atoms/Badge";
-import { Button } from "../atoms/Button";
-import { useAppT } from "../../i18n/useAppT";
+import type { Booking, Cage, Owner, Pet } from "@/app/domain/types";
+import { bookingTotal, formatDate, formatRupiah, formatWhatsapp, nights } from "@/app/domain/logic";
+import { Avatar } from "@/app/design-system/atoms/Avatar";
+import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
+import { Button } from "@/app/design-system/atoms/Button";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 const statusTone: Record<Booking["status"], Tone> = { booked: "info", checked_in: "ok", checked_out: "neutral", cancelled: "danger" };

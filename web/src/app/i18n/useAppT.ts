@@ -1,4 +1,4 @@
-import { useLocale } from "../../i18n/LocaleProvider";
+import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { appEn } from "./en";
 import { appId } from "./id";
 

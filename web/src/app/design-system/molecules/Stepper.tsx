@@ -1,4 +1,4 @@
-import { Button } from "../atoms/Button";
+import { Button } from "@/app/design-system/atoms/Button";
 import "./molecules.css";
 
 /** Number with − / + buttons, for small counts like cages. */

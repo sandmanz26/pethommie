@@ -1,4 +1,4 @@
-import type { Tone } from "../atoms/Badge";
+import type { Tone } from "@/app/design-system/atoms/Badge";
 import "./molecules.css";
 
 /** One number with its label. Tone marks values that need attention. */

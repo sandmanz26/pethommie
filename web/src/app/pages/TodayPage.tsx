@@ -1,15 +1,15 @@
 import { useState } from "react";
-import type { Booking } from "../domain/types";
-import { addDays, formatDate, holdsCage, todayBoard, todayISO, vaccineState } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { Button } from "../design-system/atoms/Button";
-import { Badge } from "../design-system/atoms/Badge";
-import { Heading, Muted } from "../design-system/atoms/Text";
-import { EmptyState } from "../design-system/molecules/EmptyState";
-import { StatCard } from "../design-system/molecules/StatCard";
-import { BookingCard } from "../design-system/organisms/BookingCard";
-import { PageHeader } from "../design-system/organisms/PageHeader";
+import type { Booking } from "@/app/domain/types";
+import { addDays, formatDate, holdsCage, todayBoard, todayISO, vaccineState } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Badge } from "@/app/design-system/atoms/Badge";
+import { Heading, Muted } from "@/app/design-system/atoms/Text";
+import { EmptyState } from "@/app/design-system/molecules/EmptyState";
+import { StatCard } from "@/app/design-system/molecules/StatCard";
+import { BookingCard } from "@/app/design-system/organisms/BookingCard";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
 
 export function TodayPage() {

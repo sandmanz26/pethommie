@@ -1,4 +1,4 @@
-import { Icon } from "../atoms/Icon";
+import { Icon } from "@/app/design-system/atoms/Icon";
 import "./molecules.css";
 
 export function SearchField({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {

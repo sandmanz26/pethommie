@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { newId } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { Button } from "../design-system/atoms/Button";
-import { ConfirmDialog } from "../design-system/molecules/ConfirmDialog";
-import { PageHeader } from "../design-system/organisms/PageHeader";
-import { PetForm } from "../design-system/organisms/PetForm";
+import { newId } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { Button } from "@/app/design-system/atoms/Button";
+import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { PetForm } from "@/app/design-system/organisms/PetForm";
 
 /** Handles both /app/pets/new and /app/pets/:id. */
 export function PetEditPage() {

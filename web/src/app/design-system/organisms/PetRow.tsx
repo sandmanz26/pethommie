@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import type { Owner, Pet } from "../../domain/types";
-import { formatWhatsapp, vaccineState, type VaccineState } from "../../domain/logic";
-import { Avatar } from "../atoms/Avatar";
-import { Badge, type Tone } from "../atoms/Badge";
-import { Icon } from "../atoms/Icon";
-import { useAppT } from "../../i18n/useAppT";
+import type { Owner, Pet } from "@/app/domain/types";
+import { formatWhatsapp, vaccineState, type VaccineState } from "@/app/domain/logic";
+import { Avatar } from "@/app/design-system/atoms/Avatar";
+import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
+import { Icon } from "@/app/design-system/atoms/Icon";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 const tone: Record<VaccineState, Tone> = { ok: "ok", soon: "warn", expired: "danger", unknown: "neutral" };

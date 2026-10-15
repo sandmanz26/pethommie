@@ -1,7 +1,7 @@
-import type { Cage, Pet } from "../../domain/types";
-import { formatRupiah } from "../../domain/logic";
-import { Avatar } from "../atoms/Avatar";
-import { useAppT } from "../../i18n/useAppT";
+import type { Cage, Pet } from "@/app/domain/types";
+import { formatRupiah } from "@/app/domain/logic";
+import { Avatar } from "@/app/design-system/atoms/Avatar";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 /** A cage and who is in it tonight. */

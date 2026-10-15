@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Button } from "../atoms/Button";
-import { Heading, Muted } from "../atoms/Text";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import "./organisms.css";
 
 export function PageHeader({ title, lead, back, actions }: { title: string; lead?: ReactNode; back?: { to: string; label: string }; actions?: ReactNode }) {

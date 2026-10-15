@@ -1,4 +1,4 @@
-import type { Species } from "../../domain/types";
+import type { Species } from "@/app/domain/types";
 import "./atoms.css";
 
 /** Round marker for a pet: its initial on a disc tinted by species. */

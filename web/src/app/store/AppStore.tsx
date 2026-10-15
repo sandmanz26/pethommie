@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
-import { newId } from "../domain/logic";
-import type { Booking, BookingStatus, Cage, Hotel, HotelData, Owner, Pet } from "../domain/types";
-import { emptyData } from "../domain/types";
+import { newId } from "@/app/domain/logic";
+import type { Booking, BookingStatus, Cage, Hotel, HotelData, Owner, Pet } from "@/app/domain/types";
+import { emptyData } from "@/app/domain/types";
 import { sampleData } from "./sampleData";
 import { localRepository, type HotelRepository } from "./storage";
 

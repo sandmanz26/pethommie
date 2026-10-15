@@ -1,5 +1,5 @@
-import { addDays, generateCages, newId, todayISO } from "../domain/logic";
-import type { Booking, HotelData, Owner, Pet } from "../domain/types";
+import { addDays, generateCages, newId, todayISO } from "@/app/domain/logic";
+import type { Booking, HotelData, Owner, Pet } from "@/app/domain/types";
 
 /** A believable small hotel so a new user can explore every screen before entering real data. */
 export function sampleData(): HotelData {

@@ -1,8 +1,8 @@
 import { NavLink } from "react-router-dom";
-import { Hanko } from "../../../components/ui/Hanko";
-import { Icon, type IconName } from "../atoms/Icon";
-import { Button } from "../atoms/Button";
-import { useAppT } from "../../i18n/useAppT";
+import { Hanko } from "@/shared/ui/Hanko";
+import { Icon, type IconName } from "@/app/design-system/atoms/Icon";
+import { Button } from "@/app/design-system/atoms/Button";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 const items: { to: string; key: "today" | "bookings" | "pets" | "cages" | "settings"; icon: IconName; end?: boolean }[] = [

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Button } from "../atoms/Button";
+import { Button } from "@/app/design-system/atoms/Button";
 import "./molecules.css";
 
 /** In-page confirmation (window.confirm is blocked in some embeds and looks out of place). */

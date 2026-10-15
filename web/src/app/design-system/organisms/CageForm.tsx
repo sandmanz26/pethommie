@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
-import type { Cage, CageSize } from "../../domain/types";
-import { SIZE_ORDER } from "../../domain/logic";
-import { Button } from "../atoms/Button";
-import { Input, Select } from "../atoms/Input";
-import { Heading } from "../atoms/Text";
-import { Field } from "../molecules/Field";
-import { useAppT } from "../../i18n/useAppT";
+import type { Cage, CageSize } from "@/app/domain/types";
+import { SIZE_ORDER } from "@/app/domain/logic";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Input, Select } from "@/app/design-system/atoms/Input";
+import { Heading } from "@/app/design-system/atoms/Text";
+import { Field } from "@/app/design-system/molecules/Field";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 export function CageForm({

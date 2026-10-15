@@ -1,15 +1,15 @@
 import { useState } from "react";
-import type { Cage, CageSize } from "../domain/types";
-import { holdsCage, newId, occupantOn, SIZE_ORDER, todayISO } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { Button } from "../design-system/atoms/Button";
-import { Heading } from "../design-system/atoms/Text";
-import { Alert } from "../design-system/molecules/Alert";
-import { EmptyState } from "../design-system/molecules/EmptyState";
-import { CageForm } from "../design-system/organisms/CageForm";
-import { CageTile } from "../design-system/organisms/CageTile";
-import { PageHeader } from "../design-system/organisms/PageHeader";
+import type { Cage, CageSize } from "@/app/domain/types";
+import { holdsCage, newId, occupantOn, SIZE_ORDER, todayISO } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Heading } from "@/app/design-system/atoms/Text";
+import { Alert } from "@/app/design-system/molecules/Alert";
+import { EmptyState } from "@/app/design-system/molecules/EmptyState";
+import { CageForm } from "@/app/design-system/organisms/CageForm";
+import { CageTile } from "@/app/design-system/organisms/CageTile";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
 
 export function CagesPage() {

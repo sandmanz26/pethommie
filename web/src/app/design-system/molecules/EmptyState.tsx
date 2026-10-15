@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "../atoms/Icon";
+import { Icon, type IconName } from "@/app/design-system/atoms/Icon";
 import "./molecules.css";
 
 export function EmptyState({ icon, children, action }: { icon: IconName; children: ReactNode; action?: ReactNode }) {

@@ -1,16 +1,16 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { formatWhatsapp, normaliseWhatsapp } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { LanguageSwitch } from "../../components/layout/LanguageSwitch";
-import { Button } from "../design-system/atoms/Button";
-import { Input } from "../design-system/atoms/Input";
-import { Heading, Muted } from "../design-system/atoms/Text";
-import { Alert } from "../design-system/molecules/Alert";
-import { ConfirmDialog } from "../design-system/molecules/ConfirmDialog";
-import { Field } from "../design-system/molecules/Field";
-import { PageHeader } from "../design-system/organisms/PageHeader";
+import { formatWhatsapp, normaliseWhatsapp } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Input } from "@/app/design-system/atoms/Input";
+import { Heading, Muted } from "@/app/design-system/atoms/Text";
+import { Alert } from "@/app/design-system/molecules/Alert";
+import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
+import { Field } from "@/app/design-system/molecules/Field";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
 
 export function SettingsPage() {
@@ -75,7 +75,7 @@ export function SettingsPage() {
       <section className="ds-form__section pg-settings">
         <Heading level={2} size="md">{t.settings.language}</Heading>
         <div>
-          <LanguageSwitch />
+          <LanguageSwitch label={t.settings.language} />
         </div>
       </section>
 

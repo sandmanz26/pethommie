@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
-import { todayISO } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { Button } from "../design-system/atoms/Button";
-import { EmptyState } from "../design-system/molecules/EmptyState";
-import { SearchField } from "../design-system/molecules/SearchField";
-import { PageHeader } from "../design-system/organisms/PageHeader";
-import { PetRow } from "../design-system/organisms/PetRow";
+import { todayISO } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { Button } from "@/app/design-system/atoms/Button";
+import { EmptyState } from "@/app/design-system/molecules/EmptyState";
+import { SearchField } from "@/app/design-system/molecules/SearchField";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { PetRow } from "@/app/design-system/organisms/PetRow";
 import "./pages.css";
 
 export function PetsPage() {

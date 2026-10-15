@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import type { Booking, CageSize, HotelData, Species } from "../../domain/types";
+import type { Booking, CageSize, HotelData, Species } from "@/app/domain/types";
 import {
   addDays,
   bookingTotal,
@@ -12,13 +12,13 @@ import {
   SIZE_ORDER,
   todayISO,
   vaccineState,
-} from "../../domain/logic";
-import { Button } from "../atoms/Button";
-import { Input, Select, Textarea } from "../atoms/Input";
-import { Heading } from "../atoms/Text";
-import { Alert } from "../molecules/Alert";
-import { Field } from "../molecules/Field";
-import { useAppT } from "../../i18n/useAppT";
+} from "@/app/domain/logic";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
+import { Heading } from "@/app/design-system/atoms/Text";
+import { Alert } from "@/app/design-system/molecules/Alert";
+import { Field } from "@/app/design-system/molecules/Field";
+import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 export type NewPetQuick = { name: string; species: Species; ownerName: string; whatsapp: string };

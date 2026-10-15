@@ -1,9 +1,9 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { newId } from "../domain/logic";
-import { useStore } from "../store/AppStore";
-import { useAppT } from "../i18n/useAppT";
-import { BookingForm } from "../design-system/organisms/BookingForm";
-import { PageHeader } from "../design-system/organisms/PageHeader";
+import { newId } from "@/app/domain/logic";
+import { useStore } from "@/app/store/AppStore";
+import { useAppT } from "@/app/i18n/useAppT";
+import { BookingForm } from "@/app/design-system/organisms/BookingForm";
+import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 
 export function BookingNewPage() {
   const { data, saveBooking, saveOwner, savePet } = useStore();
