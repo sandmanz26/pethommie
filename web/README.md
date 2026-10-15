@@ -5,10 +5,15 @@ React 19 + TypeScript + Vite, no backend yet.
 
 ## Deploy (Vercel)
 
-`vercel.json` at the repo root builds this folder and serves it as one site: the landing
-page at `/` and the operator app at `/app`. All paths fall back to `index.html`, so
-refreshing `/app/bookings` works. In Vercel: import the GitHub repo, keep the defaults
-(no root directory change needed), and deploy. Pushes to `main` go to production.
+The app is a single-page app: `/app/...` is not a real file, so the host must send every path to
+`index.html`. That rule lives in two places, so it works whichever way the Vercel project is set up:
+
+- **Root Directory = `web`** (the project name `pethommie-web` suggests this): Vercel reads
+  `web/vercel.json` and auto-detects Vite.
+- **Root Directory = repo root**: Vercel reads `vercel.json` at the root, which also builds `web/`.
+
+Without the rule, `/` works but `/app` and a refresh on any `/app/...` page return 404.
+Pushes to `main` go to production.
 
 ## Run
 
