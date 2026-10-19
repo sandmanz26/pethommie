@@ -239,3 +239,7 @@
 .ds-legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 0; list-style: none; font-size: 0.88em; color: var(--ink-soft); }
 .ds-legend li { display: flex; align-items: center; gap: 6px; }
 .ds-legend i { width: 14px; height: 14px; border-radius: 4px; }
+@media (max-width: 480px) {
+  .ds-money { grid-template-columns: 1fr; gap: 6px; }
+  .ds-money div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+}

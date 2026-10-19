@@ -75,9 +75,9 @@ export function PaymentsPanel({
           {booking.payments.map((x) => (
             <li key={x.id}>
               <span>
-                <b>{rp(x.amount)}</b> · {p.methods[x.method]}
+                <b>{rp(x.amount)}</b>
                 <small>
-                  {formatDate(dayOf(x.at), locale, { day: "numeric", month: "short" })} {timeOf(x.at, locale)}
+                  {p.methods[x.method]} · {formatDate(dayOf(x.at), locale, { day: "numeric", month: "short" })} {timeOf(x.at, locale)}
                   {x.note && ` · ${x.note}`}
                 </small>
               </span>

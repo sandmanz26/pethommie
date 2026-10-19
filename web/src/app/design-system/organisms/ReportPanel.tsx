@@ -53,6 +53,7 @@ export function ReportPanel({
       </div>
       {!owner?.whatsapp && <Alert tone="info">{r.noWhatsapp}</Alert>}
       <WhatsAppMessage
+        hideLabel
         key={text}
         label={r.title}
         text={text}
