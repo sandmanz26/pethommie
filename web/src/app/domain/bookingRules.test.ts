@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aBooking, aSmallHotel } from "@/app/testing/fixtures";
-import { bookingIssues, canTransition, cageCanBeRemoved, scheduleIssues } from "./bookingRules";
+import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, scheduleIssues } from "./bookingRules";
 import type { BookingStatus } from "./types";
 
 const stay = aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-18" });
@@ -72,5 +72,35 @@ describe("cageCanBeRemoved", () => {
     expect(cageCanBeRemoved(data, "s2")).toBe(true);
     expect(cageCanBeRemoved(aSmallHotel({ bookings: [{ ...stay, status: "checked_out" }] }), "s1")).toBe(true);
     expect(cageCanBeRemoved(aSmallHotel({ bookings: [{ ...stay, status: "cancelled" }] }), "s1")).toBe(true);
+  });
+});
+
+describe("editIssues", () => {
+  const booked = aBooking("e1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-18" });
+  const other = aBooking("e2", { petId: "p2", cageId: "s2", checkIn: "2026-10-20", checkOut: "2026-10-22" });
+  const world = aSmallHotel({ bookings: [booked, other] });
+
+  it("lets a booked stay move to a free cage or other dates, and does not clash with itself", () => {
+    expect(editIssues(world, booked, { cageId: "m1" })).toEqual([]);
+    expect(editIssues(world, booked, { checkOut: "2026-10-19" })).toEqual([]);
+  });
+
+  it("still refuses what a new booking would refuse", () => {
+    expect(editIssues(world, booked, { cageId: "s2", checkOut: "2026-10-21" })).toEqual(["cage_taken"]);
+    expect(editIssues(world, booked, { checkOut: "2026-10-14" })).toEqual(["dates"]);
+    expect(editIssues(world, booked, { cageId: "ghost" })).toEqual(["cage"]);
+  });
+
+  it("lets a stay that has started change its end and cage, but not its first day", () => {
+    const staying = { ...booked, status: "checked_in" as const };
+    expect(editIssues(world, staying, { checkOut: "2026-10-20" })).toEqual([]);
+    expect(editIssues(world, staying, { checkIn: "2026-10-13" })).toEqual(["locked"]);
+    expect(editIssues(world, staying, { checkIn: "2026-10-14" })).toEqual([]);
+  });
+
+  it("locks stays that are over", () => {
+    for (const status of ["checked_out", "cancelled"] as const) {
+      expect(editIssues(world, { ...booked, status }, { notes: "late edit" })).toEqual(["locked"]);
+    }
   });
 });

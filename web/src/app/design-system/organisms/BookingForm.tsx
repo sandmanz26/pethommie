@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { scheduleIssues } from "@/app/domain/bookingRules";
 import { normaliseWhatsapp } from "@/shared/lib/phone";
-import type { Booking, CageSize, HotelData, Species } from "@/app/domain/types";
+import type { Booking, CageSize, HotelData, PaymentMethod, Species } from "@/app/domain/types";
 import {
   addDays,
   bookingTotal,
@@ -30,11 +30,18 @@ export type NewPetQuick = { name: string; species: Species; ownerName: string; w
 export function BookingForm({
   data,
   initialPetId,
+  initialCageId,
+  initialCheckIn,
+  initialCheckOut,
   onSubmit,
   onCancel,
 }: {
   data: HotelData;
   initialPetId?: string;
+  /** Prefill from the calendar: the empty day that was tapped. */
+  initialCageId?: string;
+  initialCheckIn?: string;
+  initialCheckOut?: string;
   onSubmit: (booking: Booking, newPet?: NewPetQuick) => void;
   onCancel: () => void;
 }) {
@@ -45,11 +52,12 @@ export function BookingForm({
   const [petId, setPetId] = useState(initialPetId ?? "");
   const [adding, setAdding] = useState(data.pets.length === 0);
   const [np, setNp] = useState<NewPetQuick>({ name: "", species: "cat", ownerName: "", whatsapp: "" });
-  const [checkIn, setCheckIn] = useState(today);
-  const [checkOut, setCheckOut] = useState(addDays(today, 2));
+  const [checkIn, setCheckIn] = useState(initialCheckIn ?? today);
+  const [checkOut, setCheckOut] = useState(initialCheckOut ?? addDays(initialCheckIn ?? today, 2));
   const [size, setSize] = useState<CageSize | "">("");
-  const [cageId, setCageId] = useState("");
+  const [cageId, setCageId] = useState(initialCageId ?? "");
   const [deposit, setDeposit] = useState("");
+  const [method, setMethod] = useState<PaymentMethod>("transfer");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -66,6 +74,8 @@ export function BookingForm({
   const pet = data.pets.find((p) => p.id === petId);
   const vState = pet ? vaccineState(pet, checkIn) : null;
   const sortedPets = useMemo(() => [...data.pets].sort((a, b) => a.name.localeCompare(b.name)), [data.pets]);
+
+  const depositAmount = parseInt(deposit.replace(/\D/g, "") || "0", 10);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -90,7 +100,8 @@ export function BookingForm({
         checkIn,
         checkOut,
         status: "booked",
-        deposit: parseInt(deposit.replace(/\D/g, "") || "0", 10),
+        payments: depositAmount > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: depositAmount, method, note: "" }] : [],
+        arrival: null,
         notes: notes.trim(),
         createdAt: new Date().toISOString(),
       },
@@ -188,6 +199,17 @@ export function BookingForm({
           <Field label={f.deposit} optional={t.common.optional}>
             <Input value={deposit} onChange={(e) => setDeposit(e.target.value)} inputMode="numeric" placeholder="0" />
           </Field>
+          {depositAmount > 0 && (
+            <Field label={t.payments.method}>
+              <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
+                {(["transfer", "qris", "cash"] as PaymentMethod[]).map((m) => (
+                  <option key={m} value={m}>
+                    {t.payments.methods[m]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <div className="ds-summary" aria-live="polite">
             <span>{f.summary(n)}</span>
             <b>{formatRupiah(total, locale)}</b>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Booking } from "@/app/domain/types";
 import { addDays, formatDate, holdsCage, todayBoard, todayISO, vaccineState } from "@/app/domain/logic";
+import { stayingToday } from "@/app/domain/careLog";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -9,11 +10,15 @@ import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { StatCard } from "@/app/design-system/molecules/StatCard";
 import { BookingCard } from "@/app/design-system/organisms/BookingCard";
+import { FirstSteps } from "@/app/design-system/organisms/FirstSteps";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { StayingRow } from "@/app/design-system/organisms/StayingRow";
+import { useCheckOut } from "./useCheckOut";
 import "./pages.css";
 
 export function TodayPage() {
-  const { data, setBookingStatus } = useStore();
+  const { data } = useStore();
+  const checkOut = useCheckOut();
   const { t, locale } = useAppT();
   const [today] = useState(todayISO);
   const board = todayBoard(data, today);
@@ -26,8 +31,8 @@ export function TodayPage() {
       pet={data.pets.find((p) => p.id === b.petId)}
       owner={data.owners.find((o) => o.id === data.pets.find((p) => p.id === b.petId)?.ownerId)}
       cage={data.cages.find((c) => c.id === b.cageId)}
-      onCheckIn={action === "in" ? () => setBookingStatus(b.id, "checked_in") : undefined}
-      onCheckOut={action === "out" ? () => setBookingStatus(b.id, "checked_out") : undefined}
+      checkInTo={action === "in" ? `/app/bookings/${b.id}#checkin` : undefined}
+      onCheckOut={action === "out" ? () => checkOut.request(b) : undefined}
     />
   );
 
@@ -39,6 +44,16 @@ export function TodayPage() {
     .filter((p) => alertPetIds.has(p.id))
     .map((p) => ({ pet: p, state: vaccineState(p, today) }))
     .filter((a) => a.state === "expired" || a.state === "soon");
+
+  const staying = stayingToday(data, today);
+  const stepsDone = [
+    data.bookings.length > 0,
+    data.bookings.some((b) => b.status === "checked_in" || b.status === "checked_out"),
+    data.careLog.length > 0,
+    data.reportsSent.length > 0,
+  ];
+  const nextBooking = data.bookings.find((b) => b.status === "booked") ?? data.bookings[0];
+  const stepLinks = ["/app/bookings/new", nextBooking ? `/app/bookings/${nextBooking.id}#checkin` : "/app/bookings/new", staying[0] ? `/app/bookings/${staying[0].booking.id}#care` : "/app/bookings", staying[0] ? `/app/bookings/${staying[0].booking.id}#care` : "/app/bookings"];
 
   const dateLabel = new Date().toLocaleDateString(locale === "id" ? "id-ID" : "en-GB", { weekday: "long", day: "numeric", month: "long" });
 
@@ -53,6 +68,8 @@ export function TodayPage() {
           </Button>
         }
       />
+
+      {!stepsDone.every(Boolean) && <FirstSteps done={stepsDone} links={stepLinks} />}
 
       <div className="pg-stats">
         <StatCard label={t.today.stats.inHouse} value={board.inHouse.length} tone="ok" />
@@ -80,6 +97,17 @@ export function TodayPage() {
       </div>
 
       <section className="pg-section">
+        <Heading level={2} size="md">{t.stayingNow.title}</Heading>
+        {staying.length ? (
+          staying.map(({ booking, entries, reportSent }) => (
+            <StayingRow key={booking.id} booking={booking} pet={data.pets.find((p) => p.id === booking.petId)} today={today} entries={entries} reportSent={reportSent} />
+          ))
+        ) : (
+          <EmptyState icon="pets">{t.stayingNow.empty}</EmptyState>
+        )}
+      </section>
+
+      <section className="pg-section">
         <Heading level={2} size="md">{t.today.vaccine}</Heading>
         <Muted>{t.today.vaccineLead}</Muted>
         {alerts.length ? (
@@ -97,6 +125,7 @@ export function TodayPage() {
           <EmptyState icon="check">{t.today.noAlerts}</EmptyState>
         )}
       </section>
+      {checkOut.dialog}
     </>
   );
 }

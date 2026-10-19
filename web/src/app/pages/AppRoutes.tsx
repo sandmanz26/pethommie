@@ -15,6 +15,8 @@ import { RegisterPage } from "./RegisterPage";
 import { TodayPage } from "./TodayPage";
 import { BookingsPage } from "./BookingsPage";
 import { BookingNewPage } from "./BookingNewPage";
+import { BookingDetailPage } from "./BookingDetailPage";
+import { CalendarPage } from "./CalendarPage";
 import { PetsPage } from "./PetsPage";
 import { PetEditPage } from "./PetEditPage";
 import { CagesPage } from "./CagesPage";
@@ -63,6 +65,8 @@ export default function AppRoutes() {
               <Route index element={<TodayPage />} />
               <Route path="bookings" element={<BookingsPage />} />
               <Route path="bookings/new" element={<BookingNewPage />} />
+              <Route path="bookings/:id" element={<BookingDetailPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
               <Route path="pets" element={<PetsPage />} />
               <Route path="pets/new" element={<PetEditPage />} />
               <Route path="pets/:id" element={<PetEditPage />} />

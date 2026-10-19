@@ -13,24 +13,53 @@ export type HotelRepository = {
 
 /** One document per account, so a second account in the same browser never sees the first one's hotel. */
 export const dataKeyFor = (accountId: string) => `pethommie.app.v1.${accountId}`;
-/** Bump when HotelData changes shape, and add a step that upgrades the previous version in `parseStored`. */
-const CURRENT_VERSION = 1;
+/**
+ * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
+ * one, and a test with an old document. Older documents are upgraded on load, never discarded.
+ */
+const CURRENT_VERSION = 2;
 
 export type StoredProblem = "corrupt" | "newer";
-export type Parsed = { data: HotelData; problem: StoredProblem | null };
+export type Parsed = { data: HotelData; problem: StoredProblem | null; migratedFrom?: number };
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x);
 const hasIds = (x: unknown) => Array.isArray(x) && x.every((r) => isObject(r) && typeof r.id === "string");
 
-function isHotelData(x: Record<string, unknown>): boolean {
+function hotelOk(x: Record<string, unknown>) {
   const hotel = x.hotel;
-  const hotelOk = hotel === null || (isObject(hotel) && typeof hotel.name === "string");
-  return hotelOk && ["cages", "owners", "pets", "bookings"].every((k) => hasIds(x[k]));
+  return hotel === null || (isObject(hotel) && typeof hotel.name === "string");
+}
+
+/** The shape every version shares. */
+function isBasicShape(x: Record<string, unknown>): boolean {
+  return hotelOk(x) && ["cages", "owners", "pets", "bookings"].every((k) => hasIds(x[k]));
+}
+
+function isHotelData(x: Record<string, unknown>): boolean {
+  return (
+    isBasicShape(x) &&
+    hasIds(x.careLog) &&
+    Array.isArray(x.reportsSent) &&
+    (x.bookings as Record<string, unknown>[]).every((b) => Array.isArray(b.payments))
+  );
+}
+
+/** v1 kept a single `deposit` number on a booking; v2 keeps a list of payments, and a care log. */
+function migrateV1(doc: Record<string, unknown>): Record<string, unknown> {
+  const bookings = (doc.bookings as Record<string, unknown>[]).map(({ deposit, ...booking }) => ({
+    ...booking,
+    payments:
+      typeof deposit === "number" && deposit > 0
+        ? [{ id: `${String(booking.id)}-deposit`, at: typeof booking.createdAt === "string" ? booking.createdAt : `${String(booking.checkIn)}T00:00:00.000Z`, amount: deposit, method: "cash", note: "" }]
+        : [],
+    arrival: null,
+  }));
+  return { ...doc, version: 2, bookings, careLog: [], reportsSent: [] };
 }
 
 /**
  * Reads what was stored. Never throws: anything unreadable comes back as empty data plus the reason,
- * so the caller can keep the original before it is overwritten.
+ * so the caller can keep the original before it is overwritten. Older versions are upgraded.
  */
 export function parseStored(raw: string | null): Parsed {
   if (!raw) return { data: emptyData(), problem: null };
@@ -42,8 +71,15 @@ export function parseStored(raw: string | null): Parsed {
   }
   if (!isObject(value) || typeof value.version !== "number") return { data: emptyData(), problem: "corrupt" };
   if (value.version > CURRENT_VERSION) return { data: emptyData(), problem: "newer" };
-  if (value.version !== CURRENT_VERSION || !isHotelData(value)) return { data: emptyData(), problem: "corrupt" };
-  return { data: value as unknown as HotelData, problem: null };
+
+  let doc = value;
+  let migratedFrom: number | undefined;
+  if (doc.version === 1 && isBasicShape(doc)) {
+    doc = migrateV1(doc);
+    migratedFrom = 1;
+  }
+  if (doc.version !== CURRENT_VERSION || !isHotelData(doc)) return { data: emptyData(), problem: "corrupt" };
+  return { data: doc as unknown as HotelData, problem: null, migratedFrom };
 }
 
 /**
@@ -57,9 +93,11 @@ export function createLocalRepository(key: string, initial: () => HotelData = em
       try {
         const raw = localStorage.getItem(key);
         if (raw === null) return initial();
-        const { data, problem } = parseStored(raw);
-        // Unreadable data would be replaced by the first autosave. Keep a copy first.
+        const { data, problem, migratedFrom } = parseStored(raw);
+        // Unreadable data would be replaced by the first autosave, and an upgraded document replaces the old
+        // shape. Keep a copy of the original first.
         if (problem) localStorage.setItem(backupKey, raw);
+        else if (migratedFrom && localStorage.getItem(`${key}.v${migratedFrom}.backup`) === null) localStorage.setItem(`${key}.v${migratedFrom}.backup`, raw);
         return data;
       } catch {
         return emptyData();

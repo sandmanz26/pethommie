@@ -80,4 +80,34 @@ describe("AppStore", () => {
     expect(result.current.data.hotel).not.toBeNull();
     expect(result.current.data.bookings.length).toBeGreaterThan(0);
   });
+
+  it("takes a stay through check-in, a payment, a care entry and a report, each seeing the one before", () => {
+    const booked = aBooking("a", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16" });
+    const { result } = renderHook(() => useStore(), { wrapper: wrap(memoryRepo(aSmallHotel({ bookings: [booked] }))) });
+    const out: unknown[] = [];
+    act(() => {
+      out.push(result.current.recordCare({ bookingId: "a", at: new Date().toISOString(), kind: "meal", preset: "all", note: "" })); // not in yet
+      out.push(result.current.checkIn("a", null));
+      out.push(result.current.recordCare({ bookingId: "a", at: new Date().toISOString(), kind: "meal", preset: "all", note: "" }));
+      out.push(result.current.recordPayment("a", { at: new Date().toISOString(), amount: 20_000, method: "cash", note: "" }));
+      result.current.markReportSent("a", "2026-10-15", new Date().toISOString());
+    });
+    expect(out).toEqual([["not_staying"], true, [], []]);
+    expect(result.current.data.careLog).toHaveLength(1);
+    expect(result.current.data.bookings[0].payments).toHaveLength(1);
+    expect(result.current.data.reportsSent).toHaveLength(1);
+  });
+
+  it("edits a stay's cage and refuses an edit that would double-book", () => {
+    const a = aBooking("a", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16" });
+    const b = aBooking("b", { petId: "p2", cageId: "s2", checkIn: "2026-10-14", checkOut: "2026-10-16" });
+    const { result } = renderHook(() => useStore(), { wrapper: wrap(memoryRepo(aSmallHotel({ bookings: [a, b] }))) });
+    const issues: unknown[] = [];
+    act(() => {
+      issues.push(result.current.editBooking("a", { cageId: "s2" }));
+      issues.push(result.current.editBooking("a", { cageId: "m1" }));
+    });
+    expect(issues).toEqual([["cage_taken"], []]);
+    expect(result.current.data.bookings[0].cageId).toBe("m1");
+  });
 });

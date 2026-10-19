@@ -14,6 +14,24 @@ export function addDays(date: ISODate, days: number): ISODate {
   return todayISO(new Date(y, m - 1, d + days));
 }
 
+/** The local calendar day an ISO date-time falls on. */
+export function dayOf(iso: string): ISODate {
+  return todayISO(new Date(iso));
+}
+
+/** Local clock time of an ISO date-time, as HH.mm (Indonesian style) or HH:mm. */
+export function timeOf(iso: string, locale: string): string {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}${locale === "id" ? "." : ":"}${mm}`;
+}
+
+/** Which day of the stay a date is: the check-in day is day 1. */
+export function stayDay(checkIn: ISODate, date: ISODate): number {
+  return nights(checkIn, date) + 1;
+}
+
 /** Whole nights between two dates (checkOut - checkIn). */
 export function nights(checkIn: ISODate, checkOut: ISODate): number {
   const [a, b] = [checkIn, checkOut].map((s) => {

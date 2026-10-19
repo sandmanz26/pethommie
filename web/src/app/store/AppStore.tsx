@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BookingIssue } from "@/app/domain/bookingRules";
-import type { Booking, BookingStatus, Cage, Hotel, HotelData, Owner, Pet } from "@/app/domain/types";
+import type { BookingPatch } from "@/app/domain/bookingRules";
+import type { CareIssue } from "@/app/domain/careLog";
+import type { PaymentIssue } from "@/app/domain/payments";
+import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Hotel, HotelData, ISODate, Owner, Payment, Pet } from "@/app/domain/types";
 import { emptyData } from "@/app/domain/types";
 import * as actions from "./actions";
 import { sampleData } from "./sampleData";
@@ -44,6 +47,15 @@ function useStoreValue(repo: HotelRepository) {
       saveBooking: (booking: Booking): BookingIssue[] => run((s) => actions.upsertBooking(s, booking)),
       /** False if the stay can't move to that status. */
       setBookingStatus: (id: string, status: BookingStatus): boolean => run((s) => actions.changeBookingStatus(s, id, status)),
+      /** Changes dates, cage or notes of an existing stay. Empty when done; otherwise what is wrong. */
+      editBooking: (id: string, patch: BookingPatch): BookingIssue[] => run((s) => actions.editBooking(s, id, patch)),
+      /** False unless the stay is booked. */
+      checkIn: (id: string, arrival: Arrival | null): boolean => run((s) => actions.checkInBooking(s, id, arrival)),
+      recordPayment: (bookingId: string, payment: Omit<Payment, "id">): PaymentIssue[] => run((s) => actions.recordPayment(s, bookingId, payment)),
+      removePayment: (bookingId: string, paymentId: string) => commit(actions.removePayment(latest.current, bookingId, paymentId)),
+      recordCare: (entry: Omit<CareEntry, "id">): CareIssue[] => run((s) => actions.recordCare(s, entry)),
+      removeCare: (id: string) => commit(actions.removeCare(latest.current, id)),
+      markReportSent: (bookingId: string, date: ISODate, at: string) => commit(actions.markReportSent(latest.current, bookingId, date, at)),
       loadSample: () => commit(sampleData()),
       reset: () => {
         repo.clear();

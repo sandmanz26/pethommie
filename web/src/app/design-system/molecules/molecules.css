@@ -111,3 +111,8 @@
   border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-soft); cursor: pointer;
 }
 .ds-password__toggle:hover { color: var(--ink); background: var(--surface-sunk); }
+
+/* ---------- WhatsAppMessage ---------- */
+.ds-wa { display: grid; gap: 8px; }
+.ds-wa textarea { font-size: 0.95em; line-height: 1.5; }
+.ds-wa__actions { display: flex; flex-wrap: wrap; gap: 8px; }

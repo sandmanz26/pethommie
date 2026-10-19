@@ -5,9 +5,10 @@ import { Button } from "@/app/design-system/atoms/Button";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
-const items: { to: string; key: "today" | "bookings" | "pets" | "cages" | "settings"; icon: IconName; end?: boolean }[] = [
+const items: { to: string; key: "today" | "bookings" | "calendar" | "pets" | "cages" | "settings"; icon: IconName; end?: boolean }[] = [
   { to: "/app", key: "today", icon: "today", end: true },
   { to: "/app/bookings", key: "bookings", icon: "bookings" },
+  { to: "/app/calendar", key: "calendar", icon: "calendar" },
   { to: "/app/pets", key: "pets", icon: "pets" },
   { to: "/app/cages", key: "cages", icon: "cages" },
   { to: "/app/settings", key: "settings", icon: "settings" },

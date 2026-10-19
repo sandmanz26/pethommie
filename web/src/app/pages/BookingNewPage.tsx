@@ -17,6 +17,9 @@ export function BookingNewPage() {
       <BookingForm
         data={data}
         initialPetId={params.get("pet") ?? undefined}
+        initialCageId={params.get("cage") ?? undefined}
+        initialCheckIn={params.get("in") ?? undefined}
+        initialCheckOut={params.get("out") ?? undefined}
         onCancel={() => navigate(-1)}
         onSubmit={(booking, newPet) => {
           let petId = booking.petId;

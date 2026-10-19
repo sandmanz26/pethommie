@@ -11,7 +11,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** Problems with where and when a stay happens. */
 export type ScheduleIssue = "dates" | "cage" | "cage_taken";
 /** Everything that can be wrong with a whole booking. */
-export type BookingIssue = ScheduleIssue | "pet";
+export type BookingIssue = ScheduleIssue | "pet" | "locked";
 
 export type Schedule = { id?: string; cageId: string; checkIn: ISODate; checkOut: ISODate };
 
@@ -48,4 +48,16 @@ export function canTransition(from: BookingStatus, to: BookingStatus) {
 /** A cage with a pending or current stay can't be removed; finished stays don't block it. */
 export function cageCanBeRemoved(data: HotelData, cageId: string) {
   return !data.bookings.some((b) => b.cageId === cageId && holdsCage(b));
+}
+
+export type BookingPatch = Partial<Pick<Booking, "checkIn" | "checkOut" | "cageId" | "notes">>;
+
+/**
+ * Can this change be made to a stay that already exists? Not once it is finished or cancelled, and not
+ * the check-in day once the pet is in. Whatever is left must still pass the usual booking rules.
+ */
+export function editIssues(data: HotelData, booking: Booking, patch: BookingPatch): BookingIssue[] {
+  if (booking.status === "checked_out" || booking.status === "cancelled") return ["locked"];
+  if (booking.status === "checked_in" && patch.checkIn !== undefined && patch.checkIn !== booking.checkIn) return ["locked"];
+  return bookingIssues(data, { ...booking, ...patch });
 }

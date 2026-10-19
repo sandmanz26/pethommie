@@ -59,3 +59,7 @@
 /* ---------- Sign in / sign up ---------- */
 .pg-flow__switch { margin: 0; text-align: center; color: var(--ink-soft); }
 .pg-flow__switch a { font-weight: 700; color: var(--ink); }
+
+/* ---------- Booking page ---------- */
+.pg-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 18px; }
+.pg-summary > p { flex-basis: 100%; margin: 0; }

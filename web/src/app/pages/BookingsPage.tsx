@@ -9,12 +9,14 @@ import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { BookingCard } from "@/app/design-system/organisms/BookingCard";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { useCheckOut } from "./useCheckOut";
 import "./pages.css";
 
 type Filter = "upcoming" | "inHouse" | "past";
 
 export function BookingsPage() {
   const { data, setBookingStatus } = useStore();
+  const checkOut = useCheckOut();
   const { t } = useAppT();
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [cancelId, setCancelId] = useState<string | null>(null);
@@ -62,8 +64,8 @@ export function BookingsPage() {
                 pet={pet}
                 owner={data.owners.find((o) => o.id === pet?.ownerId)}
                 cage={data.cages.find((c) => c.id === b.cageId)}
-                onCheckIn={b.status === "booked" && b.checkIn <= today ? () => setBookingStatus(b.id, "checked_in") : undefined}
-                onCheckOut={b.status === "checked_in" ? () => setBookingStatus(b.id, "checked_out") : undefined}
+                checkInTo={b.status === "booked" && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}
+                onCheckOut={b.status === "checked_in" ? () => checkOut.request(b) : undefined}
                 onCancel={b.status === "booked" ? () => setCancelId(b.id) : undefined}
               />
             );
@@ -83,6 +85,7 @@ export function BookingsPage() {
           </EmptyState>
         )}
       </div>
+      {checkOut.dialog}
       <ConfirmDialog
         open={cancelId !== null}
         message={t.bookings.confirmCancel}

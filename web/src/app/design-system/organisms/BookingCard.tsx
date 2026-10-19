@@ -1,5 +1,7 @@
 import type { Booking, Cage, Owner, Pet } from "@/app/domain/types";
 import { bookingTotal, formatDate, formatRupiah, nights } from "@/app/domain/logic";
+import { balanceDue } from "@/app/domain/payments";
+import { Link } from "react-router-dom";
 import { formatWhatsapp } from "@/shared/lib/phone";
 import { Avatar } from "@/app/design-system/atoms/Avatar";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
@@ -17,7 +19,7 @@ export function BookingCard({
   pet,
   owner,
   cage,
-  onCheckIn,
+  checkInTo,
   onCheckOut,
   onCancel,
 }: {
@@ -25,20 +27,23 @@ export function BookingCard({
   pet?: Pet;
   owner?: Owner;
   cage?: Cage;
-  onCheckIn?: () => void;
+  /** Where to do the check-in (the booking page, where the arrival record is filled). */
+  checkInTo?: string;
   onCheckOut?: () => void;
   onCancel?: () => void;
 }) {
   const { t, locale } = useAppT();
   const total = bookingTotal(booking, cage);
-  const balance = Math.max(0, total - booking.deposit);
+  const balance = balanceDue(booking, cage);
   const n = nights(booking.checkIn, booking.checkOut);
   return (
     <article className="ds-booking">
       <Avatar name={pet?.name ?? "?"} species={pet?.species ?? "other"} />
       <div className="ds-booking__main">
         <div className="ds-booking__top">
-          <b>{pet?.name ?? "—"}</b>
+          <Link className="ds-booking__name" to={`/app/bookings/${booking.id}`}>
+            {pet?.name ?? "—"}
+          </Link>
           <Badge tone={statusTone[booking.status]}>{t.bookings.status[booking.status]}</Badge>
         </div>
         <span className="ds-booking__meta">
@@ -57,11 +62,11 @@ export function BookingCard({
           </small>
         )}
       </div>
-      {(onCheckIn || onCheckOut || onCancel) && (
+      {(checkInTo || onCheckOut || onCancel) && (
         <div className="ds-booking__actions">
           {onCancel && <Button variant="ghost" size="sm" icon="x" aria-label={t.bookings.cancelBooking} onClick={onCancel} />}
-          {onCheckIn && (
-            <Button size="sm" icon="login" onClick={onCheckIn}>
+          {checkInTo && (
+            <Button to={checkInTo} size="sm" icon="login">
               {t.bookings.checkIn}
             </Button>
           )}

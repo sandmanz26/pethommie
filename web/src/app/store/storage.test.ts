@@ -22,13 +22,42 @@ describe("parseStored", () => {
     ["a record without an id", JSON.stringify({ ...aSmallHotel(), pets: [{ name: "x" }] })],
     ["a hotel without a name", JSON.stringify({ ...aSmallHotel(), hotel: { city: "x" } })],
     ["an impossible version", JSON.stringify({ ...aSmallHotel(), version: 0 })],
+    ["a v2 document without its care log", JSON.stringify({ ...aSmallHotel(), careLog: undefined })],
+    ["a booking without payments", JSON.stringify({ ...aSmallHotel({ bookings: [{ id: "b", petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-02", status: "booked", arrival: null, notes: "", createdAt: "" }] as never }) })],
   ])("flags %s as corrupt, and returns empty data", (_label, raw) => {
     expect(parseStored(raw)).toEqual({ data: emptyData(), problem: "corrupt" });
   });
 
   it("flags data from a newer version of the app, without trying to read it", () => {
-    const raw = JSON.stringify({ ...aSmallHotel(), version: 2, somethingNew: true });
+    const raw = JSON.stringify({ ...aSmallHotel(), version: 3, somethingNew: true });
     expect(parseStored(raw)).toEqual({ data: emptyData(), problem: "newer" });
+  });
+});
+
+describe("upgrading a version 1 document", () => {
+  const v1 = (bookings: unknown[]) =>
+    JSON.stringify({ version: 1, hotel: aSmallHotel().hotel, cages: aSmallHotel().cages, owners: aSmallHotel().owners, pets: aSmallHotel().pets, bookings });
+  const old = { id: "b1", petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", status: "booked", notes: "x", createdAt: "2026-09-30T10:00:00.000Z" };
+
+  it("turns a deposit into a payment, so no money is lost", () => {
+    const { data, problem, migratedFrom } = parseStored(v1([{ ...old, deposit: 100_000 }]));
+    expect(problem).toBeNull();
+    expect(migratedFrom).toBe(1);
+    expect(data.version).toBe(2);
+    expect(data.bookings[0]).not.toHaveProperty("deposit");
+    expect(data.bookings[0].payments).toEqual([expect.objectContaining({ amount: 100_000, at: "2026-09-30T10:00:00.000Z" })]);
+    expect(data.bookings[0]).toMatchObject({ arrival: null, notes: "x" });
+    expect(data.careLog).toEqual([]);
+    expect(data.reportsSent).toEqual([]);
+  });
+
+  it("gives a booking with no deposit no payments", () => {
+    expect(parseStored(v1([{ ...old, deposit: 0 }])).data.bookings[0].payments).toEqual([]);
+    expect(parseStored(v1([old])).data.bookings[0].payments).toEqual([]);
+  });
+
+  it("still refuses a version 1 document that is broken", () => {
+    expect(parseStored(JSON.stringify({ version: 1, hotel: null, cages: null }))).toEqual({ data: emptyData(), problem: "corrupt" });
   });
 });
 
@@ -74,6 +103,16 @@ describe("createLocalRepository", () => {
     localStorage.setItem(KEY, raw);
     expect(repo.load()).toEqual(emptyData());
     expect(localStorage.getItem(BACKUP)).toBe(raw);
+  });
+
+  it("keeps the original of an upgraded document, once", () => {
+    const raw = JSON.stringify({ version: 1, hotel: null, cages: [], owners: [], pets: [], bookings: [] });
+    localStorage.setItem(KEY, raw);
+    expect(repo.load().version).toBe(2);
+    expect(localStorage.getItem(`${KEY}.v1.backup`)).toBe(raw);
+    localStorage.setItem(`${KEY}.v1.backup`, "kept");
+    repo.load();
+    expect(localStorage.getItem(`${KEY}.v1.backup`)).toBe("kept");
   });
 
   it("reports a failed save instead of pretending it worked", () => {

@@ -1,4 +1,4 @@
-import { emptyData, type Booking, type Cage, type CageSize, type HotelData, type Owner, type Pet } from "@/app/domain/types";
+import { emptyData, type Booking, type Cage, type CageSize, type CareEntry, type HotelData, type Owner, type Pet } from "@/app/domain/types";
 
 /** Small builders for tests: just enough fields, with sensible defaults. */
 export const aCage = (id: string, size: CageSize = "S", pricePerNight = 50_000): Cage => ({ id, name: id.toUpperCase(), size, pricePerNight });
@@ -19,7 +19,8 @@ export const aPet = (id: string, ownerId: string, over: Partial<Pet> = {}): Pet 
 export const aBooking = (id: string, over: Pick<Booking, "petId" | "cageId" | "checkIn" | "checkOut"> & Partial<Booking>): Booking => ({
   id,
   status: "booked",
-  deposit: 0,
+  payments: [],
+  arrival: null,
   notes: "",
   createdAt: "2026-10-01T00:00:00.000Z",
   ...over,
@@ -39,3 +40,13 @@ export const aSmallHotel = (parts: Partial<HotelData> = {}): HotelData =>
     pets: [aPet("p1", "o1"), aPet("p2", "o1", { species: "cat" })],
     ...parts,
   });
+
+export const aCareEntry = (id: string, bookingId: string, over: Partial<CareEntry> = {}): CareEntry => ({
+  id,
+  bookingId,
+  at: new Date(2026, 9, 14, 8, 0).toISOString(),
+  kind: "meal",
+  preset: "all",
+  note: "",
+  ...over,
+});

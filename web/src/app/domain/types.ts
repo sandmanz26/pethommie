@@ -38,6 +38,36 @@ export type Pet = {
   notes: string;
 };
 
+export type PaymentMethod = "cash" | "qris" | "transfer";
+
+/** Money received for a stay (a deposit, a part payment, the balance). Recorded by hand: nothing here talks to a bank. */
+export type Payment = {
+  id: string;
+  /** When it was received. */
+  at: string;
+  /** Rupiah, a whole number above zero. */
+  amount: number;
+  method: PaymentMethod;
+  note: string;
+};
+
+/** What the pet looked like when it arrived. The record an operator can point to if there is a dispute later. */
+export type Arrival = {
+  /** When the check-in was done. */
+  at: string;
+  /** No flu, cough or eye discharge. */
+  healthy: boolean;
+  /** No fleas or ticks. */
+  fleaFree: boolean;
+  weightKg: number | null;
+  /** What came with the pet: bag, blanket, toys. */
+  belongings: string;
+  /** Food the owner brought, and how to feed it. */
+  food: string;
+  /** Marks, wounds, behaviour. */
+  notes: string;
+};
+
 export type Booking = {
   id: string;
   petId: string;
@@ -45,26 +75,49 @@ export type Booking = {
   checkIn: ISODate;
   checkOut: ISODate;
   status: BookingStatus;
-  /** Deposit already paid, in rupiah. */
-  deposit: number;
+  payments: Payment[];
+  /** Filled at check-in; null if the pet was checked in without one. */
+  arrival: Arrival | null;
   notes: string;
   createdAt: string;
 };
 
+export type CareKind = "meal" | "drink" | "play" | "toilet" | "medicine" | "mood" | "note" | "incident";
+
+/** One line in a pet's daily care log. */
+export type CareEntry = {
+  id: string;
+  bookingId: string;
+  /** When it happened (ISO date-time). */
+  at: string;
+  kind: CareKind;
+  /** A one-tap answer ("all eaten"); the wording shown to the owner comes from the domain, so it is always Indonesian. */
+  preset: string | null;
+  /** Anything the staff typed. Required for notes and incidents. */
+  note: string;
+};
+
+/** The day's report for this stay was sent to the owner. */
+export type ReportSent = { bookingId: string; date: ISODate; at: string };
+
 export type HotelData = {
-  version: 1;
+  version: 2;
   hotel: Hotel | null;
   cages: Cage[];
   owners: Owner[];
   pets: Pet[];
   bookings: Booking[];
+  careLog: CareEntry[];
+  reportsSent: ReportSent[];
 };
 
 export const emptyData = (): HotelData => ({
-  version: 1,
+  version: 2,
   hotel: null,
   cages: [],
   owners: [],
   pets: [],
   bookings: [],
+  careLog: [],
+  reportsSent: [],
 });
