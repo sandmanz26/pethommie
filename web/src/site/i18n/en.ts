@@ -164,15 +164,17 @@ export const en = {
   } as Record<"ink" | "turntable", Chapter[]>,
   features: {
     eyebrow: "Built for operators",
+    soon: "Coming soon",
     title: "Your whole boarding workflow in one app.",
     lead: "Made for pet hotels with 10 to 150 cages that still run on notebooks, spreadsheets, and WhatsApp chats. Not a point-of-sale app with hotel features bolted on.",
     items: [
-      { title: "Cage calendar", body: "See free cages by date and by size. A booked slot can't be filled twice." },
-      { title: "Booking link with QRIS deposit", body: "Put it in your Instagram bio or send it on WhatsApp. A slot only locks once the deposit is in, so fewer guests go no-show." },
-      { title: "Automatic vaccine checks", body: "Owners upload a photo of the vaccine card when they book. Expired vaccines are flagged right away." },
+      { title: "Cage calendar", body: "Cages down the side, days across the top. Tap an empty day to book it. A booked slot can't be filled twice." },
+      { title: "Booking link with QRIS deposit", body: "Put it in your Instagram bio or send it on WhatsApp. A slot only locks once the deposit is in, so fewer guests go no-show.", soon: true },
+      { title: "Vaccine checks", body: "Every pet's vaccine date is tracked. Expired and soon-to-expire vaccines are flagged on your board and while you book." },
+      { title: "Check-in record and payments", body: "A short checklist when a pet arrives, and every deposit and payment on the stay. Check-out warns you if money is still owed." },
       { title: "Daily and incident log", body: "Meals, medication, toileting, mood, and anything unusual, all timestamped. Shift handovers stay tidy." },
-      { title: "Reports to owners on WhatsApp", body: "One tap sends a photo and daily summary from your pet hotel's own WhatsApp number." },
-      { title: "Works when the signal drops", body: "Check-ins and logs can be recorded offline and sync when the connection comes back." },
+      { title: "Reports to owners on WhatsApp", body: "One tap opens WhatsApp with the day's summary written for you. Add a photo and send it from your pet hotel's own number." },
+      { title: "Works when the signal drops", body: "Open it once, install it on your phone, and it keeps working without signal. Everything is saved on that phone for now; syncing between phones comes later." },
     ],
   },
   report: {
@@ -181,7 +183,7 @@ export const en = {
     body: "An owner's biggest worry is not knowing how their pet is doing. A daily report answers that before they ask. Every entry is also kept on record in case there's ever a complaint or dispute.",
     points: [
       "Sent from your pet hotel's own WhatsApp number",
-      "Photo, meals, sleep, and mood in one message",
+      "Meals, water, play, toilet and mood in one message; add a photo before you send",
       "Owners don't need to install anything",
     ],
     phoneAriaLabel: "Example daily report on WhatsApp",

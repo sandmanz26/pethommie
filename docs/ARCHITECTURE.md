@@ -80,13 +80,40 @@ the layout shows as a warning.
 ### Persistence
 
 `HotelRepository` (`store/storage.ts`) is the only thing that knows where data lives. Today:
-`localStorage`, key `pethommie.app.v1`, document `version: 1`.
+`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 2`.
 
 - Reads are validated (`parseStored`). Anything unreadable or from a newer app version comes
-  back as empty data **and the original is copied to `pethommie.app.v1.backup` first**, because
+  back as empty data **and the original is copied to `<key>.backup` first**, because
   the first autosave would otherwise overwrite it.
+- Older documents are upgraded on read. v1 → v2 turns each booking's single `deposit` into a
+  `payments` list (so no money is lost) and adds `arrival`, `careLog` and `reportsSent`. The
+  untouched v1 document is kept once as `<key>.v1.backup`.
 - When `HotelData` changes shape: bump `CURRENT_VERSION`, add a step that upgrades the previous
-  version inside `parseStored`, add tests for old documents.
+  version inside `parseStored`, add tests for old documents (see `storage.test.ts`).
+
+### A stay, end to end
+
+A `Booking` carries its own money and record: `payments[]` (cash / QRIS / transfer, entered by
+hand; nothing talks to a bank) and `arrival` (the check-in record). The daily `careLog` and the
+`reportsSent` marks sit at the top level, keyed by booking. Rules live in `domain/`:
+`payments.ts` (paid, balance, status), `careLog.ts` (what may be logged, for whom),
+`calendar.ts` (where a stay sits on a cage's row), `bookingRules.ts` (`editIssues`: what may change
+once a stay exists) and `messages.ts` (the WhatsApp texts).
+
+Messages to owners are always Indonesian whatever language the operator's screen uses, and the
+words come from the domain, not from the app's i18n. WhatsApp is reached with a click-to-chat link
+(`https://wa.me/<number>?text=…`) from the operator's own number; there is no API and nothing is
+sent until the operator presses send in WhatsApp. No length limit for `?text=` is documented, so
+the text is also shown for copying.
+
+### Offline (PWA)
+
+`vite-plugin-pwa` generates a service worker that precaches the built app, fonts, icons and
+illustrations. It is registered only from the operator app (`app/pwa/useServiceWorker.ts`) with
+scope `/app`, so the website and its large films are never controlled by it. Updates are
+offered in a banner, never forced, so a reload can't interrupt someone mid-form. Fonts are
+self-hosted (`@fontsource-variable`), which is what lets them work offline and keeps the CSP
+free of third parties.
 
 ## 3. Moving to a backend
 
@@ -136,15 +163,21 @@ not deployed.
 `npm test` (Vitest, jsdom + Testing Library). What is covered, and why there:
 
 - Domain rules and store actions: the part where a bug costs a customer data.
-- Storage: corrupt, newer-version, full and blocked storage.
+- Storage: corrupt, newer-version, full and blocked storage; the v1 → v2 upgrade.
 - Real flows through the router: first visit → onboarding → saved data; booking with a new pet;
-  only free cages offered; an existing hotel skips onboarding.
+  only free cages offered; an existing hotel skips onboarding; check-in, payments, check-out
+  with a balance, the care log, the report link, editing a stay, the calendar (`stay.test.tsx`).
+- The rules above were checked by mutation: breaking each one makes a test fail.
 - Site integrity: film frames vs registry, caption timing, copy structure.
 - Error boundary, including the "old tab after a deploy" reload.
 
+`npm run e2e` (Playwright, run in CI against the built site) covers a day at the hotel in a real
+browser, axe accessibility on every operator screen at desktop and phone width, no sideways
+scrolling, and opening the app offline.
+
 Not covered by automated tests: how things look, and the canvas drawing. Both were checked by
-capturing screenshots before and after structural changes and comparing them. Adding Playwright
-with screenshot tests to CI is the next step if the UI changes often.
+capturing screenshots before and after structural changes and comparing them. Screenshot tests
+in CI are the next step if the UI changes often.
 
 ## 8. Deploy and hardening
 
@@ -152,11 +185,13 @@ with screenshot tests to CI is the next step if the UI changes often.
   refresh), security headers (CSP, `X-Frame-Options`, `nosniff`, referrer and permissions policy),
   long cache for hashed assets, a day for films and illustrations, `X-Robots-Tag: noindex` on
   `/app/*`.
-- The CSP allows inline *styles* (React sets some) and Google Fonts; scripts are `self` only. If you
+- The CSP allows inline *styles* (React sets some); fonts and scripts are `self` only. If you
   add a third-party script or API, extend it in `vercel.json`.
 - After a deploy, tabs opened earlier ask for JS files that no longer exist. `ErrorBoundary` detects
   that and reloads once; any other error shows a way out instead of a blank page.
-- CI (`.github/workflows/ci.yml`): typecheck, lint, tests, build, and a production dependency audit.
+- `sw.js` and the manifest are served with `max-age=0, must-revalidate` so a new version is noticed.
+- CI (`.github/workflows/ci.yml`): typecheck, lint, tests, build, a production dependency audit,
+  and the Playwright suite.
 
 ## 9. Known gaps
 
@@ -169,4 +204,6 @@ Honest list, roughly by importance:
    rate limiting (all need a server).
 4. Binary assets (about 37 MB of frames, source videos and illustrations) live in git. Fine now; consider
    Git LFS or an asset bucket if they keep growing.
-5. No visual or end-to-end tests in CI (§7).
+5. No screenshot tests in CI (§7).
+6. Offline works per phone: data is not synced, and nothing here has been tried on a real Android
+   phone or Safari yet (see `docs/product/riset.md` §6).

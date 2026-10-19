@@ -17,6 +17,7 @@ export function Features() {
           {features.items.map((f) => (
             <div className="feature" key={f.title}>
               <h3>{f.title}</h3>
+              {f.soon && <span className="feature__soon">{features.soon}</span>}
               <p>{f.body}</p>
             </div>
           ))}

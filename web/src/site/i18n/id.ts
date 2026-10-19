@@ -159,15 +159,17 @@ export const id: Messages = {
   },
   features: {
     eyebrow: "Fitur untuk operator",
+    soon: "Segera hadir",
     title: "Seluruh alur penitipan dalam satu aplikasi.",
     lead: "Dibuat untuk pet hotel 10 sampai 150 kandang yang hari ini masih mengandalkan buku, spreadsheet, dan chat WhatsApp. Bukan aplikasi kasir yang ditambal fitur hotel.",
     items: [
-      { title: "Kalender kandang", body: "Lihat kandang kosong per tanggal dan per ukuran. Slot yang sudah dibooking tidak bisa diisi dua kali." },
-      { title: "Link booking dengan DP QRIS", body: "Pasang di bio Instagram atau kirim lewat WhatsApp. Slot baru terkunci setelah DP masuk, jadi booking tanpa kabar berkurang." },
-      { title: "Cek vaksin otomatis", body: "Pemilik wajib unggah foto kartu vaksin saat booking. Vaksin yang sudah kedaluwarsa langsung ditandai." },
+      { title: "Kalender kandang", body: "Kandang di kiri, tanggal di atas. Ketuk hari kosong untuk langsung booking. Slot yang sudah dibooking tidak bisa diisi dua kali." },
+      { title: "Link booking dengan DP QRIS", body: "Pasang di bio Instagram atau kirim lewat WhatsApp. Slot baru terkunci setelah DP masuk, jadi booking tanpa kabar berkurang.", soon: true },
+      { title: "Cek vaksin", body: "Tanggal vaksin setiap anabul tercatat. Vaksin yang habis atau segera habis ditandai di papan harianmu dan saat membuat booking." },
+      { title: "Catatan check-in dan pembayaran", body: "Daftar periksa singkat saat anabul tiba, plus semua DP dan pembayaran per menginap. Saat check-out kamu diingatkan kalau masih ada sisa tagihan." },
       { title: "Log harian dan insiden", body: "Makan, obat, BAB, mood, dan kejadian penting tercatat dengan jam. Serah terima shift jadi rapi." },
-      { title: "Rapor ke WhatsApp pemilik", body: "Satu ketukan mengirim foto dan ringkasan harian dari nomor WhatsApp pet hotelmu sendiri." },
-      { title: "Tetap jalan saat sinyal hilang", body: "Check-in dan log tetap bisa dicatat offline, lalu tersinkron saat sinyal kembali." },
+      { title: "Rapor ke WhatsApp pemilik", body: "Satu ketukan membuka WhatsApp dengan ringkasan hari ini yang sudah tertulis. Tambah foto, lalu kirim dari nomor pet hotelmu sendiri." },
+      { title: "Tetap jalan saat sinyal hilang", body: "Buka sekali, pasang di HP, lalu tetap jalan tanpa sinyal. Semua data tersimpan di HP itu untuk sekarang; sinkron antar-HP menyusul." },
     ],
   },
   report: {
@@ -176,7 +178,7 @@ export const id: Messages = {
     body: "Kekhawatiran terbesar pemilik adalah tidak tahu kondisi anabulnya. Rapor harian menjawabnya sebelum mereka bertanya. Setiap catatan juga tersimpan sebagai bukti kalau suatu saat ada keluhan atau sengketa.",
     points: [
       "Dikirim dari nomor WhatsApp pet hotelmu sendiri",
-      "Foto, makan, tidur, dan mood dalam satu pesan",
+      "Makan, minum, main, BAB/BAK, dan mood dalam satu pesan; tambah foto sebelum kirim",
       "Pemilik tidak perlu install aplikasi apa pun",
     ],
     phoneAriaLabel: "Contoh Rapor Anabul di WhatsApp",

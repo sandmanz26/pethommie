@@ -335,3 +335,13 @@
   font-size: var(--step--1);
   color: var(--ink-soft);
 }
+.feature__soon {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper, #f2ede2);
+  font-size: var(--step--1, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

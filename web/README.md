@@ -19,6 +19,7 @@ npm run build    # type-check + production build to dist/
 npm run lint
 npm test         # unit + flow tests (Vitest)
 npm run check    # typecheck, lint, tests, build: what CI runs
+npm run e2e      # browser tests on the built site (build first; needs Chromium: npx playwright install chromium)
 ```
 
 ## Structure
@@ -112,17 +113,27 @@ Everything else under `/app` needs an account, and each account has its own hote
 Accounts are a **mock** for now (see below); the pages talk to an `AuthService` interface, so a real
 backend replaces one file.
 
-Pages: Today (arrivals, departures, vaccine alerts), Bookings (upcoming / staying /
-past, check-in/out, cancel), New booking (only free cages are offered, so a cage
-can't be double-booked; a new pet + owner can be added inline), Pets (search,
-vaccine status), Cages (tonight's status, add/edit), Settings (hotel profile,
-language, JSON backup, reset).
+Pages: Today (arrivals, departures, who is staying and whether their report went out,
+vaccine alerts, a "getting started" list for new hotels), Bookings (upcoming / staying /
+past), the booking page (check-in record, payments, daily care log, the report for the owner,
+ready-made WhatsApp messages, change dates or cage, cancel), Calendar (14 days by cage; tap a
+free day to book it), New booking (only free cages are offered, so a cage can't be double-booked;
+a new pet + owner can be added inline), Pets (search, vaccine status), Cages (tonight's status,
+add/edit), Settings (hotel profile, language, JSON backup, reset).
+
+Check-out asks first when money is still owed. Payments are recorded by hand (cash, QRIS,
+transfer); nothing here talks to a bank. WhatsApp messages open the operator's own WhatsApp with
+the text filled in (a `wa.me` link); nothing is sent until they press send, and they are always in
+Indonesian. The app works offline after the first visit (service worker scoped to `/app`).
+
+More in [`docs/product`](../docs/product/README.md): audit, research, roadmap, metrics.
 
 ```
 src/app/
-  domain/          types.ts (Hotel, Cage, Owner, Pet, Booking), logic.ts (pure: dates,
-                   availability, totals, vaccine state) and bookingRules.ts (what makes a
-                   booking valid, how a stay moves, when a cage can go). No React.
+  domain/          types.ts (Hotel, Cage, Owner, Pet, Booking with payments and arrival,
+                   care log), logic.ts (pure: dates, availability, totals, vaccine state),
+                   bookingRules.ts (what makes a booking valid, how a stay moves, what may
+                   change), payments.ts, careLog.ts, calendar.ts, messages.ts. No React.
   store/           actions.ts (pure state changes that enforce the rules), AppStore.tsx
                    (React wiring, autosave), storage.ts (HotelRepository: validated
                    localStorage with a backup; swap for an API later), sampleData.ts
@@ -132,8 +143,10 @@ src/app/
     atoms/         Button, Icon, Input/Select/Textarea, Badge, Avatar, Heading/Muted
     molecules/     Field, Stepper, StatCard, EmptyState, Segmented, SearchField,
                    Alert, ConfirmDialog, ProgressSteps
-    organisms/     AppNav, PageHeader, BookingCard, PetRow, CageTile,
-                   BookingForm, PetForm, CageForm
+    organisms/     AppNav, PageHeader, BookingCard, PetRow, CageTile, BookingForm, PetForm,
+                   CageForm, CheckInForm, ArrivalSummary, PaymentsPanel, CareLogPanel,
+                   ReportPanel, MessagesPanel, BookingEditForm, CalendarGrid, StayingRow,
+                   FirstSteps
     templates/     AppLayout (sidebar / phone tab bar), FocusLayout (sign in, sign up, setup)
     tokens.css     app tokens incl. semantic status colours
   pages/           one file per route + AppRoutes.tsx
