@@ -11,7 +11,8 @@ web/        the React app (site + operator app). Start here.
 docs/       architecture and research
   ARCHITECTURE.md   how it is built, the rules, and how to move to a backend
   research/         market validation for Indonesia (Bahasa Indonesia)
-.github/    CI: typecheck, lint, tests, build, dependency audit
+  product/          product audit, research, roadmap and metrics (Bahasa Indonesia)
+.github/    CI: typecheck, lint, tests, build, dependency audit, browser tests
 ```
 
 ## Run it
