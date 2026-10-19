@@ -4,7 +4,7 @@ import type { Booking, BookingStatus, Cage, Hotel, HotelData, Owner, Pet } from 
 import { emptyData } from "@/app/domain/types";
 import * as actions from "./actions";
 import { sampleData } from "./sampleData";
-import { localRepository, type HotelRepository } from "./storage";
+import type { HotelRepository } from "./storage";
 
 function useStoreValue(repo: HotelRepository) {
   const [data, setData] = useState<HotelData>(() => repo.load());
@@ -58,7 +58,7 @@ function useStoreValue(repo: HotelRepository) {
 type Store = ReturnType<typeof useStoreValue>;
 const StoreContext = createContext<Store | null>(null);
 
-export function AppStoreProvider({ children, repo = localRepository }: { children: ReactNode; repo?: HotelRepository }) {
+export function AppStoreProvider({ children, repo }: { children: ReactNode; repo: HotelRepository }) {
   const value = useStoreValue(repo);
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

@@ -48,6 +48,27 @@ rule functions only to explain problems early (`scheduleIssues` in `BookingForm`
 To add a rule: write it in `domain/`, call it from the relevant action (which should refuse by
 returning the unchanged state and a reason), surface the reason in the form, add tests.
 
+### Accounts and sign-in (`app/auth`)
+
+Everything under `/app` except `login` and `register` needs an account. `RequireAuth` sends signed-out
+visitors to `/app/login` and remembers where they were going; `GuestOnly` sends signed-in people on
+(back to that page, or `/app`). `landingAfterLogin` only ever returns a path inside `/app`, so a crafted
+link can't turn the login screen into an open redirect.
+
+`AccountData` gives each account its own store, keyed by account id: signing out and in as someone
+else starts from *their* hotel and nothing of the previous one stays in memory. Data lives under
+`pethommie.app.v1.<accountId>`.
+
+The pages only ever talk to the `AuthService` interface (`restore`, `register`, `login`, `logout`; all
+async). Today the implementation is `localAuthService`: accounts in localStorage, passwords hashed with
+PBKDF2-SHA256 and a per-account salt, never stored or returned as typed. **This is a stand-in, not
+security**: anyone with access to the browser can read or change that data. To go live, write an
+API-backed `AuthService` (sessions in an HttpOnly cookie, the same rules in `validation.ts` run on the
+server, rate limiting, email verification, password reset) and change one line in `defaultService.ts`.
+
+Mock data is gated by `DEMO_MODE` (`VITE_DEMO_MODE`, on by default for now): two seeded accounts and a
+sign-up helper. Turn it off for a real launch and delete `demoAccounts.ts` with the mock service.
+
 ### State
 
 `AppStore` keeps `HotelData` in React state and mirrors it in a ref. Every action reads the latest
@@ -75,7 +96,7 @@ The seams are in place:
    a loading state); `save()` becomes a per-action call instead of "write the whole document".
 2. The rules in `domain/` have no React or browser dependencies: run them on the server as well
    and treat the client's checks as a convenience.
-3. Add auth, and a hotel id to every record. Today there is exactly one hotel per browser.
+3. Real auth (§2), and a hotel id on every record. Today there is exactly one hotel per account.
 4. `site/lib/waitlist.ts` has a `WaitlistStore` interface with the same idea. Entries are
    currently stored only in the visitor's own browser, so **the owner of the product cannot see
    sign-ups**. Fix this first when a backend exists.
@@ -141,10 +162,11 @@ with screenshot tests to CI is the next step if the UI changes often.
 
 Honest list, roughly by importance:
 
-1. No backend, auth or multi-device sync. Data lives in one browser; clearing site data loses it
+1. No backend or real authentication (§2: the accounts are a mock) and no multi-device sync. Data lives in one browser; clearing site data loses it
    (Settings has a JSON export). Two tabs of the same hotel can overwrite each other.
 2. Sign-ups from the landing page aren't visible to the owner (see §3.4).
-3. One hotel per browser; no staff roles.
+3. One hotel per account; no staff roles or invitations. No password reset, email verification or
+   rate limiting (all need a server).
 4. Binary assets (about 37 MB of frames, source videos and illustrations) live in git. Fine now; consider
    Git LFS or an asset bucket if they keep growing.
 5. No visual or end-to-end tests in CI (§7).

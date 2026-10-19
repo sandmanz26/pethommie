@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
-import { STORAGE_KEY } from "@/app/store/storage";
+import { dataKeyFor } from "@/app/store/storage";
+import { signedInAs } from "@/app/testing/auth";
 import { aSmallHotel } from "@/app/testing/fixtures";
 import AppRoutes from "./AppRoutes";
 
@@ -20,10 +21,11 @@ function renderApp(path: string) {
   );
 }
 
-const stored = () => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
+const stored = (accountId = "acct-test") => JSON.parse(localStorage.getItem(dataKeyFor(accountId)) ?? "null");
 
-describe("a new owner's first visit", () => {
-  it("is sent to onboarding and can set up a hotel in a few taps", async () => {
+describe("a signed-in owner's first visit", () => {
+  it("goes to onboarding, with the hotel name and WhatsApp already filled in from sign-up", async () => {
+    await signedInAs({ account: { hotelName: "Rumah Meong Bintaro", whatsapp: "6281234567890" } });
     const user = userEvent.setup();
     renderApp("/app");
 
@@ -31,11 +33,9 @@ describe("a new owner's first visit", () => {
     expect(await screen.findByRole("heading", { name: /welcome to pethommie/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /start setup/i }));
 
-    // 1. Hotel: the name is required
-    await user.click(screen.getByRole("button", { name: /next: your cages/i }));
-    expect(screen.getByText(/enter your pet hotel's name/i)).toBeInTheDocument();
-    await user.type(screen.getByLabelText(/pet hotel name/i), "Rumah Meong Bintaro");
-    await user.type(screen.getByLabelText(/business whatsapp/i), "0812 3456 7890");
+    // 1. Hotel: prefilled, so just carry on
+    expect(screen.getByLabelText(/pet hotel name/i)).toHaveValue("Rumah Meong Bintaro");
+    expect(screen.getByLabelText(/business whatsapp/i)).toHaveValue("0812 3456 7890");
     await user.click(screen.getByRole("button", { name: /next: your cages/i }));
 
     // 2. Cages: pick the large preset
@@ -53,7 +53,18 @@ describe("a new owner's first visit", () => {
     expect(saved.cages.map((c: { name: string }) => c.name)).toContain("S-14");
   });
 
+  it("asks for the hotel name if it was cleared", async () => {
+    await signedInAs();
+    const user = userEvent.setup();
+    renderApp("/app/onboarding");
+    await user.click(await screen.findByRole("button", { name: /start setup/i }));
+    await user.clear(screen.getByLabelText(/pet hotel name/i));
+    await user.click(screen.getByRole("button", { name: /next: your cages/i }));
+    expect(screen.getByText(/enter your pet hotel's name/i)).toBeInTheDocument();
+  });
+
   it("can be skipped with sample data", async () => {
+    await signedInAs();
     const user = userEvent.setup();
     renderApp("/app/onboarding");
     await user.click(await screen.findByRole("button", { name: /explore with sample data/i }));
@@ -62,10 +73,10 @@ describe("a new owner's first visit", () => {
   });
 
   it("keeps the price you typed when you switch presets", async () => {
+    await signedInAs();
     const user = userEvent.setup();
     renderApp("/app/onboarding");
     await user.click(await screen.findByRole("button", { name: /start setup/i }));
-    await user.type(screen.getByLabelText(/pet hotel name/i), "Rumah");
     await user.click(screen.getByRole("button", { name: /next: your cages/i }));
     const [small] = screen.getAllByLabelText(/price per night/i);
     await user.clear(small);
@@ -77,14 +88,14 @@ describe("a new owner's first visit", () => {
 
 describe("a hotel that is already set up", () => {
   it("opens on today's board, and onboarding bounces back to it", async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(aSmallHotel()));
+    await signedInAs({ data: aSmallHotel() });
     renderApp("/app/onboarding");
     expect(await screen.findByRole("heading", { name: /^today$/i })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /welcome to pethommie/i })).not.toBeInTheDocument();
   });
 
   it("unknown app pages fall back to today", async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(aSmallHotel()));
+    await signedInAs({ data: aSmallHotel() });
     renderApp("/app/does-not-exist");
     expect(await screen.findByRole("heading", { name: /^today$/i })).toBeInTheDocument();
   });
@@ -93,7 +104,7 @@ describe("a hotel that is already set up", () => {
 describe("booking a stay", () => {
   it("adds a new pet and owner in the same step, and shows the booking", async () => {
     const user = userEvent.setup();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(aSmallHotel()));
+    await signedInAs({ data: aSmallHotel() });
     renderApp("/app/bookings/new");
 
     await user.click(await screen.findByRole("button", { name: /\+ new pet/i }));
@@ -115,26 +126,13 @@ describe("booking a stay", () => {
     const today = new Date();
     const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const out = new Date(today.getTime() + 2 * 86_400_000);
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(
-        aSmallHotel({
-          bookings: [
-            {
-              id: "b1",
-              petId: "p1",
-              cageId: "s1",
-              checkIn: iso(today),
-              checkOut: iso(out),
-              status: "booked",
-              deposit: 0,
-              notes: "",
-              createdAt: "2026-10-01T00:00:00.000Z",
-            },
-          ],
-        }),
-      ),
-    );
+    await signedInAs({
+      data: aSmallHotel({
+        bookings: [
+          { id: "b1", petId: "p1", cageId: "s1", checkIn: iso(today), checkOut: iso(out), status: "booked", deposit: 0, notes: "", createdAt: "2026-10-01T00:00:00.000Z" },
+        ],
+      }),
+    });
     renderApp("/app/bookings/new");
     const cage = await screen.findByLabelText(/^cage ·/i);
     const options = within(cage).getAllByRole("option").map((o) => (o as HTMLOptionElement).value);

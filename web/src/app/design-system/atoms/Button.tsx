@@ -37,7 +37,6 @@ export function Button(props: AsButton | AsLink) {
       </Link>
     );
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { variant: _v, size: _s, icon: _i, block: _b, children: _c, className: _cn, to: _t, type = "button", ...rest } = props;
   return (
     <button className={cls} type={type} {...rest}>

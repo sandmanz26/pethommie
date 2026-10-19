@@ -35,6 +35,8 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // `const { password, ...safe } = record` is how a field is left out on purpose.
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

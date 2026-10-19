@@ -21,7 +21,10 @@ export function TopBar() {
       </nav>
       <div className="topbar__actions">
         <LanguageSwitch label={t.nav.languageLabel} />
-        <Button href="/app">{t.nav.cta}</Button>
+        <a className="topbar__login" href="/app/login">
+          {t.nav.login}
+        </a>
+        <Button href="/app/register">{t.nav.cta}</Button>
       </div>
     </header>
   );

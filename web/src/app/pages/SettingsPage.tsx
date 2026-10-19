@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
+import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
@@ -17,6 +18,8 @@ export function SettingsPage() {
   const { data, setHotel, loadSample, reset } = useStore();
   const { t } = useAppT();
   const navigate = useNavigate();
+  const account = useAccount();
+  const { logout } = useAuth();
   const hotel = data.hotel!;
   const [name, setName] = useState(hotel.name);
   const [city, setCity] = useState(hotel.city);
@@ -71,6 +74,25 @@ export function SettingsPage() {
           </Button>
         </div>
       </form>
+
+      <section className="ds-form__section pg-settings">
+        <Heading level={2} size="md">{t.auth.accountTitle}</Heading>
+        <Muted>
+          {t.auth.signedInAs} <b>{account.name}</b> · {account.email}
+        </Muted>
+        <div>
+          <Button
+            variant="secondary"
+            icon="logout"
+            onClick={async () => {
+              await logout();
+              navigate("/app/login", { replace: true });
+            }}
+          >
+            {t.nav.logout}
+          </Button>
+        </div>
+      </section>
 
       <section className="ds-form__section pg-settings">
         <Heading level={2} size="md">{t.settings.language}</Heading>

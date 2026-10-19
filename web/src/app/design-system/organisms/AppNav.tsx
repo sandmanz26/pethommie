@@ -14,7 +14,7 @@ const items: { to: string; key: "today" | "bookings" | "pets" | "cages" | "setti
 ];
 
 /** Sidebar on wide screens, bottom tab bar on phones. */
-export function AppNav({ hotelName }: { hotelName: string }) {
+export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: () => void }) {
   const { t } = useAppT();
   return (
     <>
@@ -37,10 +37,16 @@ export function AppNav({ hotelName }: { hotelName: string }) {
             </NavLink>
           ))}
         </nav>
-        <NavLink to="/" className="ds-sidenav__link ds-sidenav__site">
-          <Icon name="logout" />
-          {t.nav.backToSite}
-        </NavLink>
+        <div className="ds-sidenav__foot">
+          <NavLink to="/" className="ds-sidenav__link">
+            <Icon name="home" />
+            {t.nav.backToSite}
+          </NavLink>
+          <button type="button" className="ds-sidenav__link" onClick={onLogout}>
+            <Icon name="logout" />
+            {t.nav.logout}
+          </button>
+        </div>
       </aside>
 
       <nav className="ds-tabbar" aria-label="App">

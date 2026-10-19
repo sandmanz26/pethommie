@@ -101,3 +101,13 @@
 .ds-progress__track { display: grid; grid-auto-flow: column; gap: 6px; }
 .ds-progress__seg { height: 4px; border-radius: 4px; background: var(--line); }
 .ds-progress__seg.is-done { background: var(--seal); }
+
+/* ---------- PasswordInput ---------- */
+.ds-password { position: relative; }
+.ds-password .ds-control { padding-right: calc(var(--tap) + 4px); }
+.ds-password__toggle {
+  position: absolute; top: 50%; right: 2px; transform: translateY(-50%);
+  display: grid; place-items: center; width: var(--tap); height: var(--tap);
+  border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-soft); cursor: pointer;
+}
+.ds-password__toggle:hover { color: var(--ink); background: var(--surface-sunk); }

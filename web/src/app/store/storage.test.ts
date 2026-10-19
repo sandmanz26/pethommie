@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { emptyData } from "@/app/domain/types";
 import { aSmallHotel } from "@/app/testing/fixtures";
-import { BACKUP_KEY, localRepository, parseStored, STORAGE_KEY } from "./storage";
+import { createLocalRepository, dataKeyFor, parseStored } from "./storage";
 
 describe("parseStored", () => {
   it("treats nothing stored as a fresh start, not a problem", () => {
@@ -32,48 +32,67 @@ describe("parseStored", () => {
   });
 });
 
-describe("localRepository", () => {
+describe("createLocalRepository", () => {
+  const KEY = dataKeyFor("acct-1");
+  const BACKUP = `${KEY}.backup`;
+  const repo = createLocalRepository(KEY);
+
   it("round-trips data through localStorage", () => {
     const data = aSmallHotel();
-    expect(localRepository.save(data)).toBe(true);
-    expect(localRepository.load()).toEqual(data);
+    expect(repo.save(data)).toBe(true);
+    expect(repo.load()).toEqual(data);
+  });
+
+  it("keeps each account's hotel apart", () => {
+    const other = createLocalRepository(dataKeyFor("acct-2"));
+    repo.save(aSmallHotel());
+    expect(other.load()).toEqual(emptyData());
+    other.save(aSmallHotel({ hotel: { name: "Someone else", city: "", whatsapp: "", createdAt: "" } }));
+    expect(repo.load().hotel?.name).toBe("Rumah Meong");
   });
 
   it("loads empty data on a first visit and writes no backup", () => {
-    expect(localRepository.load()).toEqual(emptyData());
-    expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+    expect(repo.load()).toEqual(emptyData());
+    expect(localStorage.getItem(BACKUP)).toBeNull();
+  });
+
+  it("starts a new document from the given initial data, and never again once something is saved", () => {
+    const withSample = createLocalRepository(KEY, () => aSmallHotel());
+    expect(withSample.load().cages).toHaveLength(3);
+    withSample.save(emptyData());
+    expect(withSample.load()).toEqual(emptyData());
   });
 
   it("keeps a copy of unreadable data before anything can overwrite it", () => {
-    localStorage.setItem(STORAGE_KEY, "{corrupt");
-    expect(localRepository.load()).toEqual(emptyData());
-    expect(localStorage.getItem(BACKUP_KEY)).toBe("{corrupt");
+    localStorage.setItem(KEY, "{corrupt");
+    expect(repo.load()).toEqual(emptyData());
+    expect(localStorage.getItem(BACKUP)).toBe("{corrupt");
   });
 
   it("keeps newer-version data safe in the backup too", () => {
     const raw = JSON.stringify({ ...aSmallHotel(), version: 7 });
-    localStorage.setItem(STORAGE_KEY, raw);
-    expect(localRepository.load()).toEqual(emptyData());
-    expect(localStorage.getItem(BACKUP_KEY)).toBe(raw);
+    localStorage.setItem(KEY, raw);
+    expect(repo.load()).toEqual(emptyData());
+    expect(localStorage.getItem(BACKUP)).toBe(raw);
   });
 
   it("reports a failed save instead of pretending it worked", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("full", "QuotaExceededError");
     });
-    expect(localRepository.save(aSmallHotel())).toBe(false);
+    expect(repo.save(aSmallHotel())).toBe(false);
   });
 
   it("survives storage being blocked entirely", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new DOMException("blocked", "SecurityError");
     });
-    expect(localRepository.load()).toEqual(emptyData());
+    expect(repo.load()).toEqual(emptyData());
   });
 
   it("clears", () => {
-    localRepository.save(aSmallHotel());
-    localRepository.clear();
-    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    repo.save(aSmallHotel());
+    repo.clear();
+    expect(localStorage.getItem(KEY)).toBeNull();
   });
 });

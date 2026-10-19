@@ -107,6 +107,11 @@ the first task to pick. Each step has an illustration from `public/illustrations
 with sample data" skips it and fills every screen. Once a hotel exists, `/app/onboarding`
 redirects to `/app`; Settings → Delete all data brings the onboarding back.
 
+Sign in and sign up: `/app/login` and `/app/register` (also reachable as `/login` and `/register`).
+Everything else under `/app` needs an account, and each account has its own hotel data.
+Accounts are a **mock** for now (see below); the pages talk to an `AuthService` interface, so a real
+backend replaces one file.
+
 Pages: Today (arrivals, departures, vaccine alerts), Bookings (upcoming / staying /
 past, check-in/out, cancel), New booking (only free cages are offered, so a cage
 can't be double-booked; a new pet + owner can be added inline), Pets (search,
@@ -129,10 +134,28 @@ src/app/
                    Alert, ConfirmDialog, ProgressSteps
     organisms/     AppNav, PageHeader, BookingCard, PetRow, CageTile,
                    BookingForm, PetForm, CageForm
-    templates/     AppLayout (sidebar / phone tab bar), OnboardingLayout
+    templates/     AppLayout (sidebar / phone tab bar), FocusLayout (sign in, sign up, setup)
     tokens.css     app tokens incl. semantic status colours
   pages/           one file per route + AppRoutes.tsx
 ```
+
+### Demo accounts and mock data
+
+While there is no backend, demo mode is on (`src/app/config.ts`):
+
+| Email | Password | What it is |
+|---|---|---|
+| `demo@pethommie.id` | `Demo1234` | A pet hotel with sample bookings |
+| `baru@pethommie.id` | `Demo1234` | A brand-new owner: goes straight to setup |
+
+The login page lists them with a one-tap "Use". The sign-up page has "Fill with sample data", which
+fills a different made-up person each time (emails are `…@example.com` with a random number, so
+repeats never collide). Set `VITE_DEMO_MODE=false` at build time (see `.env.example`) to remove all of
+this for a real launch.
+
+`auth/`: `validation.ts` (sign-up and login rules, pure), `password.ts` (PBKDF2 hashing),
+`AuthService.ts` (the interface), `localAuthService.ts` (the mock: accounts in localStorage),
+`AuthProvider.tsx` + `guards.tsx` (who is signed in; who may see what).
 
 Rules of thumb: atoms and molecules never touch the store; organisms get data and
 callbacks as props; pages connect the store to organisms. Business rules live in

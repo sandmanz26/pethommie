@@ -60,8 +60,19 @@
 .topbar__actions .btn {
   white-space: nowrap;
 }
-/* Narrow phones: the seal alone carries the brand, so the actions keep their size. */
-@media (max-width: 374px) {
+.topbar__login {
+  padding: 8px 4px;
+  font-size: var(--step--1);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.topbar__login:hover {
+  color: var(--seal);
+}
+/* Phones: the seal alone carries the brand, so language, log in and sign up all fit. */
+@media (max-width: 560px) {
   .topbar {
     gap: 8px;
   }

@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import type { CageSize } from "@/app/domain/types";
 import { formatRupiah, generateCages, SIZE_ORDER } from "@/app/domain/logic";
-import { normaliseWhatsapp } from "@/shared/lib/phone";
+import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
+import { useAccount } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -15,7 +16,7 @@ import { Field } from "@/app/design-system/molecules/Field";
 import { ProgressSteps } from "@/app/design-system/molecules/ProgressSteps";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { Stepper } from "@/app/design-system/molecules/Stepper";
-import { OnboardingLayout } from "@/app/design-system/templates/OnboardingLayout";
+import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
 import "./pages.css";
 
 type CageSpec = Record<CageSize, { count: number; price: number }>;
@@ -44,9 +45,10 @@ export function OnboardingPage() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>(0);
-  const [name, setName] = useState("");
+  const account = useAccount();
+  const [name, setName] = useState(account.hotelName);
   const [city, setCity] = useState("");
-  const [wa, setWa] = useState("");
+  const [wa, setWa] = useState(formatWhatsapp(account.whatsapp));
   const [spec, setSpec] = useState<CageSpec>(DEFAULT_SPEC);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -97,20 +99,20 @@ export function OnboardingPage() {
   );
 
   return (
-    <OnboardingLayout aside={sampleLink}>
+    <FocusLayout aside={sampleLink}>
       {step > 0 && <ProgressSteps current={step} total={3} label={o.stepOf(step, 3)} />}
 
       {step === 0 && (
-        <div className="pg-onb">
+        <div className="pg-flow">
           <Illustration name="playing-time" height={160} />
-          <div className="pg-onb__head pg-onb__head--center">
+          <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.welcome.title}</Heading>
             <Muted>{o.welcome.lead}</Muted>
           </div>
-          <ol className="pg-onb__plan">
+          <ol className="pg-flow__plan">
             {o.welcome.items.map((item, i) => (
               <li key={item.title}>
-                <span className="pg-onb__num" aria-hidden="true">
+                <span className="pg-flow__num" aria-hidden="true">
                   {i + 1}
                 </span>
                 <span>
@@ -127,9 +129,9 @@ export function OnboardingPage() {
       )}
 
       {step === 1 && (
-        <form className="pg-onb" onSubmit={submitHotel} noValidate>
+        <form className="pg-flow" onSubmit={submitHotel} noValidate>
           <Illustration name="setup-store" />
-          <div className="pg-onb__head pg-onb__head--center">
+          <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.hotel.title}</Heading>
             <Muted>{o.hotel.lead}</Muted>
           </div>
@@ -142,7 +144,7 @@ export function OnboardingPage() {
           <Field label={o.hotel.whatsapp} hint={o.hotel.whatsappHint} error={errors.wa} optional={t.common.optional}>
             <Input value={wa} onChange={(e) => setWa(e.target.value)} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
           </Field>
-          <div className="pg-onb__actions">
+          <div className="pg-flow__actions">
             <Button variant="secondary" icon="chevronLeft" onClick={() => setStep(0)}>
               {t.common.back}
             </Button>
@@ -154,13 +156,13 @@ export function OnboardingPage() {
       )}
 
       {step === 2 && (
-        <form className="pg-onb" onSubmit={submitCages} noValidate>
+        <form className="pg-flow" onSubmit={submitCages} noValidate>
           <Illustration name="setup-price" />
-          <div className="pg-onb__head pg-onb__head--center">
+          <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.cages.title}</Heading>
             <Muted>{o.cages.lead}</Muted>
           </div>
-          <div className="pg-onb__presets">
+          <div className="pg-flow__presets">
             <Segmented
               label={o.cages.presets.label}
               value={preset}
@@ -173,10 +175,10 @@ export function OnboardingPage() {
               ]}
             />
           </div>
-          <div className="pg-onb__sizes">
+          <div className="pg-flow__sizes">
             {SIZE_ORDER.map((s) => (
-              <div className="pg-onb__size" key={s}>
-                <div className="pg-onb__sizename">
+              <div className="pg-flow__size" key={s}>
+                <div className="pg-flow__sizename">
                   <b>{t.common.sizes[s]}</b>
                   <span>{s}-01…</span>
                 </div>
@@ -195,9 +197,9 @@ export function OnboardingPage() {
               </div>
             ))}
           </div>
-          <p className="pg-onb__total">{o.cages.total(totalCages)}</p>
+          <p className="pg-flow__total">{o.cages.total(totalCages)}</p>
           {errors.cages && <Alert tone="danger">{errors.cages}</Alert>}
-          <div className="pg-onb__actions">
+          <div className="pg-flow__actions">
             <Button variant="secondary" icon="chevronLeft" onClick={() => setStep(1)}>
               {t.common.back}
             </Button>
@@ -209,17 +211,17 @@ export function OnboardingPage() {
       )}
 
       {step === 3 && (
-        <div className="pg-onb">
+        <div className="pg-flow">
           <Illustration name="free-snacks" />
-          <div className="pg-onb__head pg-onb__head--center">
+          <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.done.title(name.trim())}</Heading>
-            <p className="pg-onb__summary">
+            <p className="pg-flow__summary">
               <Icon name="check" size={16} /> {o.done.summary(totalCages, formatRupiah(fromPrice, locale))}
             </p>
             <Muted>{o.done.lead}</Muted>
           </div>
-          <div className="pg-onb__choices">
-            <a className="pg-onb__choice" href="/app/bookings/new" onClick={(e) => (e.preventDefault(), navigate("/app/bookings/new"))}>
+          <div className="pg-flow__choices">
+            <a className="pg-flow__choice" href="/app/bookings/new" onClick={(e) => (e.preventDefault(), navigate("/app/bookings/new"))}>
               <Icon name="bookings" size={22} />
               <span>
                 <b>{o.done.firstBooking}</b>
@@ -227,7 +229,7 @@ export function OnboardingPage() {
               </span>
               <Icon name="chevronRight" />
             </a>
-            <a className="pg-onb__choice" href="/app/pets/new" onClick={(e) => (e.preventDefault(), navigate("/app/pets/new"))}>
+            <a className="pg-flow__choice" href="/app/pets/new" onClick={(e) => (e.preventDefault(), navigate("/app/pets/new"))}>
               <Icon name="pets" size={22} />
               <span>
                 <b>{o.done.firstPet}</b>
@@ -241,6 +243,6 @@ export function OnboardingPage() {
           </Button>
         </div>
       )}
-    </OnboardingLayout>
+    </FocusLayout>
   );
 }

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/shared/errors/ErrorBoundary";
 import { LocaleProvider, useLocale } from "@/shared/i18n/LocaleProvider";
 import { Loading } from "@/shared/ui/Loading";
@@ -25,6 +25,9 @@ export default function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
+            {/* Short links people type or remember. */}
+            <Route path="/login" element={<Navigate to="/app/login" replace />} />
+            <Route path="/register" element={<Navigate to="/app/register" replace />} />
             <Route
               path="/app/*"
               element={

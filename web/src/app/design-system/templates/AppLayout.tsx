@@ -4,11 +4,11 @@ import { useAppT } from "@/app/i18n/useAppT";
 import "./templates.css";
 
 /** Signed-in workspace: navigation + one content column. */
-export function AppLayout({ hotelName, banner, children }: { hotelName: string; banner?: ReactNode; children: ReactNode }) {
+export function AppLayout({ hotelName, banner, onLogout, children }: { hotelName: string; banner?: ReactNode; onLogout: () => void; children: ReactNode }) {
   const { t } = useAppT();
   return (
     <div className="app-root tpl-app">
-      <AppNav hotelName={hotelName} />
+      <AppNav hotelName={hotelName} onLogout={onLogout} />
       <main className="tpl-app__main">
         <div className="tpl-app__content">
           {banner}
