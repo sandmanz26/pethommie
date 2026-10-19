@@ -115,11 +115,10 @@ export function FilmSwitcher({ value, onChange }: { value: FilmId; onChange: (id
   }
 
   return (
-    <div
+    <aside
       ref={boxRef}
       className={`film-switcher${dragging ? " is-dragging" : ""}${away && !dragging ? " is-away" : ""}`}
       style={pos ? { left: pos.x, top: pos.y } : { visibility: "hidden" }}
-      role="group"
       aria-label={s.label}
     >
       <button
@@ -150,6 +149,6 @@ export function FilmSwitcher({ value, onChange }: { value: FilmId; onChange: (id
           </button>
         ))}
       </div>
-    </div>
+    </aside>
   );
 }

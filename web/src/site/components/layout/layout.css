@@ -76,8 +76,14 @@
   .topbar {
     gap: 8px;
   }
+  /* Seal only on phones, but the name stays for screen readers. */
   .topbar__name {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .topbar__actions {
     gap: 8px;

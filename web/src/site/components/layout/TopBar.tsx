@@ -8,7 +8,7 @@ export function TopBar() {
   const { t } = useSiteT();
   return (
     <header className="topbar">
-      <a className="topbar__brand" href="#top" aria-label={t.brand.name}>
+      <a className="topbar__brand" href="#top">
         <Hanko />
         <span className="topbar__name">{t.brand.name}</span>
       </a>
