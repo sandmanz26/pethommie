@@ -4,6 +4,10 @@ export const appEn = {
   common: {
     save: "Save",
     cancel: "Cancel",
+    updateReady: "A new version of Pethommie is ready.",
+    reload: "Reload",
+    offlineReady: "Pethommie is ready to work offline.",
+    dismiss: "Dismiss",
     saveFailed: "Your changes can't be saved in this browser (storage is full or blocked). Export a backup from Settings before you close this tab.",
     delete: "Delete",
     edit: "Edit",

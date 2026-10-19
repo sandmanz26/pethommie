@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from "@/app/auth/AuthProvider";
 import { GuestOnly, RequireAuth } from "@/app/auth/guards";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
+import { useServiceWorker } from "@/app/pwa/useServiceWorker";
+import { Button } from "@/app/design-system/atoms/Button";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { AppLayout } from "@/app/design-system/templates/AppLayout";
 import "@/app/design-system/tokens.css";
@@ -28,11 +30,28 @@ function Workspace() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useAppT();
+  const sw = useServiceWorker();
   if (!data.hotel) return <Navigate to="/app/onboarding" replace />;
   return (
     <AppLayout
       hotelName={data.hotel.name}
-      banner={saveFailed && <Alert tone="warn">{t.common.saveFailed}</Alert>}
+      banner={
+        <>
+          {saveFailed && <Alert tone="warn">{t.common.saveFailed}</Alert>}
+          {sw.needRefresh && (
+            <Alert tone="info">
+              {t.common.updateReady}{" "}
+              <Button size="sm" onClick={sw.reload}>{t.common.reload}</Button>
+            </Alert>
+          )}
+          {sw.offlineReady && !sw.needRefresh && (
+            <Alert tone="ok">
+              {t.common.offlineReady}{" "}
+              <Button size="sm" variant="ghost" onClick={sw.dismiss}>{t.common.dismiss}</Button>
+            </Alert>
+          )}
+        </>
+      }
       onLogout={async () => {
         await logout();
         navigate("/app/login", { replace: true });

@@ -1,0 +1,86 @@
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test } from '@playwright/test'
+import { signInWithSampleData } from './helpers'
+
+test('a day at the hotel: check in, get paid, log care, send the report', async ({ page }) => {
+  await signInWithSampleData(page)
+
+  // Nala arrives today: open her booking from Today and check her in with a record.
+  await page.getByRole('link', { name: 'Check in' }).first().click()
+  await page.getByLabel(/weight/i).fill('3.8')
+  await page.getByRole('button', { name: /^check in$/i }).click()
+  await expect(page.getByRole('region', { name: /check-in record/i })).toContainText('3.8 kg')
+
+  // Settle the whole bill.
+  const payments = page.getByRole('region', { name: /payments/i })
+  await payments.getByRole('button', { name: /fill in the balance/i }).click()
+  await payments.getByRole('button', { name: /save payment/i }).click()
+  await expect(payments.getByText('Paid in full')).toBeVisible()
+
+  // One tap in the care log, and it is in the owner's report.
+  const log = page.getByRole('region', { name: /daily care log/i })
+  await log.getByRole('button', { name: 'All eaten' }).click()
+  const report = page.getByRole('region', { name: /report for the owner/i })
+  await expect(report.getByRole('textbox')).toHaveValue(/Makan: habis/)
+
+  // WhatsApp opens with the owner's number and that text. Stop the new tab: we only check the link.
+  const link = report.getByRole('link', { name: /send on whatsapp/i })
+  await expect(link).toHaveAttribute('href', /^https:\/\/wa\.me\/62\d+\?text=Halo%20Kak/)
+  await link.evaluate((a) => a.addEventListener('click', (e) => e.preventDefault())) // don't leave for wa.me; the app's own handler still runs
+  await link.click()
+  await expect(report.getByText(/^Sent at/)).toBeVisible()
+
+  // Everything survives a reload.
+  await page.reload()
+  await expect(page.getByRole('region', { name: /check-in record/i })).toContainText('3.8 kg')
+  await expect(page.getByRole('region', { name: /daily care log/i })).toContainText('All eaten')
+})
+
+test('the calendar books an empty day', async ({ page }) => {
+  await signInWithSampleData(page)
+  await page.goto('/app/calendar')
+  await page.getByRole('link', { name: /new booking in S-04 from/i }).first().click()
+  await expect(page.getByLabel(/^cage ·/i)).toHaveValue(/.+/)
+  await expect(page.getByRole('heading', { name: 'New booking', level: 1 })).toBeVisible()
+})
+
+for (const [name, viewport, locale] of [
+  ['desktop', { width: 1280, height: 800 }, 'en'],
+  ['phone', { width: 390, height: 844 }, 'id'],
+] as const) {
+  test.describe(`${name}`, () => {
+    test.use({ viewport })
+
+    test('every operator screen is free of accessibility violations and fits the width', async ({ page }) => {
+      await signInWithSampleData(page, locale)
+      await page.goto('/app')
+      const bookingHref = await page.locator('a[href*="#care"]').first().getAttribute('href')
+      const paths = ['/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings', bookingHref!.replace('#care', '')]
+      for (const path of paths) {
+        await page.goto(path)
+        await page.getByRole('heading', { level: 1 }).first().waitFor()
+        const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze()
+        expect(violations.map((v) => `${v.id}: ${v.nodes[0]?.target.join(' ')}`), path).toEqual([])
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+        expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0)
+      }
+    })
+  })
+}
+
+test('the app opens without a connection after the first visit, and the website is not touched', async ({ page, context }) => {
+  await signInWithSampleData(page)
+  await page.evaluate(() => navigator.serviceWorker.ready) // installed and active: the app is cached
+  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration('/app'))?.scope)).toMatch(/\/app$/)
+  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration('/'))?.scope)).toBeUndefined()
+
+  await page.reload()
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller) // the worker now controls the page
+  await context.setOffline(true)
+  await page.goto('/app/calendar')
+  await expect(page.getByRole('heading', { name: 'Cage calendar', level: 1 })).toBeVisible()
+  await page.goto('/app/bookings')
+  await expect(page.locator('.ds-booking').first()).toBeVisible()
+  expect(await page.evaluate(() => document.fonts.ready.then(() => [...document.fonts].some((f) => f.family === 'Fredoka' && f.status === 'loaded')))).toBe(true)
+  await context.setOffline(false)
+})

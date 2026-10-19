@@ -25,3 +25,6 @@ dist-ssr
 
 # Raw Higgsfield transition clips (intermediate; the assembled film is committed)
 media/turntable-hd/
+
+test-results
+playwright-report

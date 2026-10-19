@@ -5,6 +5,10 @@ export const appId: AppMessages = {
   common: {
     save: "Simpan",
     cancel: "Batal",
+    updateReady: "Versi baru Pethommie sudah siap.",
+    reload: "Muat ulang",
+    offlineReady: "Pethommie siap dipakai tanpa internet.",
+    dismiss: "Tutup",
     saveFailed: "Perubahanmu tidak bisa disimpan di browser ini (penyimpanan penuh atau diblokir). Ekspor cadangan dari Pengaturan sebelum menutup tab ini.",
     delete: "Hapus",
     edit: "Ubah",
