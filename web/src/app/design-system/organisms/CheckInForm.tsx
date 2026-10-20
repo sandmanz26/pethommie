@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Arrival } from "@/app/domain/types";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Checkbox } from "@/app/design-system/atoms/Checkbox";
+import { UiIcon } from "@/app/design-system/atoms/UiIcon";
 import { Input, Textarea } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -49,9 +50,12 @@ export function CheckInForm({ onSubmit }: { onSubmit: (arrival: Arrival | null) 
   return (
     <form className="ds-form ds-form--panel" onSubmit={submit} noValidate aria-labelledby="checkin-title">
       <div>
-        <Heading level={2} size="md">
-          <span id="checkin-title">{a.title}</span>
-        </Heading>
+        <span className="ds-panel__title">
+          <UiIcon name="bag" size={28} />
+          <Heading level={2} size="md">
+            <span id="checkin-title">{a.title}</span>
+          </Heading>
+        </span>
         <Muted>{a.lead}</Muted>
       </div>
       <div className="ds-form__checks">

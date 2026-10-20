@@ -4,6 +4,7 @@ import { stayDay, timeOf } from "@/app/domain/logic";
 import { dailyReport } from "@/app/domain/messages";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
+import { UiIcon } from "@/app/design-system/atoms/UiIcon";
 import { WhatsAppMessage } from "@/app/design-system/molecules/WhatsAppMessage";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
@@ -46,9 +47,12 @@ export function ReportPanel({
   return (
     <section className="ds-panel" aria-labelledby="report-title">
       <div>
-        <Heading level={2} size="md">
-          <span id="report-title">{r.title}</span>
-        </Heading>
+        <span className="ds-panel__title">
+          <UiIcon name="report" size={28} />
+          <Heading level={2} size="md">
+            <span id="report-title">{r.title}</span>
+          </Heading>
+        </span>
         <Muted>{r.lead}</Muted>
       </div>
       {!owner?.whatsapp && <Alert tone="info">{r.noWhatsapp}</Alert>}

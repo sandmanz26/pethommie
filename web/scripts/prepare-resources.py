@@ -5,6 +5,10 @@
       -> stray slivers left over from cropping are removed, the empty margin is trimmed
       -> public/illustrations/<name>.webp
 
+  resources/icons/<set>/*.png     small icons (64 px) cut from a sheet
+      -> only the ones listed in ICONS below, with slivers of neighbouring icons removed
+      -> public/icons/ui/<usage-name>.webp  (named by what they are used for)
+
   resources/photos/*.jpg|png|webp  real photos
       -> rotated upright, EXIF removed, longest side capped at 1600 px
       -> public/photos/<name>.webp
@@ -31,15 +35,37 @@ ALPHA_MIN = 16  # alpha above this counts as "ink"
 CELL = 4  # components are found on a grid 4x coarser than the image
 PAD = 16  # transparent margin kept around the trimmed illustration
 
+# Icons the app uses: public name -> "<set folder>/<file>" in resources/icons. Add a line to use another one.
+ICONS = {
+    "meal": "app/10_kibble",
+    "drink": "app/15_bone",  # the sheet was sliced one tile off: the water bowl sits in this tile, right of the bone
+    "play": "play/06_cat_ball",
+    "toilet": "care/11_litterbox_kucing",
+    "medicine": "care/05_sick",
+    "mood": "play/01_happy_dog",
+    "note": "app/07_report",
+    "incident": "care/06_kucing_bingung",
+    "dog": "app/02_user_dog",
+    "cat": "app/03_user_cat",
+    "money": "app/12_money",
+    "bag": "app/08_bag",
+    "report": "app/07_report",
+    "dog-house": "play/09_dog_house",
+    "no-carrier": "play/07_dog_carrier_crossed",
+    "reservation": "care/07_reservasi",
+}
+ICON_PAD = 2
+ICON_CROPS = {"drink": (24, 0, 64, 64)}  # keep only this box of the tile (left, top, right, bottom)
+
 
 def slug(path: Path) -> str:
     name = re.sub(r"^\d+[\s._-]*", "", path.stem)
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or path.stem.lower()
 
 
-def components(mask: np.ndarray) -> list[dict]:
+def components(mask: np.ndarray, cell: int = CELL) -> list[dict]:
     """Connected blobs of ink, found on a coarse grid so near-touching strokes stay together."""
-    small = mask[::CELL, ::CELL]
+    small = mask[::cell, ::cell]
     h, w = small.shape
     label = np.zeros((h, w), dtype=np.int32)
     found: list[dict] = []
@@ -65,17 +91,17 @@ def components(mask: np.ndarray) -> list[dict]:
     return found
 
 
-def clean_cutout(img: Image.Image) -> Image.Image:
+def clean_cutout(img: Image.Image, cell: int = CELL) -> Image.Image:
     """Drop slivers that were cut off by a crop: small blobs with a flat edge on the image's outer border."""
     rgba = np.array(img.convert("RGBA"))
     mask = rgba[:, :, 3] > ALPHA_MIN
     if not mask.any():
         return img
-    comps = components(mask)
+    comps = components(mask, cell)
     if len(comps) < 2:
         return img
     label = comps[0]["label"]
-    full = np.kron(label, np.ones((CELL, CELL), dtype=np.int32))[: mask.shape[0], : mask.shape[1]]
+    full = np.kron(label, np.ones((cell, cell), dtype=np.int32))[: mask.shape[0], : mask.shape[1]]
     full[~mask] = 0
     ys, xs = np.where(mask)
     box = (xs.min(), ys.min(), xs.max(), ys.max())
@@ -90,7 +116,7 @@ def clean_cutout(img: Image.Image) -> Image.Image:
             continue
         x0, y0, x1, y1 = bx.min(), by.min(), bx.max(), by.max()
         flat = False
-        tol = CELL + 1
+        tol = cell + 1
         # A flat run of ink along a side that sits on the outer border means a crop line, not a drawn shape.
         if y0 <= box[1] + tol and blob[y0 : y0 + 2].any(axis=0).sum() >= 0.5 * (x1 - x0 + 1):
             flat = True
@@ -103,7 +129,7 @@ def clean_cutout(img: Image.Image) -> Image.Image:
         if flat:
             # include the soft edge around the blob
             grown = np.array(Image.fromarray((blob * 255).astype(np.uint8)).resize(blob.shape[::-1]).filter(
-                __import__("PIL.ImageFilter", fromlist=["MaxFilter"]).MaxFilter(2 * CELL + 1)))
+                __import__("PIL.ImageFilter", fromlist=["MaxFilter"]).MaxFilter(2 * cell + 1)))
             rgba[grown > 0, 3] = 0
             removed += 1
     out = Image.fromarray(rgba)
@@ -111,12 +137,12 @@ def clean_cutout(img: Image.Image) -> Image.Image:
     return out
 
 
-def trim(img: Image.Image) -> Image.Image:
+def trim(img: Image.Image, pad: int = PAD) -> Image.Image:
     bbox = img.getchannel("A").point(lambda v: 255 if v > ALPHA_MIN else 0).getbbox()
     if not bbox:
         return img
     l, t, r, b = bbox
-    return img.crop((max(l - PAD, 0), max(t - PAD, 0), min(r + PAD, img.width), min(b + PAD, img.height)))
+    return img.crop((max(l - pad, 0), max(t - pad, 0), min(r + pad, img.width), min(b + pad, img.height)))
 
 
 def save_webp(img: Image.Image, path: Path, quality: int) -> None:
@@ -133,6 +159,20 @@ def main() -> None:
         cleaned = clean_cutout(Image.open(src))
         print(f"{src.name}: removed {cleaned.info.get('removed', 0)} stray piece(s)")
         save_webp(trim(cleaned), ROOT / "public" / "illustrations" / f"{slug(src)}.webp", 90)
+    for name, ref in ICONS.items():
+        if only and name not in only:
+            continue
+        src = ROOT / "resources" / "icons" / f"{ref}.png"
+        source = Image.open(src)
+        if name in ICON_CROPS:
+            source = source.crop(ICON_CROPS[name])
+        cleaned = clean_cutout(source, cell=1)
+        print(f"{src.name}: removed {cleaned.info.get('removed', 0)} stray piece(s)")
+        icon = trim(cleaned, ICON_PAD)
+        side = max(icon.size)  # square canvas, so every icon takes the same box
+        canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+        canvas.paste(icon, ((side - icon.width) // 2, (side - icon.height) // 2))
+        save_webp(canvas, ROOT / "public" / "icons" / "ui" / f"{name}.webp", 92)
     for src in sorted((ROOT / "resources" / "photos").iterdir()):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue

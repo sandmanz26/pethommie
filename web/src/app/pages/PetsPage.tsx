@@ -50,7 +50,7 @@ export function PetsPage() {
           ))
         ) : (
           <EmptyState
-            icon="pets"
+            art="dog"
             action={
               !q && (
                 <Button to="/app/pets/new" icon="plus" size="sm">

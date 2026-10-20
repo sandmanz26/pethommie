@@ -87,12 +87,12 @@ export function TodayPage() {
               {board.lateArrivals.map((b) => card(b, "in"))}
             </>
           )}
-          {board.arriving.length ? board.arriving.map((b) => card(b, "in")) : !board.lateArrivals.length && <EmptyState icon="login">{t.today.emptyArrivals}</EmptyState>}
+          {board.arriving.length ? board.arriving.map((b) => card(b, "in")) : !board.lateArrivals.length && <EmptyState art="reservation">{t.today.emptyArrivals}</EmptyState>}
         </section>
 
         <section className="pg-section">
           <Heading level={2} size="md">{t.today.departures}</Heading>
-          {board.leaving.length ? board.leaving.map((b) => card(b, "out")) : <EmptyState icon="logout">{t.today.emptyDepartures}</EmptyState>}
+          {board.leaving.length ? board.leaving.map((b) => card(b, "out")) : <EmptyState art="no-carrier">{t.today.emptyDepartures}</EmptyState>}
         </section>
       </div>
 
@@ -103,7 +103,7 @@ export function TodayPage() {
             <StayingRow key={booking.id} booking={booking} pet={data.pets.find((p) => p.id === booking.petId)} today={today} entries={entries} reportSent={reportSent} />
           ))
         ) : (
-          <EmptyState icon="pets">{t.stayingNow.empty}</EmptyState>
+          <EmptyState art="dog-house">{t.stayingNow.empty}</EmptyState>
         )}
       </section>
 
