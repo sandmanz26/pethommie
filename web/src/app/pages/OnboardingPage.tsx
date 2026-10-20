@@ -5,6 +5,7 @@ import { formatRupiah, generateCages, SIZE_ORDER } from "@/app/domain/logic";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
+import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Icon } from "@/app/design-system/atoms/Icon";
@@ -40,6 +41,7 @@ type Step = 0 | 1 | 2 | 3;
 /** A welcome, then three short steps: name the hotel, set up cages, pick a first task. */
 export function OnboardingPage() {
   const { data, setHotel, setCages, loadSample } = useStore();
+  const { mode } = useMode();
   const { t, locale } = useAppT();
   const o = t.onboarding;
   const navigate = useNavigate();
@@ -88,7 +90,7 @@ export function OnboardingPage() {
   }
 
   function useSample() {
-    loadSample();
+    loadSample(mode);
     navigate("/app");
   }
 

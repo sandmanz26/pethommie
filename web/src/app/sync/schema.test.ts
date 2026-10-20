@@ -97,14 +97,14 @@ async function readRows(hotelId: string): Promise<{ hotel: HotelRow; rows: Rows 
   return {
     hotel,
     rows: {
-      cages: (await pick("cages", "id, hotel_id, name, size, price_per_night")) as Rows["cages"],
+      cages: (await pick("cages", "id, hotel_id, name, size, price_per_night, capacity")) as Rows["cages"],
       owners: (await pick("owners", "id, hotel_id, name, whatsapp, language")) as Rows["owners"],
       pets: (await pick("pets", `id, hotel_id, owner_id, name, species, breed, ${day("vaccine_expiry")}, notes`)) as Rows["pets"],
-      bookings: (await pick("bookings", `id, hotel_id, pet_id, cage_id, ${day("check_in")}, ${day("check_out")}, status, arrival, notes, ${ts("created_at")}`)) as Rows["bookings"],
+      bookings: (await pick("bookings", `id, hotel_id, pet_id, cage_id, ${day("check_in")}, ${day("check_out")}, status, source, arrival, notes, ${ts("created_at")}`)) as Rows["bookings"],
       booking_pets: (await pick("booking_pets", "hotel_id, booking_id, pet_id, position")) as Rows["booking_pets"],
       charges: (await pick("charges", "id, hotel_id, booking_id, position, label, amount")) as Rows["charges"],
       invoices: (await db.query(`select id, hotel_id, booking_id, number, ${day("issued_on")}, ${day("due_on")}, language, status, ${day("voided_on")}, seller, customer, pet_names, stay, lines, subtotal, tax_percent::float8 as tax_percent, tax_amount, total, prices_include_tax from invoices where hotel_id = $1`, [hotelId])).rows as Rows["invoices"],
-      payments: (await pick("payments", `id, hotel_id, booking_id, ${ts("paid_at")}, amount, method, note`)) as Rows["payments"],
+      payments: (await pick("payments", `id, hotel_id, booking_id, ${ts("paid_at")}, amount, method, kind, reference, note`)) as Rows["payments"],
       care_entries: (await pick("care_entries", `id, hotel_id, booking_id, ${ts("at")}, kind, preset, note`)) as Rows["care_entries"],
       reports_sent: (await pick("reports_sent", `hotel_id, booking_id, ${day("report_date")}, ${ts("sent_at")}`)) as Rows["reports_sent"],
     },
@@ -135,7 +135,7 @@ describe("the schema holds what the app sends", () => {
 
   it("accepts a hotel made of old, hand-made ids", async () => {
     const data = aSmallHotel({
-      bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", payments: [{ id: "pay1", at: "2026-10-14T08:00:00.000Z", amount: 5, method: "cash", note: "" }] })],
+      bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", payments: [{ id: "pay1", at: "2026-10-14T08:00:00.000Z", amount: 5, method: "cash", kind: "payment" as const, reference: "", note: "" }] })],
     });
     const { hotel, rows } = toRows(data, H2);
     await insertHotel(H2, BOB, hotel);
@@ -149,7 +149,7 @@ describe("the database refuses what the app refuses", () => {
   let rows: Rows;
   beforeAll(async () => {
     const data = aSmallHotel({
-      cages: [aCage("s1"), aCage("s2")],
+      cages: [aCage("s1"), aCage("s2"), aCage("room", "M", 60_000, 3)],
       owners: [anOwner("o1", "6281234567890")],
       pets: Array.from({ length: 12 }, (_, i) => aPet(`p${i + 1}`, "o1")),
       bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-11-10", checkOut: "2026-11-14" })],
@@ -178,6 +178,26 @@ describe("the database refuses what the app refuses", () => {
   it("lets a stay start the day another one ends, and use another cage", async () => {
     expect(await refused(booking({ check_in: "2026-11-14", check_out: "2026-11-16" }))).toBeNull();
     expect(await refused(booking({ cage_id: rows.cages[1].id, check_in: "2026-11-10", check_out: "2026-11-14" }))).toBeNull();
+  });
+
+  it("lets a shared room take stays up to its places, and no more", async () => {
+    const room = rows.cages[2].id;
+    for (let i = 0; i < 3; i++) expect(await refused(booking({ cage_id: room, check_in: "2026-11-20", check_out: "2026-11-23" }))).toBeNull();
+    expect(await refused(booking({ cage_id: room, check_in: "2026-11-22", check_out: "2026-11-24" }))).toMatch(/bookings_no_double_booking/);
+    // the night after they all leave is free again
+    expect(await refused(booking({ cage_id: room, check_in: "2026-11-23", check_out: "2026-11-24" }))).toBeNull();
+  });
+
+  it("knows payment kinds and the new methods, and nothing else", async () => {
+    const pay = (kind: string, method: string) =>
+      sql("insert into payments (id, hotel_id, booking_id, paid_at, amount, method, kind, reference) values ($1,$2,$3,now(),5,$4,$5,'ref')", [crypto.randomUUID(), H, rows.bookings[0].id, method, kind]);
+    expect(await refused(pay("refund", "ewallet"))).toBeNull();
+    expect(await refused(pay("deposit", "card"))).toBeNull();
+    expect(await refused(pay("tip", "cash"))).toMatch(/check/i);
+    const withSource = (source: string) =>
+      sql("insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status, source) values ($1,$2,$3,$4,'2026-12-20','2026-12-21','booked',$5)", [crypto.randomUUID(), H, rows.pets[11].id, rows.cages[1].id, source]);
+    expect(await refused(withSource("tiktok"))).toMatch(/check/i);
+    expect(await refused(withSource("link"))).toBeNull();
   });
 
   it("doesn't count a cancelled or finished stay", async () => {

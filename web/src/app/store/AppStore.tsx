@@ -8,7 +8,7 @@ import type { InvoiceIssue } from "@/app/domain/invoices";
 import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Payment, Pet } from "@/app/domain/types";
 import { emptyData } from "@/app/domain/types";
 import * as actions from "./actions";
-import { sampleData } from "./sampleData";
+import { sampleData, type SampleKind } from "./sampleData";
 import type { HotelRepository } from "./storage";
 
 function useStoreValue(repo: HotelRepository) {
@@ -65,7 +65,7 @@ function useStoreValue(repo: HotelRepository) {
       recordCare: (entry: Omit<CareEntry, "id">): CareIssue[] => run((s) => actions.recordCare(s, entry)),
       removeCare: (id: string) => commit(actions.removeCare(latest.current, id)),
       markReportSent: (bookingId: string, date: ISODate, at: string) => commit(actions.markReportSent(latest.current, bookingId, date, at)),
-      loadSample: () => commit(sampleData()),
+      loadSample: (kind: SampleKind = "simple") => commit(sampleData(kind)),
       /** Replaces everything with a restored backup. The caller has already checked it with `parseStored`. */
       importData: (next: HotelData) => commit(next),
       reset: () => {

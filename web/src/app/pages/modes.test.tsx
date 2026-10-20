@@ -99,7 +99,7 @@ describe("what simple mode leaves out", () => {
   });
 
   it("records the whole balance with one tap", async () => {
-    const user = await open("/app/bookings/b1", "simple", [stay({ status: "checked_in", payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", note: "" }] })]);
+    const user = await open("/app/bookings/b1", "simple", [stay({ status: "checked_in", payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] })]);
     const panel = await screen.findByRole("region", { name: /payments/i });
     expect(within(panel).queryByLabelText(/note/i)).not.toBeInTheDocument();
     await user.click(within(panel).getByRole("button", { name: /mark as paid in full/i }));

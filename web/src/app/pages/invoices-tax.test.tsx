@@ -25,7 +25,7 @@ function renderApp(path: string) {
 
 const today = todayISO();
 const year = today.slice(0, 4);
-const pay = (amount: number): Payment => ({ id: `pay${amount}`, at: new Date().toISOString(), amount, method: "cash", note: "" });
+const pay = (amount: number): Payment => ({ id: `pay${amount}`, at: new Date().toISOString(), amount, method: "cash", kind: "payment" as const, reference: "", note: "" });
 const stored = (): HotelData => JSON.parse(localStorage.getItem(dataKeyFor("acct-test")) ?? "null");
 
 // Mochi stayed 2 nights in a Rp 50.000 cage and paid Rp 100.000; Kopi (same owner) is staying with Mochi's friend.

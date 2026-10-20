@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
+import { useMode } from "@/app/mode/ModeProvider";
 import type { HotelSettings, Language } from "@/app/domain/types";
 import { parseStored } from "@/app/store/storage";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -20,6 +21,7 @@ import "./pages.css";
 
 export function SettingsPage() {
   const { data, setHotel, saveSettings, loadSample, reset, importData } = useStore();
+  const { mode } = useMode();
   const { t } = useAppT();
   const navigate = useNavigate();
   const account = useAccount();
@@ -262,7 +264,7 @@ export function SettingsPage() {
             reset();
             navigate("/app/onboarding");
           } else {
-            loadSample();
+            loadSample(mode);
             navigate("/app");
           }
           setConfirm(null);

@@ -3,7 +3,7 @@ import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtu
 import { customerOf, customers, matchesCustomer } from "./customers";
 import type { Payment } from "./types";
 
-const pay = (amount: number): Payment => ({ id: String(amount), at: "2026-10-01T08:00:00.000Z", amount, method: "cash", note: "" });
+const pay = (amount: number): Payment => ({ id: String(amount), at: "2026-10-01T08:00:00.000Z", amount, method: "cash", kind: "payment" as const, reference: "", note: "" });
 // S1 = Rp 50.000 a night
 const data = aSmallHotel({
   owners: [anOwner("o1", "6281234567890"), anOwner("o2", "6285711223344"), anOwner("o3")],

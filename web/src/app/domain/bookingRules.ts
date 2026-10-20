@@ -1,4 +1,4 @@
-import { cageIsFree, holdsCage, involvesPet, overlaps, stayPetIds } from "./logic";
+import { cageIsFree, holdsCage, involvesPet, overlaps, placesFor, stayPetIds } from "./logic";
 import type { Booking, BookingStatus, HotelData, ISODate } from "./types";
 
 /**
@@ -13,7 +13,8 @@ export type ScheduleIssue = "dates" | "cage" | "cage_taken";
 /** Everything that can be wrong with a whole booking. */
 export type BookingIssue = ScheduleIssue | "pet" | "companion" | "pet_busy" | "locked";
 
-export type Schedule = { id?: string; cageId: string; checkIn: ISODate; checkOut: ISODate };
+/** `places`: how many places the stay takes in the unit (see placesFor); 1 if not given. */
+export type Schedule = { id?: string; cageId: string; checkIn: ISODate; checkOut: ISODate; places?: number };
 
 /** Dates must be real calendar days with check-out after check-in; the cage must exist and be free. */
 export function scheduleIssues(data: HotelData, s: Schedule): ScheduleIssue[] {
@@ -21,7 +22,7 @@ export function scheduleIssues(data: HotelData, s: Schedule): ScheduleIssue[] {
   const datesOk = ISO_DATE.test(s.checkIn) && ISO_DATE.test(s.checkOut) && s.checkOut > s.checkIn;
   if (!datesOk) issues.push("dates");
   if (!data.cages.some((c) => c.id === s.cageId)) issues.push("cage");
-  else if (datesOk && !cageIsFree(data, s.cageId, s.checkIn, s.checkOut, s.id)) issues.push("cage_taken");
+  else if (datesOk && !cageIsFree(data, s.cageId, s.checkIn, s.checkOut, s.id, s.places ?? 1)) issues.push("cage_taken");
   return issues;
 }
 
@@ -29,7 +30,7 @@ const datesAreReal = (b: Pick<Booking, "checkIn" | "checkOut">) => ISO_DATE.test
 
 /** A booking also needs a pet that exists. A cancelled or finished stay no longer holds its cage. */
 export function bookingIssues(data: HotelData, b: Booking): BookingIssue[] {
-  const issues: BookingIssue[] = scheduleIssues(data, b);
+  const issues: BookingIssue[] = scheduleIssues(data, { ...b, places: placesFor(b, data.cages.find((c) => c.id === b.cageId)) });
   const result = holdsCage(b) ? issues : issues.filter((i) => i !== "cage_taken");
   const primary = data.pets.find((p) => p.id === b.petId);
   if (!primary) result.push("pet");

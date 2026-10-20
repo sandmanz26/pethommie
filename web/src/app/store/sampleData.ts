@@ -1,5 +1,6 @@
 import { addDays, generateCages, newId, todayISO } from "@/app/domain/logic";
 import { buildInvoice } from "@/app/domain/invoices";
+import { advancedSample } from "./sampleAdvanced";
 import { defaultSettings, type Arrival, type Booking, type CareEntry, type HotelData, type ISODate, type Owner, type Pet, type ReportSent } from "@/app/domain/types";
 
 /** Local time `hour:minute` on a calendar day, as an ISO date-time. */
@@ -8,8 +9,18 @@ const at = (day: ISODate, hour: number, minute: number) => {
   return new Date(y, m - 1, d, hour, minute).toISOString();
 };
 
+export type SampleKind = "simple" | "advanced";
+
+/**
+ * A hotel to explore before entering real data. "simple": a small hotel with a handful of stays, for the simple
+ * mode. "advanced": a busy hotel with months of history (see sampleAdvanced.ts), for the advanced mode.
+ */
+export function sampleData(kind: SampleKind = "simple"): HotelData {
+  return kind === "advanced" ? advancedSample() : simpleSample();
+}
+
 /** A believable small hotel so a new user can explore every screen before entering real data. */
-export function sampleData(): HotelData {
+function simpleSample(): HotelData {
   const today = todayISO();
   const cages = generateCages({
     S: { count: 6, price: 50_000 },
@@ -48,9 +59,10 @@ export function sampleData(): HotelData {
     checkIn: addDays(today, inOffset),
     checkOut: addDays(today, outOffset),
     status,
+    source: (["whatsapp", "instagram", "walk_in", "whatsapp", "referral"] as const)[petIdx % 5],
     companionIds: [],
     charges: [],
-    payments: deposit > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: deposit, method: deposit % 100_000 === 0 ? "qris" : "cash", note: "" }] : [],
+    payments: deposit > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: deposit, method: deposit % 100_000 === 0 ? "qris" : "cash", kind: inOffset > 0 || status === "booked" ? "deposit" : "payment", reference: "", note: "" }] : [],
     arrival,
     notes: "",
     createdAt: new Date().toISOString(),
@@ -104,7 +116,7 @@ export function sampleData(): HotelData {
   ];
   const reportsSent: ReportSent[] = [{ bookingId: mochi.id, date: yesterday, at: at(yesterday, 18, 0) }];
   const data: HotelData = {
-    version: 3,
+    version: 4,
     hotel: { name: "Rumah Meong Bintaro", city: "South Tangerang", whatsapp: "6281200001111", createdAt: new Date().toISOString() },
     settings: {
       ...defaultSettings(),

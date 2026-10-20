@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { defaultSettings, emptyData } from "@/app/domain/types";
-import { aSmallHotel } from "@/app/testing/fixtures";
+import { aBooking, aSmallHotel } from "@/app/testing/fixtures";
 import { createLocalRepository, dataKeyFor, parseStored } from "./storage";
 
 describe("parseStored", () => {
@@ -29,7 +29,7 @@ describe("parseStored", () => {
   });
 
   it("flags data from a newer version of the app, without trying to read it", () => {
-    const raw = JSON.stringify({ ...aSmallHotel(), version: 4, somethingNew: true });
+    const raw = JSON.stringify({ ...aSmallHotel(), version: 5, somethingNew: true });
     expect(parseStored(raw)).toEqual({ data: emptyData(), problem: "newer" });
   });
 });
@@ -43,7 +43,7 @@ describe("upgrading a version 1 document", () => {
     const { data, problem, migratedFrom } = parseStored(v1([{ ...old, deposit: 100_000 }]));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(1);
-    expect(data.version).toBe(3);
+    expect(data.version).toBe(4);
     expect(data.bookings[0]).not.toHaveProperty("deposit");
     expect(data.bookings[0].payments).toEqual([expect.objectContaining({ amount: 100_000, at: "2026-09-30T10:00:00.000Z" })]);
     expect(data.bookings[0]).toMatchObject({ arrival: null, notes: "x" });
@@ -64,7 +64,7 @@ describe("upgrading a version 1 document", () => {
 describe("upgrading a version 2 document", () => {
   const v2 = () => {
     const { settings: _s, invoices: _i, ...rest } = aSmallHotel({
-      bookings: [{ id: "b1", petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", status: "checked_in", payments: [{ id: "pay", at: "2026-10-01T08:00:00.000Z", amount: 5, method: "cash", note: "" }], arrival: null, notes: "keep", createdAt: "2026-09-30T10:00:00.000Z" }] as never,
+      bookings: [{ id: "b1", petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", status: "checked_in", payments: [{ id: "pay", at: "2026-10-01T08:00:00.000Z", amount: 5, method: "cash", kind: "payment" as const, reference: "", note: "" }], arrival: null, notes: "keep", createdAt: "2026-09-30T10:00:00.000Z" }] as never,
       careLog: [{ id: "c", bookingId: "b1", at: "2026-10-02T08:00:00.000Z", kind: "meal", preset: "all", note: "" }],
     });
     return { ...rest, version: 2, owners: rest.owners.map(({ language: _l, ...o }) => o) };
@@ -74,7 +74,7 @@ describe("upgrading a version 2 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v2()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(2);
-    expect(data.version).toBe(3);
+    expect(data.version).toBe(4);
     expect(data.bookings[0]).toMatchObject({ id: "b1", status: "checked_in", notes: "keep", charges: [], companionIds: [], payments: [expect.objectContaining({ amount: 5 })] });
     expect(data.owners.every((o) => o.language === "id")).toBe(true);
     expect(data.invoices).toEqual([]);
@@ -93,6 +93,47 @@ describe("upgrading a version 2 document", () => {
     for (const bad of [{ ...ok, settings: undefined }, { ...ok, invoices: undefined }, { ...ok, owners: [{ id: "o", name: "x", whatsapp: "" }] }]) {
       expect(parseStored(JSON.stringify(bad)).problem).toBe("corrupt");
     }
+  });
+});
+
+describe("upgrading a version 3 document", () => {
+  const v3 = () => {
+    const doc = JSON.parse(
+      JSON.stringify(
+        aSmallHotel({
+          bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", payments: [{ id: "pay", at: "2026-10-01T08:00:00.000Z", amount: 5, method: "cash", kind: "deposit", reference: "x", note: "" }] })],
+        }),
+      ),
+    );
+    doc.version = 3;
+    delete doc.settings.unitTerm;
+    for (const c of doc.cages) delete c.capacity;
+    for (const b of doc.bookings) {
+      delete b.source;
+      for (const p of b.payments) {
+        delete p.kind;
+        delete p.reference;
+      }
+    }
+    return doc;
+  };
+
+  it("makes every cage hold one, every payment a plain payment, every source unknown; nothing else changes", () => {
+    const { data, problem, migratedFrom } = parseStored(JSON.stringify(v3()));
+    expect(problem).toBeNull();
+    expect(migratedFrom).toBe(3);
+    expect(data.version).toBe(4);
+    expect(data.cages.every((c) => c.capacity === 1)).toBe(true);
+    expect(data.bookings[0]).toMatchObject({ source: "other", payments: [{ id: "pay", amount: 5, kind: "payment", reference: "" }] });
+    expect(data.settings.unitTerm).toBe("cage");
+  });
+
+  it("does not take a version 4 document without capacities, payment kinds or sources", () => {
+    const ok = JSON.parse(JSON.stringify(aSmallHotel({ bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03" })] })));
+    expect(parseStored(JSON.stringify(ok)).problem).toBeNull();
+    const noCapacity = { ...ok, cages: ok.cages.map(({ capacity: _c, ...c }: Record<string, unknown>) => c) };
+    const noSource = { ...ok, bookings: ok.bookings.map(({ source: _s, ...b }: Record<string, unknown>) => b) };
+    for (const bad of [noCapacity, noSource]) expect(parseStored(JSON.stringify(bad)).problem).toBe("corrupt");
   });
 });
 
@@ -143,7 +184,7 @@ describe("createLocalRepository", () => {
   it("keeps the original of an upgraded document, once", () => {
     const raw = JSON.stringify({ version: 1, hotel: null, cages: [], owners: [], pets: [], bookings: [] });
     localStorage.setItem(KEY, raw);
-    expect(repo.load().version).toBe(3);
+    expect(repo.load().version).toBe(4);
     expect(localStorage.getItem(`${KEY}.v1.backup`)).toBe(raw);
     localStorage.setItem(`${KEY}.v1.backup`, "kept");
     repo.load();

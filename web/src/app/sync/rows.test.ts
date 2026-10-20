@@ -45,7 +45,7 @@ describe("toRows / fromRows", () => {
 
   it("gives old, hand-made ids fixed UUIDs, and every reference follows", () => {
     const data = aSmallHotel({
-      bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", payments: [{ id: "pay1", at: "2026-10-14T08:00:00.000Z", amount: 5, method: "cash", note: "" }] })],
+      bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", payments: [{ id: "pay1", at: "2026-10-14T08:00:00.000Z", amount: 5, method: "cash", kind: "payment" as const, reference: "", note: "" }] })],
       careLog: [aCareEntry("c1", "b1")],
       reportsSent: [{ bookingId: "b1", date: "2026-10-15", at: "2026-10-15T08:00:00.000Z" }],
     });
@@ -68,7 +68,7 @@ describe("toRows / fromRows", () => {
 
   it("dates a payment or entry with no usable time instead of failing the upload", () => {
     const data = aSmallHotel({
-      bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", createdAt: "2026-10-10T00:00:00.000Z", payments: [{ id: "x", at: "", amount: 5, method: "cash", note: "" }] })],
+      bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", createdAt: "2026-10-10T00:00:00.000Z", payments: [{ id: "x", at: "", amount: 5, method: "cash", kind: "payment" as const, reference: "", note: "" }] })],
       careLog: [aCareEntry("c1", "b1", { at: "garbage" })],
     });
     const { rows } = toRows(data, HOTEL);

@@ -137,7 +137,7 @@ describe("editBooking", () => {
   const state = aSmallHotel({ bookings: [stay] });
 
   it("changes the dates and cage and leaves the rest of the stay alone", () => {
-    const withPayment = aSmallHotel({ bookings: [{ ...stay, payments: [{ id: "x", at: "", amount: 5, method: "cash", note: "" }] }] });
+    const withPayment = aSmallHotel({ bookings: [{ ...stay, payments: [{ id: "x", at: "", amount: 5, method: "cash", kind: "payment" as const, reference: "", note: "" }] }] });
     const out = editBooking(withPayment, "b1", { cageId: "m1", checkOut: "2026-10-19" });
     expect(out.result).toEqual([]);
     expect(out.state.bookings[0]).toMatchObject({ cageId: "m1", checkOut: "2026-10-19", checkIn: "2026-10-14", status: "booked" });
@@ -183,7 +183,7 @@ describe("checkInBooking", () => {
 
 describe("payments", () => {
   const state = aSmallHotel({ bookings: [stay] });
-  const payment = { at: "2026-10-14T09:00:00.000Z", amount: 50_000, method: "qris" as const, note: "" };
+  const payment = { at: "2026-10-14T09:00:00.000Z", amount: 50_000, method: "qris" as const, kind: "payment" as const, reference: "", note: "" };
 
   it("records money against the stay", () => {
     const out = recordPayment(state, "b1", payment);
@@ -355,5 +355,14 @@ describe("invoices", () => {
     const gone = removePet(once, "p1");
     expect(gone.bookings).toEqual([]);
     expect(gone.invoices).toHaveLength(1);
+  });
+});
+
+describe("refunds", () => {
+  it("can't give back more than the stay has kept", () => {
+    const s = aSmallHotel({ bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", payments: [{ id: "x", at: "2026-10-01T08:00:00.000Z", amount: 50_000, method: "cash", kind: "deposit", reference: "", note: "" }] })] });
+    const refund = (amount: number) => recordPayment(s, "b1", { at: "2026-10-02T08:00:00.000Z", amount, method: "transfer", kind: "refund", reference: "", note: "" });
+    expect(refund(60_000).result).toEqual(["refund"]);
+    expect(refund(50_000).result).toEqual([]);
   });
 });

@@ -25,6 +25,16 @@ export const demoAccounts: SeedAccount[] = [
     hotelName: "Anabul Sejahtera",
     password: DEMO_PASSWORD,
   },
+  {
+    id: "demo-pro",
+    name: "Dewi Lestari",
+    email: "pro@pethommie.id",
+    whatsapp: "6281399001122",
+    hotelName: "Kandang Ceria Pet Hotel",
+    password: DEMO_PASSWORD,
+    startsWithSampleData: true,
+    sampleKind: "advanced",
+  },
 ];
 
 export const MOCK_REGISTRANT_PASSWORD = "Pethommie123";

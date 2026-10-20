@@ -33,7 +33,7 @@ describe("what charges do to a stay's price", () => {
 
   it("is what is owed, and so what counts as paid", () => {
     const b = stay([{ id: "1", label: "Grooming", amount: 50_000 }]);
-    expect(balanceDue({ ...b, payments: [{ id: "p", at: "", amount: 150_000, method: "cash", note: "" }] }, cage)).toBe(50_000);
-    expect(paymentStatus({ ...b, payments: [{ id: "p", at: "", amount: 200_000, method: "cash", note: "" }] }, cage)).toBe("paid");
+    expect(balanceDue({ ...b, payments: [{ id: "p", at: "", amount: 150_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] }, cage)).toBe(50_000);
+    expect(paymentStatus({ ...b, payments: [{ id: "p", at: "", amount: 200_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] }, cage)).toBe("paid");
   });
 });

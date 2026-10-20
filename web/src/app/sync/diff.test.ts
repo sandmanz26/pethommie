@@ -19,7 +19,7 @@ describe("diffData", () => {
 
   it("is exactly the one record that changed", () => {
     const before = aSmallHotel({ bookings: [stay] });
-    const after = recordPayment(before, "b1", { at: "2026-10-14T08:00:00.000Z", amount: 50_000, method: "qris", note: "" }).state;
+    const after = recordPayment(before, "b1", { at: "2026-10-14T08:00:00.000Z", amount: 50_000, method: "qris", kind: "payment" as const, reference: "", note: "" }).state;
     const c = diffData(before, after, HOTEL);
     expect(c.payments.upsert).toHaveLength(1);
     expect(c.payments.upsert[0]).toMatchObject({ amount: 50_000, method: "qris" });
@@ -34,7 +34,7 @@ describe("diffData", () => {
 
   it("follows a cascade: removing a pet removes its stays, payments and log", () => {
     const withAll = recordCare(
-      recordPayment(aSmallHotel({ bookings: [{ ...stay, status: "checked_in" }] }), "b1", { at: "2026-10-14T08:00:00.000Z", amount: 5, method: "cash", note: "" }).state,
+      recordPayment(aSmallHotel({ bookings: [{ ...stay, status: "checked_in" }] }), "b1", { at: "2026-10-14T08:00:00.000Z", amount: 5, method: "cash", kind: "payment" as const, reference: "", note: "" }).state,
       { bookingId: "b1", at: new Date(2026, 9, 15, 9).toISOString(), kind: "meal", preset: "all", note: "" },
     ).state;
     const c = diffData(withAll, removePet(withAll, "p1"), HOTEL);
@@ -52,7 +52,7 @@ describe("applying changes", () => {
       (d) => upsertPet(d, aPet("p9", "o9", { name: "Newbie" })),
       (d) => upsertBooking(d, aBooking("b9", { petId: "p9", cageId: "l1", checkIn: "2026-10-14", checkOut: "2026-10-17" })).state,
       (d) => checkInBooking(d, "b9", { at: "2026-10-14T09:00:00.000Z", healthy: true, fleaFree: true, weightKg: 9, belongings: "", food: "", notes: "" }).state,
-      (d) => recordPayment(d, "b9", { at: "2026-10-14T09:05:00.000Z", amount: 100_000, method: "transfer", note: "DP" }).state,
+      (d) => recordPayment(d, "b9", { at: "2026-10-14T09:05:00.000Z", amount: 100_000, method: "transfer", kind: "payment" as const, reference: "", note: "DP" }).state,
       (d) => recordCare(d, { bookingId: "b9", at: new Date(2026, 9, 15, 8).toISOString(), kind: "meal", preset: "most", note: "" }).state,
       (d) => markReportSent(d, "b9", "2026-10-15", "2026-10-15T18:00:00.000Z"),
       (d) => ({ ...d, bookings: d.bookings.map((b) => (b.payments.length ? removePayment(d, b.id, b.payments[0].id).bookings.find((x) => x.id === b.id)! : b)) }),

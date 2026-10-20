@@ -1,7 +1,7 @@
 import { newId } from "@/app/domain/logic";
 import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
 import { careIssues, type CareIssue } from "@/app/domain/careLog";
-import { isValidAmount, type PaymentIssue } from "@/app/domain/payments";
+import { isValidAmount, paidAmount, type PaymentIssue } from "@/app/domain/payments";
 import { chargeIssues, type ChargeIssue } from "@/app/domain/charges";
 import { buildInvoice, type InvoiceIssue } from "@/app/domain/invoices";
 import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Invoice, Language, Owner, Payment, Pet } from "@/app/domain/types";
@@ -90,13 +90,17 @@ export function checkInBooking(s: HotelData, id: string, arrival: Arrival | null
   return { state: withBooking(s, id, (b) => ({ ...b, status: "checked_in", arrival })), result: true };
 }
 
-/** Records money received. Not for a cancelled stay, and the amount must be a whole number above zero. */
+/**
+ * Records money received or given back. Not for a cancelled stay; the amount must be a whole number above zero, and a
+ * refund can't be more than the stay has kept.
+ */
 export function recordPayment(s: HotelData, bookingId: string, payment: Omit<Payment, "id">): Outcome<PaymentIssue[]> {
   const booking = s.bookings.find((b) => b.id === bookingId);
   const issues: PaymentIssue[] = [];
   if (!booking) issues.push("booking");
   else if (booking.status === "cancelled") issues.push("cancelled");
   if (!isValidAmount(payment.amount)) issues.push("amount");
+  else if (booking && payment.kind === "refund" && payment.amount > paidAmount(booking)) issues.push("refund");
   if (issues.length) return { state: s, result: issues };
   return { state: withBooking(s, bookingId, (b) => ({ ...b, payments: [...b.payments, { ...payment, id: newId() }] })), result: [] };
 }

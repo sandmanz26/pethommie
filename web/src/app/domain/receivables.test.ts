@@ -3,7 +3,7 @@ import { aBooking, aCage, aSmallHotel } from "@/app/testing/fixtures";
 import { receivables, recentPayments } from "./payments";
 import type { Payment } from "./types";
 
-const pay = (amount: number, at = "2026-10-01T08:00:00.000Z"): Payment => ({ id: `${amount}-${at}`, at, amount, method: "cash", note: "" });
+const pay = (amount: number, at = "2026-10-01T08:00:00.000Z"): Payment => ({ id: `${amount}-${at}`, at, amount, method: "cash", kind: "payment" as const, reference: "", note: "" });
 const stay = (id: string, status: "booked" | "checked_in" | "checked_out" | "cancelled", over = {}) =>
   aBooking(id, { petId: "p1", cageId: "s1", checkIn: "2026-10-10", checkOut: "2026-10-12", status, ...over }); // 2 nights = 100.000
 

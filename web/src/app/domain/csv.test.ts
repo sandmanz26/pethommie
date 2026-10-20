@@ -19,7 +19,7 @@ describe("staysCsv", () => {
     cages: [aCage("s1")],
     bookings: [
       aBooking("b2", { petId: "p1", cageId: "s1", checkIn: "2026-10-20", checkOut: "2026-10-21", status: "cancelled" }),
-      aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-10", checkOut: "2026-10-12", notes: "likes, toys", payments: [{ id: "x", at: "", amount: 30_000, method: "cash", note: "" }] }),
+      aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-10", checkOut: "2026-10-12", notes: "likes, toys", payments: [{ id: "x", at: "", amount: 30_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] }),
     ],
   });
   const lines = staysCsv(data).trim().split("\r\n");

@@ -24,7 +24,7 @@ function renderApp(path: string) {
 }
 
 const today = todayISO();
-const pay = (amount: number): Payment => ({ id: String(amount), at: new Date().toISOString(), amount, method: "cash", note: "" });
+const pay = (amount: number): Payment => ({ id: String(amount), at: new Date().toISOString(), amount, method: "cash", kind: "payment" as const, reference: "", note: "" });
 const stored = (): HotelData => JSON.parse(localStorage.getItem(dataKeyFor("acct-test")) ?? "null");
 const rp = (n: string) => new RegExp(`Rp\\s?${n.replace(/\./g, "\\.")}`);
 

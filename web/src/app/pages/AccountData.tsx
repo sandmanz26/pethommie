@@ -14,11 +14,11 @@ import { createLocalRepository, dataKeyFor } from "@/app/store/storage";
 export function AccountData() {
   const account = useAccount();
   const repo = useMemo(
-    () => createLocalRepository(dataKeyFor(account.id), account.startsWithSampleData ? sampleData : emptyData),
-    [account.id, account.startsWithSampleData],
+    () => createLocalRepository(dataKeyFor(account.id), account.startsWithSampleData ? () => sampleData(account.sampleKind) : emptyData),
+    [account.id, account.startsWithSampleData, account.sampleKind],
   );
   return (
-    <ModeProvider key={account.id} accountId={account.id}>
+    <ModeProvider key={account.id} accountId={account.id} initial={account.sampleKind === "advanced" ? "advanced" : undefined}>
       <AppStoreProvider repo={repo}>
         <Outlet />
       </AppStoreProvider>

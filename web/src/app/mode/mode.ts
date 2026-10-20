@@ -12,12 +12,13 @@ export const modeKeyFor = (accountId: string) => `pethommie.app.mode.${accountId
 
 export const isMode = (x: unknown): x is Mode => x === "simple" || x === "advanced";
 
-export function readMode(accountId: string): Mode {
+/** The account's choice, or `fallback` (the default mode) when it never made one. */
+export function readMode(accountId: string, fallback: Mode = DEFAULT_MODE): Mode {
   try {
     const stored = localStorage.getItem(modeKeyFor(accountId));
-    return isMode(stored) ? stored : DEFAULT_MODE;
+    return isMode(stored) ? stored : fallback;
   } catch {
-    return DEFAULT_MODE;
+    return fallback;
   }
 }
 

@@ -57,7 +57,7 @@ export function reportFor(data: HotelData, p: Period): Report {
   const received = data.bookings
     .flatMap((b) => b.payments)
     .filter((x) => !Number.isNaN(Date.parse(x.at)) && dayOf(x.at) >= p.from && dayOf(x.at) < p.to)
-    .reduce((sum, x) => sum + x.amount, 0);
+    .reduce((sum, x) => sum + (x.kind === "refund" ? -x.amount : x.amount), 0);
 
   const repeatStays = stays.filter((b) => {
     const owner = ownerOf(b);

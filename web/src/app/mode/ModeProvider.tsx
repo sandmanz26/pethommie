@@ -5,8 +5,8 @@ type ModeValue = { mode: Mode; advanced: boolean; setMode: (mode: Mode) => void 
 const ModeContext = createContext<ModeValue | null>(null);
 
 /** The current account's simple/advanced choice. Mount it with a `key` of the account so accounts never share one. */
-export function ModeProvider({ accountId, children }: { accountId: string; children: ReactNode }) {
-  const [mode, setState] = useState<Mode>(() => readMode(accountId));
+export function ModeProvider({ accountId, initial, children }: { accountId: string; initial?: Mode; children: ReactNode }) {
+  const [mode, setState] = useState<Mode>(() => readMode(accountId, initial));
   const setMode = useCallback(
     (next: Mode) => {
       writeMode(accountId, next);

@@ -4,7 +4,7 @@ import { dueDateFor, FINAL_SCHEME_CEILING, taxCsv, taxFor } from "./tax";
 import { defaultSettings, type HotelData, type Invoice, type TaxProfile } from "./types";
 
 const day = (y: number, m: number, d: number) => new Date(y, m - 1, d, 10).toISOString();
-const pay = (y: number, m: number, d: number, amount: number) => ({ id: `${y}-${m}-${d}-${amount}`, at: day(y, m, d), amount, method: "transfer" as const, note: "" });
+const pay = (y: number, m: number, d: number, amount: number) => ({ id: `${y}-${m}-${d}-${amount}`, at: day(y, m, d), amount, method: "transfer" as const, kind: "payment" as const, reference: "", note: "" });
 const settings = (tax: Partial<TaxProfile>) => ({ ...defaultSettings(), tax: { ...defaultSettings().tax, ...tax } });
 
 /** A hotel whose money came in as these (month, rupiah) payments, all in 2026. */

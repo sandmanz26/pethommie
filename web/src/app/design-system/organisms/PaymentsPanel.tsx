@@ -1,5 +1,6 @@
+import { Link } from "react-router-dom";
 import { useState, type FormEvent } from "react";
-import type { Booking, Cage, Payment, PaymentMethod } from "@/app/domain/types";
+import type { Booking, Cage, Payment, PaymentKind, PaymentMethod } from "@/app/domain/types";
 import { bookingTotal, formatRupiah, timeOf, dayOf, formatDate } from "@/app/domain/logic";
 import { balanceDue, paidAmount, paymentStatus, type PaymentIssue } from "@/app/domain/payments";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
@@ -37,19 +38,22 @@ export function PaymentsPanel({
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("transfer");
+  const [kind, setKind] = useState<PaymentKind>(booking.status === "booked" ? "deposit" : "payment");
+  const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | undefined>();
 
   function payInFull() {
-    onAdd?.({ at: new Date().toISOString(), amount: balance, method, note: "" });
+    onAdd?.({ at: new Date().toISOString(), amount: balance, method, kind: "payment", reference: "", note: "" });
   }
 
   function submit(e: FormEvent) {
     e.preventDefault();
     const digits = parseInt(amount.replace(/\D/g, "") || "0", 10);
-    const issues = onAdd?.({ at: new Date().toISOString(), amount: digits, method, note: note.trim() }) ?? [];
-    if (issues.length) return setError(p.errAmount);
+    const issues = onAdd?.({ at: new Date().toISOString(), amount: digits, method, kind, reference: reference.trim(), note: note.trim() }) ?? [];
+    if (issues.length) return setError(issues.includes("refund") ? p.errRefund : p.errAmount);
     setAmount("");
+    setReference("");
     setNote("");
     setError(undefined);
   }
@@ -82,14 +86,18 @@ export function PaymentsPanel({
       {booking.payments.length ? (
         <ul className="ds-paylist">
           {booking.payments.map((x) => (
-            <li key={x.id}>
+            <li key={x.id} className={x.kind === "refund" ? "is-refund" : ""}>
               <span>
-                <b>{rp(x.amount)}</b>
+                <b>{x.kind === "refund" ? `− ${rp(x.amount)}` : rp(x.amount)}</b>
                 <small>
-                  {p.methods[x.method]} · {formatDate(dayOf(x.at), locale, { day: "numeric", month: "short" })} {timeOf(x.at, locale)}
+                  {p.kinds[x.kind]} · {p.methods[x.method]} · {formatDate(dayOf(x.at), locale, { day: "numeric", month: "short" })} {timeOf(x.at, locale)}
+                  {x.reference && ` · ${x.reference}`}
                   {x.note && ` · ${x.note}`}
                 </small>
               </span>
+              <Link className="ds-paylist__receipt" to={`/app/receipts/${booking.id}/${x.id}`}>
+                {p.receipt}
+              </Link>
               {onRemove && <Button variant="ghost" size="sm" icon="trash" aria-label={`${p.remove} ${rp(x.amount)}`} onClick={() => onRemove(x.id)} />}
             </li>
           ))}
@@ -106,18 +114,34 @@ export function PaymentsPanel({
             </Field>
             <Field label={p.method}>
               <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-                {(["transfer", "qris", "cash"] as PaymentMethod[]).map((m) => (
+                {(["transfer", "qris", "cash", "ewallet", "card"] as PaymentMethod[]).map((m) => (
                   <option key={m} value={m}>
                     {p.methods[m]}
                   </option>
                 ))}
               </Select>
             </Field>
+            {!simple && (
+              <Field label={p.kind}>
+                <Select value={kind} onChange={(e) => setKind(e.target.value as PaymentKind)}>
+                  {(["deposit", "payment", "refund"] as PaymentKind[]).map((k) => (
+                    <option key={k} value={k}>
+                      {p.kinds[k]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
           </div>
           {!simple && (
-            <Field label={p.note} optional={t.common.optional}>
-              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={p.notePh} />
-            </Field>
+            <div className="ds-form__row">
+              <Field label={p.reference} optional={t.common.optional}>
+                <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={p.referencePh} />
+              </Field>
+              <Field label={p.note} optional={t.common.optional}>
+                <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={p.notePh} />
+              </Field>
+            </div>
           )}
           <Muted>{p.hint}</Muted>
           <div className="ds-form__actions">

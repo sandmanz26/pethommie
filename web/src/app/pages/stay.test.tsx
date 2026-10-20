@@ -92,7 +92,7 @@ describe("payments", () => {
   });
 
   it("fills in the balance, and marks the stay paid in full once it is settled", async () => {
-    const user = await open(stay({ payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", note: "" }] }));
+    const user = await open(stay({ payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] }));
     const panel = await screen.findByRole("region", { name: /payments/i });
     await user.click(within(panel).getByRole("button", { name: /fill in the balance/i }));
     expect(within(panel).getByLabelText(/amount/i)).toHaveValue("100000");
@@ -111,7 +111,7 @@ describe("payments", () => {
   });
 
   it("takes back a payment entered by mistake", async () => {
-    const user = await open(stay({ payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", note: "" }] }));
+    const user = await open(stay({ payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] }));
     await user.click(await screen.findByRole("button", { name: /remove payment/i }));
     expect(stored().bookings[0].payments).toEqual([]);
   });
@@ -136,7 +136,7 @@ describe("checking out", () => {
   });
 
   it("lets the pet go without a question once everything is paid", async () => {
-    const paid = stay({ status: "checked_in", payments: [{ id: "d", at: new Date().toISOString(), amount: 150_000, method: "cash", note: "" }] });
+    const paid = stay({ status: "checked_in", payments: [{ id: "d", at: new Date().toISOString(), amount: 150_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] });
     const user = await open(paid);
     await user.click(await screen.findByRole("button", { name: /^check out$/i }));
     expect(screen.queryByText(/still unpaid/i)).not.toBeInTheDocument();

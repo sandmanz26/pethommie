@@ -116,6 +116,16 @@ describe("mock accounts", () => {
     expect(await auth.login("demo@pethommie.id", DEMO_PASSWORD)).toEqual({ ok: false, error: "invalid_credentials" });
   });
 
+  it("adds a demo account that is new since this browser was seeded, and leaves the others as they were", async () => {
+    const first = createLocalAuthService({ ...FAST, seed: demoAccounts.slice(0, 2) });
+    await first.login("demo@pethommie.id", DEMO_PASSWORD);
+    const before = JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts;
+    const later = createLocalAuthService({ ...FAST, seed: demoAccounts });
+    const pro = await later.login("pro@pethommie.id", DEMO_PASSWORD);
+    expect(pro.ok && pro.account).toMatchObject({ id: "demo-pro", sampleKind: "advanced" });
+    expect(JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts.slice(0, 2)).toEqual(before);
+  });
+
   it("creates none when there is no seed (a real launch)", async () => {
     const auth = createLocalAuthService(FAST);
     expect(await auth.login("demo@pethommie.id", DEMO_PASSWORD)).toEqual({ ok: false, error: "invalid_credentials" });

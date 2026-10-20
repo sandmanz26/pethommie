@@ -17,7 +17,7 @@ export const dataKeyFor = (accountId: string) => `pethommie.app.v1.${accountId}`
  * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
  * one, and a test with an old document. Older documents are upgraded on load, never discarded.
  */
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 export type StoredProblem = "corrupt" | "newer";
 export type Parsed = { data: HotelData; problem: StoredProblem | null; migratedFrom?: number };
@@ -45,7 +45,8 @@ function isV2(x: Record<string, unknown>): boolean {
   );
 }
 
-function isHotelData(x: Record<string, unknown>): boolean {
+/** The shape version 3 had: no capacity on cages, no kinds on payments, no source on bookings. */
+function isV3(x: Record<string, unknown>): boolean {
   return (
     isV2(x) &&
     isObject(x.settings) &&
@@ -53,6 +54,17 @@ function isHotelData(x: Record<string, unknown>): boolean {
     hasIds(x.invoices) &&
     (x.bookings as Record<string, unknown>[]).every((b) => Array.isArray(b.charges) && Array.isArray(b.companionIds)) &&
     (x.owners as Record<string, unknown>[]).every((o) => o.language === "id" || o.language === "en")
+  );
+}
+
+function isHotelData(x: Record<string, unknown>): boolean {
+  const bookings = x.bookings as Record<string, unknown>[];
+  return (
+    isV3(x) &&
+    isObject(x.settings) &&
+    typeof x.settings.unitTerm === "string" &&
+    (x.cages as Record<string, unknown>[]).every((c) => typeof c.capacity === "number" && c.capacity >= 1) &&
+    bookings.every((b) => typeof b.source === "string" && (b.payments as Record<string, unknown>[]).every((p) => typeof p.kind === "string" && typeof p.reference === "string"))
   );
 }
 
@@ -74,6 +86,20 @@ function migrateV2(doc: Record<string, unknown>): Record<string, unknown> {
   const bookings = (doc.bookings as Record<string, unknown>[]).map((b) => ({ ...b, charges: [], companionIds: [] }));
   const owners = (doc.owners as Record<string, unknown>[]).map((o) => ({ ...o, language: "id" }));
   return { ...doc, version: 3, bookings, owners, settings: defaultSettings(), invoices: [] };
+}
+
+/**
+ * v4 lets a unit hold more than one stay (a shared room), says what kind of money a payment is, and where a booking
+ * came from. Every cage holds one, every payment is a plain payment, every source unknown: nothing changes meaning.
+ */
+function migrateV3(doc: Record<string, unknown>): Record<string, unknown> {
+  const cages = (doc.cages as Record<string, unknown>[]).map((c) => ({ ...c, capacity: 1 }));
+  const bookings = (doc.bookings as Record<string, unknown>[]).map((b) => ({
+    ...b,
+    source: "other",
+    payments: (b.payments as Record<string, unknown>[]).map((p) => ({ ...p, kind: "payment", reference: "" })),
+  }));
+  return { ...doc, version: 4, cages, bookings, settings: { ...(doc.settings as Record<string, unknown>), unitTerm: "cage" } };
 }
 
 /**
@@ -100,6 +126,10 @@ export function parseStored(raw: string | null): Parsed {
   if (doc.version === 2 && isV2(doc)) {
     doc = migrateV2(doc);
     migratedFrom ??= 2;
+  }
+  if (doc.version === 3 && isV3(doc)) {
+    doc = migrateV3(doc);
+    migratedFrom ??= 3;
   }
   if (doc.version !== CURRENT_VERSION || !isHotelData(doc)) return { data: emptyData(), problem: "corrupt" };
   return { data: doc as unknown as HotelData, problem: null, migratedFrom };

@@ -89,7 +89,7 @@ describe("AppStore", () => {
       out.push(result.current.recordCare({ bookingId: "a", at: new Date().toISOString(), kind: "meal", preset: "all", note: "" })); // not in yet
       out.push(result.current.checkIn("a", null));
       out.push(result.current.recordCare({ bookingId: "a", at: new Date().toISOString(), kind: "meal", preset: "all", note: "" }));
-      out.push(result.current.recordPayment("a", { at: new Date().toISOString(), amount: 20_000, method: "cash", note: "" }));
+      out.push(result.current.recordPayment("a", { at: new Date().toISOString(), amount: 20_000, method: "cash", kind: "payment" as const, reference: "", note: "" }));
       result.current.markReportSent("a", "2026-10-15", new Date().toISOString());
     });
     expect(out).toEqual([["not_staying"], true, [], []]);

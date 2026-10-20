@@ -5,21 +5,28 @@ import type { Booking, Cage, HotelData, Payment } from "./types";
 
 export type PaymentStatus = "unpaid" | "partial" | "paid";
 
-export const paidAmount = (b: Pick<Booking, "payments">) => b.payments.reduce((sum, p) => sum + p.amount, 0);
+/** A payment as it counts towards the stay: money in is positive, a refund negative. */
+export const signedAmount = (p: Pick<Payment, "amount" | "kind">) => (p.kind === "refund" ? -p.amount : p.amount);
 
-export function balanceDue(b: Pick<Booking, "checkIn" | "checkOut" | "payments" | "charges">, cage: Cage | undefined) {
+/** Money kept for the stay: everything received, less refunds. */
+export const paidAmount = (b: Pick<Booking, "payments">) => b.payments.reduce((sum, p) => sum + signedAmount(p), 0);
+
+type Priced = Pick<Booking, "checkIn" | "checkOut" | "payments" | "charges"> & Partial<Pick<Booking, "petId" | "companionIds">>;
+
+export function balanceDue(b: Priced, cage: Cage | undefined) {
   return Math.max(0, bookingTotal(b, cage) - paidAmount(b));
 }
 
 /** Paid in full, or more. A stay with nothing to pay (no cage on record) counts as paid, not as a debt. */
-export function paymentStatus(b: Pick<Booking, "checkIn" | "checkOut" | "payments" | "charges">, cage: Cage | undefined): PaymentStatus {
+export function paymentStatus(b: Priced, cage: Cage | undefined): PaymentStatus {
   const total = bookingTotal(b, cage);
   const paid = paidAmount(b);
   if (paid >= total) return "paid";
   return paid > 0 ? "partial" : "unpaid";
 }
 
-export type PaymentIssue = "booking" | "cancelled" | "amount";
+/** refund: more given back than the stay has kept. */
+export type PaymentIssue = "booking" | "cancelled" | "amount" | "refund";
 
 /** An amount is a whole number of rupiah above zero. */
 export const isValidAmount = (amount: number) => Number.isInteger(amount) && amount > 0;

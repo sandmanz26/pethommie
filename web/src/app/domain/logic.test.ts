@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { aBooking, aCage, aHotel, aPet, aSmallHotel } from "@/app/testing/fixtures";
+import { aBooking, aCage, aHotel, anOwner, aPet, aSmallHotel } from "@/app/testing/fixtures";
+import type { Booking } from "./types";
 import {
   addDays,
   bookingTotal,
@@ -12,7 +13,10 @@ import {
   nights,
   occupantOn,
   overlaps,
+  placesFor,
+  placesUsed,
   todayBoard,
+  totalPlaces,
   todayISO,
   vaccineState,
 } from "./logic";
@@ -186,5 +190,41 @@ describe("newId", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("shared rooms (a unit with more than one place)", () => {
+  const room = aCage("room", "M", 60_000, 3);
+  const hotel = (bookings: Booking[]) =>
+    aSmallHotel({ cages: [aCage("s1"), room], owners: [anOwner("o1")], pets: ["p1", "p2", "p3", "p4", "p5"].map((id) => aPet(id, "o1")), bookings });
+  const stay = (id: string, petId: string, over: Partial<Booking> = {}) => aBooking(id, { petId, cageId: "room", checkIn: "2026-11-10", checkOut: "2026-11-13", ...over });
+
+  it("takes stays until its places are used, night by night", () => {
+    const two = hotel([stay("a", "p1"), stay("b", "p2")]);
+    expect(cageIsFree(two, "room", "2026-11-10", "2026-11-13")).toBe(true);
+    expect(cageIsFree(two, "room", "2026-11-10", "2026-11-13", undefined, 2)).toBe(false);
+    const full = hotel([stay("a", "p1"), stay("b", "p2"), stay("c", "p3", { checkIn: "2026-11-12", checkOut: "2026-11-14" })]);
+    expect(cageIsFree(full, "room", "2026-11-11", "2026-11-12")).toBe(true);
+    expect(cageIsFree(full, "room", "2026-11-12", "2026-11-13")).toBe(false);
+    expect(cageIsFree(full, "room", "2026-11-13", "2026-11-14")).toBe(true);
+  });
+
+  it("counts each pet of a stay as a place, while a cage is taken whole", () => {
+    const party = stay("a", "p1", { companionIds: ["p2"] });
+    expect(placesFor(party, room)).toBe(2);
+    expect(placesFor(party, aCage("s1"))).toBe(1);
+    expect(placesUsed(hotel([party]), "room", "2026-11-11")).toBe(2);
+  });
+
+  it("charges each pet the nightly rate in a shared room, and the cage once in a cage", () => {
+    const party = { checkIn: "2026-11-10", checkOut: "2026-11-13", companionIds: ["p2"] };
+    expect(bookingTotal(party, room)).toBe(3 * 60_000 * 2);
+    expect(bookingTotal(party, aCage("s1", "S", 50_000))).toBe(3 * 50_000);
+  });
+
+  it("counts free places tonight: a free cage is one, a room its spare places", () => {
+    const d = hotel([aBooking("x", { petId: "p4", cageId: "s1", checkIn: "2026-11-10", checkOut: "2026-11-12" }), stay("a", "p1")]);
+    expect(totalPlaces(d)).toBe(4);
+    expect(todayBoard(d, "2026-11-11").freeTonight).toBe(2);
   });
 });

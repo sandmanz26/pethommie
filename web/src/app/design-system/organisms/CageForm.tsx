@@ -24,6 +24,8 @@ export function CageForm({
   const [name, setName] = useState(cage?.name ?? "");
   const [size, setSize] = useState<CageSize>(cage?.size ?? "M");
   const [price, setPrice] = useState(String(cage?.pricePerNight ?? 75000));
+  const [shared, setShared] = useState((cage?.capacity ?? 1) > 1);
+  const [capacity, setCapacity] = useState(String(Math.max(2, cage?.capacity ?? 6)));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function submit(e: FormEvent) {
@@ -32,9 +34,11 @@ export function CageForm({
     const err: Record<string, string> = {};
     if (!name.trim()) err.name = c.errName;
     if (!(p > 0)) err.price = c.errPrice;
+    const places = parseInt(capacity.replace(/\D/g, "") || "0", 10);
+    if (shared && !(places >= 2)) err.capacity = c.errCapacity;
     setErrors(err);
     if (Object.keys(err).length) return;
-    onSubmit({ name: name.trim(), size, pricePerNight: p });
+    onSubmit({ name: name.trim(), size, pricePerNight: p, capacity: shared ? places : 1 });
   }
 
   return (
@@ -54,7 +58,20 @@ export function CageForm({
           </Select>
         </Field>
       </div>
-      <Field label={c.price} error={errors.price}>
+      <div className="ds-form__row">
+        <Field label={c.kind}>
+          <Select value={shared ? "shared" : "single"} onChange={(e) => setShared(e.target.value === "shared")}>
+            <option value="single">{c.kinds.single}</option>
+            <option value="shared">{c.kinds.shared}</option>
+          </Select>
+        </Field>
+        {shared && (
+          <Field label={c.capacity} error={errors.capacity}>
+            <Input value={capacity} onChange={(e) => setCapacity(e.target.value)} inputMode="numeric" />
+          </Field>
+        )}
+      </div>
+      <Field label={shared ? c.priceShared : c.price} error={errors.price}>
         <Input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="numeric" />
       </Field>
       <div className="ds-form__actions">

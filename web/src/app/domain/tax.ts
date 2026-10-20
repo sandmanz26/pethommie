@@ -75,7 +75,7 @@ export function taxFor(data: HotelData, year: number): YearTax {
   for (const b of data.bookings) {
     for (const p of b.payments) {
       const m = monthOf(p.at, year);
-      if (m) cash[m - 1] += withoutTax(p.amount, tax);
+      if (m) cash[m - 1] += withoutTax(p.kind === "refund" ? -p.amount : p.amount, tax);
     }
     if (b.status === "checked_out") {
       const m = monthOf(b.checkOut, year);

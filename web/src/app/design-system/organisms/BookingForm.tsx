@@ -1,14 +1,16 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { bookingIssues, scheduleIssues } from "@/app/domain/bookingRules";
 import { normaliseWhatsapp } from "@/shared/lib/phone";
-import type { Booking, CageSize, HotelData, PaymentMethod, Species } from "@/app/domain/types";
+import type { Booking, BookingSource, CageSize, HotelData, PaymentMethod, Species } from "@/app/domain/types";
 import {
   addDays,
   bookingTotal,
+  cageIsFree,
   formatRupiah,
-  freeCages,
+  isShared,
   newId,
   nights,
+  placesUsed,
   SIZE_ORDER,
   todayISO,
   vaccineState,
@@ -63,22 +65,25 @@ export function BookingForm({
   const [cageId, setCageId] = useState(initialCageId ?? "");
   const [deposit, setDeposit] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("transfer");
+  const [source, setSource] = useState<BookingSource>("whatsapp");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validDates = checkOut > checkIn;
+  const pet = data.pets.find((p) => p.id === petId);
+  const siblings = !adding && pet ? data.pets.filter((p) => p.ownerId === pet.ownerId && p.id !== pet.id) : [];
+  const chosenCompanions = companions.filter((id) => siblings.some((s) => s.id === id));
+  // A cage holds the whole party; a shared room needs a place for each pet.
+  const party = 1 + chosenCompanions.length;
   const options = useMemo(
-    () => (validDates ? freeCages(data, checkIn, checkOut, size || undefined) : []),
-    [data, checkIn, checkOut, size, validDates],
+    () => (validDates ? data.cages.filter((c) => (!size || c.size === size) && cageIsFree(data, c.id, checkIn, checkOut, undefined, isShared(c) ? party : 1)) : []),
+    [data, checkIn, checkOut, size, validDates, party],
   );
   // Drop a chosen cage that is no longer free for the new dates/size.
   const selectedCageId = options.some((c) => c.id === cageId) ? cageId : "";
   const cage = data.cages.find((c) => c.id === selectedCageId);
   const n = validDates ? nights(checkIn, checkOut) : 0;
-  const total = bookingTotal({ checkIn, checkOut }, cage);
-  const pet = data.pets.find((p) => p.id === petId);
-  const siblings = !adding && pet ? data.pets.filter((p) => p.ownerId === pet.ownerId && p.id !== pet.id) : [];
-  const chosenCompanions = companions.filter((id) => siblings.some((s) => s.id === id));
+  const total = bookingTotal({ checkIn, checkOut, companionIds: chosenCompanions }, cage);
   const vState = pet ? vaccineState(pet, checkIn) : null;
   const sortedPets = useMemo(() => [...data.pets].sort((a, b) => a.name.localeCompare(b.name)), [data.pets]);
 
@@ -93,8 +98,8 @@ export function BookingForm({
       if (np.whatsapp.trim() && !normaliseWhatsapp(np.whatsapp)) err.npWa = t.petForm.errWhatsapp;
     } else if (!petId) err.pet = f.errPet;
     const issues = [
-      ...scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut }),
-      ...bookingIssues(data, { id: "", petId: adding ? "" : petId, companionIds: adding ? [] : chosenCompanions, cageId: selectedCageId, checkIn, checkOut, status: "booked", payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion"),
+      ...scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut, places: isShared(cage) ? party : 1 }),
+      ...bookingIssues(data, { id: "", petId: adding ? "" : petId, companionIds: adding ? [] : chosenCompanions, cageId: selectedCageId, checkIn, checkOut, status: "booked", source, payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion"),
     ];
     if (issues.includes("pet_busy")) err.pet = f.errPetBusy;
     if (issues.includes("companion")) err.companions = f.errCompanion;
@@ -112,9 +117,10 @@ export function BookingForm({
         checkIn,
         checkOut,
         status: "booked",
+        source,
         companionIds: adding ? [] : chosenCompanions,
         charges: [],
-        payments: depositAmount > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: depositAmount, method, note: "" }] : [],
+        payments: depositAmount > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: depositAmount, method, kind: "deposit", reference: "", note: "" }] : [],
         arrival: null,
         notes: notes.trim(),
         createdAt: new Date().toISOString(),
@@ -202,7 +208,9 @@ export function BookingForm({
               <option value="">{options.length ? f.cagePh : "—"}</option>
               {options.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} · {t.common.sizes[c.size]} · {formatRupiah(c.pricePerNight, locale)}
+                  {isShared(c)
+                    ? `${c.name} · ${t.cages.places(placesUsed(data, c.id, checkIn), c.capacity)} · ${formatRupiah(c.pricePerNight, locale)}`
+                    : `${c.name} · ${t.common.sizes[c.size]} · ${formatRupiah(c.pricePerNight, locale)}`}
                 </option>
               ))}
             </Select>
@@ -219,7 +227,7 @@ export function BookingForm({
           {depositAmount > 0 && (
             <Field label={t.payments.method}>
               <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-                {(["transfer", "qris", "cash"] as PaymentMethod[]).map((m) => (
+                {(["transfer", "qris", "cash", "ewallet", "card"] as PaymentMethod[]).map((m) => (
                   <option key={m} value={m}>
                     {t.payments.methods[m]}
                   </option>
@@ -232,6 +240,15 @@ export function BookingForm({
             <b>{formatRupiah(total, locale)}</b>
           </div>
         </div>
+        <Field label={f.source}>
+          <Select value={source} onChange={(e) => setSource(e.target.value as BookingSource)}>
+            {(Object.keys(f.sources) as BookingSource[]).map((s) => (
+              <option key={s} value={s}>
+                {f.sources[s]}
+              </option>
+            ))}
+          </Select>
+        </Field>
         <Field label={f.notes} optional={t.common.optional}>
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={f.notesPh} />
         </Field>

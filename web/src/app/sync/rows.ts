@@ -12,7 +12,7 @@ import { uuidFor } from "./ids";
  */
 
 export type HotelRow = { id: string; name: string; city: string; whatsapp: string; settings: HotelSettings; created_at: string };
-export type CageRow = { id: string; hotel_id: string; name: string; size: string; price_per_night: number };
+export type CageRow = { id: string; hotel_id: string; name: string; size: string; price_per_night: number; capacity: number };
 export type OwnerRow = { id: string; hotel_id: string; name: string; whatsapp: string; language: string };
 export type PetRow = { id: string; hotel_id: string; owner_id: string; name: string; species: string; breed: string; vaccine_expiry: string | null; notes: string };
 export type BookingRow = {
@@ -23,6 +23,7 @@ export type BookingRow = {
   check_in: string;
   check_out: string;
   status: string;
+  source: string;
   arrival: Arrival | null;
   notes: string;
   created_at: string;
@@ -52,7 +53,7 @@ export type InvoiceRow = {
   total: number;
   prices_include_tax: boolean;
 };
-export type PaymentRow = { id: string; hotel_id: string; booking_id: string; paid_at: string; amount: number; method: string; note: string };
+export type PaymentRow = { id: string; hotel_id: string; booking_id: string; paid_at: string; amount: number; method: string; kind: string; reference: string; note: string };
 export type CareEntryRow = { id: string; hotel_id: string; booking_id: string; at: string; kind: string; preset: string | null; note: string };
 export type ReportSentRow = { hotel_id: string; booking_id: string; report_date: string; sent_at: string };
 
@@ -91,7 +92,7 @@ export function toRows(data: HotelData, hotelId: string): { hotel: HotelRow; row
   return {
     hotel: { id: h, name: hotel?.name ?? "", city: hotel?.city ?? "", whatsapp: hotel?.whatsapp ?? "", settings: data.settings, created_at: epoch },
     rows: {
-      cages: data.cages.map((c) => ({ id: u(c.id), hotel_id: h, name: c.name, size: c.size, price_per_night: c.pricePerNight })),
+      cages: data.cages.map((c) => ({ id: u(c.id), hotel_id: h, name: c.name, size: c.size, price_per_night: c.pricePerNight, capacity: c.capacity })),
       owners: data.owners.map((o) => ({ id: u(o.id), hotel_id: h, name: o.name, whatsapp: o.whatsapp, language: o.language })),
       pets: data.pets.map((p) => ({
         id: u(p.id),
@@ -111,6 +112,7 @@ export function toRows(data: HotelData, hotelId: string): { hotel: HotelRow; row
         check_in: b.checkIn,
         check_out: b.checkOut,
         status: b.status,
+        source: b.source,
         arrival: b.arrival,
         notes: b.notes,
         created_at: createdOf.get(b.id)!,
@@ -126,6 +128,8 @@ export function toRows(data: HotelData, hotelId: string): { hotel: HotelRow; row
           paid_at: iso(p.at, createdOf.get(b.id)!),
           amount: p.amount,
           method: p.method,
+          kind: p.kind,
+          reference: p.reference,
           note: p.note,
         })),
       ),
@@ -169,7 +173,7 @@ export function fromRows(hotel: HotelRow, rows: Rows): HotelData {
   const paymentsOf = new Map<string, Payment[]>();
   for (const p of rows.payments) {
     const list = paymentsOf.get(p.booking_id) ?? [];
-    list.push({ id: p.id, at: iso(p.paid_at, epoch), amount: p.amount, method: p.method as Payment["method"], note: p.note });
+    list.push({ id: p.id, at: iso(p.paid_at, epoch), amount: p.amount, method: p.method as Payment["method"], kind: p.kind as Payment["kind"], reference: p.reference, note: p.note });
     paymentsOf.set(p.booking_id, list);
   }
   const companionsOf = new Map<string, string[]>();
@@ -182,7 +186,7 @@ export function fromRows(hotel: HotelRow, rows: Rows): HotelData {
     ...emptyData(),
     settings: hotel.settings,
     hotel: { name: hotel.name, city: hotel.city, whatsapp: hotel.whatsapp, createdAt: iso(hotel.created_at, epoch) },
-    cages: rows.cages.map((c): Cage => ({ id: c.id, name: c.name, size: c.size as Cage["size"], pricePerNight: c.price_per_night })),
+    cages: rows.cages.map((c): Cage => ({ id: c.id, name: c.name, size: c.size as Cage["size"], pricePerNight: c.price_per_night, capacity: c.capacity })),
     owners: rows.owners.map((o): Owner => ({ id: o.id, name: o.name, whatsapp: o.whatsapp, language: o.language as Owner["language"] })),
     pets: rows.pets.map((p): Pet => ({ id: p.id, name: p.name, species: p.species as Pet["species"], breed: p.breed, ownerId: p.owner_id, vaccineExpiry: (p.vaccine_expiry ?? "") as ISODate | "", notes: p.notes })),
     bookings: rows.bookings.map(
@@ -195,6 +199,7 @@ export function fromRows(hotel: HotelRow, rows: Rows): HotelData {
         checkIn: b.check_in,
         checkOut: b.check_out,
         status: b.status as Booking["status"],
+        source: b.source as Booking["source"],
         payments: sortedPayments(b.id),
         arrival: b.arrival,
         notes: b.notes,

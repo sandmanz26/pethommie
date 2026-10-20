@@ -21,6 +21,8 @@ export type Account = {
   createdAt: string;
   /** Mock accounts only: open with the sample hotel already filled in. Goes away with the mock service. */
   startsWithSampleData?: boolean;
+  /** Mock accounts only: which sample hotel ("advanced" opens the busy one, in advanced mode). */
+  sampleKind?: "simple" | "advanced";
 };
 
 export type StoredAccount = Account & { password: PasswordHash };

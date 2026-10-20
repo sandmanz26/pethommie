@@ -52,41 +52,66 @@ export function overlaps(aIn: ISODate, aOut: ISODate, bIn: ISODate, bOut: ISODat
   return aIn < bOut && bIn < aOut;
 }
 
-export function cageIsFree(
-  data: HotelData,
-  cageId: string,
-  checkIn: ISODate,
-  checkOut: ISODate,
-  ignoreBookingId?: string,
-) {
-  return !data.bookings.some(
-    (b) =>
-      b.cageId === cageId &&
-      b.id !== ignoreBookingId &&
-      holdsCage(b) &&
-      overlaps(checkIn, checkOut, b.checkIn, b.checkOut),
-  );
+/** A place that takes more than one stay at a time: a shared room or play area. */
+export const isShared = (cage: Pick<Cage, "capacity"> | undefined) => (cage?.capacity ?? 1) > 1;
+
+/** Places a stay takes in a unit: a cage is taken whole (its pets share it); in a shared room each pet takes one. */
+export function placesFor(b: Pick<Booking, "petId" | "companionIds">, cage: Pick<Cage, "capacity"> | undefined) {
+  return isShared(cage) ? stayPetIds(b).length : 1;
 }
 
-export function freeCages(data: HotelData, checkIn: ISODate, checkOut: ISODate, size?: CageSize) {
-  return data.cages.filter(
-    (c) => (!size || c.size === size) && cageIsFree(data, c.id, checkIn, checkOut),
-  );
+/** Places in use in a unit on a night, by stays that hold their place. */
+export function placesUsed(data: HotelData, cageId: string, night: ISODate, ignoreBookingId?: string) {
+  const cage = data.cages.find((c) => c.id === cageId);
+  return data.bookings
+    .filter((b) => b.cageId === cageId && b.id !== ignoreBookingId && holdsCage(b) && b.checkIn <= night && night < b.checkOut)
+    .reduce((n, b) => n + placesFor(b, cage), 0);
 }
 
-/** The booking occupying a cage on a given night, if any. */
+/**
+ * True if a unit has room for `places` more on every night of [checkIn, checkOut). A cage (capacity 1) is free only
+ * when nobody holds it; a shared room while its pets stay within capacity.
+ */
+export function cageIsFree(data: HotelData, cageId: string, checkIn: ISODate, checkOut: ISODate, ignoreBookingId?: string, places = 1) {
+  const cage = data.cages.find((c) => c.id === cageId);
+  const capacity = cage?.capacity ?? 1;
+  const overlapping = data.bookings.filter((b) => b.cageId === cageId && b.id !== ignoreBookingId && holdsCage(b) && overlaps(checkIn, checkOut, b.checkIn, b.checkOut));
+  if (!overlapping.length) return places <= capacity;
+  if (capacity <= 1) return false;
+  for (let night = checkIn; night < checkOut; night = addDays(night, 1)) {
+    const used = overlapping.filter((b) => b.checkIn <= night && night < b.checkOut).reduce((n, b) => n + placesFor(b, cage), 0);
+    if (used + places > capacity) return false;
+  }
+  return true;
+}
+
+export function freeCages(data: HotelData, checkIn: ISODate, checkOut: ISODate, size?: CageSize, places = 1) {
+  return data.cages.filter((c) => (!size || c.size === size) && cageIsFree(data, c.id, checkIn, checkOut, undefined, places));
+}
+
+/** The booking occupying a cage on a given night, if any (for a shared room: one of them). */
 export function occupantOn(data: HotelData, cageId: string, night: ISODate) {
   return data.bookings.find(
     (b) => b.cageId === cageId && holdsCage(b) && b.checkIn <= night && night < b.checkOut,
   );
 }
 
+/** Places the hotel has: one per cage, `capacity` per shared room. */
+export const totalPlaces = (data: Pick<HotelData, "cages">) => data.cages.reduce((n, c) => n + Math.max(1, c.capacity), 0);
+
 // ---------- money ----------
 
-/** The price of a stay: the nights at the cage's rate, plus add-ons and minus discounts. Never below zero. */
-export function bookingTotal(booking: Pick<Booking, "checkIn" | "checkOut"> & { charges?: Pick<Charge, "amount">[] }, cage: Cage | undefined) {
+/**
+ * The price of a stay: the nights at the unit's rate (for each pet in a shared room), plus add-ons and minus
+ * discounts. Never below zero.
+ */
+export function bookingTotal(
+  booking: Pick<Booking, "checkIn" | "checkOut"> & { charges?: Pick<Charge, "amount">[]; petId?: string; companionIds?: string[] },
+  cage: Cage | undefined,
+) {
   if (!cage) return 0;
-  const base = Math.max(0, nights(booking.checkIn, booking.checkOut)) * cage.pricePerNight;
+  const pets = isShared(cage) ? 1 + (booking.companionIds?.length ?? 0) : 1;
+  const base = Math.max(0, nights(booking.checkIn, booking.checkOut)) * cage.pricePerNight * pets;
   const extras = (booking.charges ?? []).reduce((sum, c) => sum + c.amount, 0);
   return Math.max(0, base + extras);
 }
@@ -130,7 +155,8 @@ export function todayBoard(data: HotelData, today: ISODate) {
     lateArrivals: live.filter((b) => b.status === "booked" && b.checkIn < today),
     leaving: live.filter((b) => b.status === "checked_in" && b.checkOut <= today),
     inHouse: live.filter((b) => b.status === "checked_in"),
-    freeTonight: data.cages.filter((c) => !occupantOn(data, c.id, today)).length,
+    /** Places free tonight, out of `totalPlaces`: a free cage counts one, a shared room its spare places. */
+    freeTonight: data.cages.reduce((n, c) => n + Math.max(0, Math.max(1, c.capacity) - placesUsed(data, c.id, today)), 0),
   };
 }
 
@@ -157,6 +183,7 @@ export function generateCages(spec: Record<CageSize, { count: number; price: num
       name: `${size}-${String(i + 1).padStart(2, "0")}`,
       size,
       pricePerNight: spec[size].price,
+      capacity: 1,
     })),
   );
 }

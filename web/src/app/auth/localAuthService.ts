@@ -56,7 +56,16 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
       try {
         const doc = JSON.parse(raw) as unknown;
         if (isObject(doc) && doc.version === 1 && Array.isArray(doc.accounts) && doc.accounts.every(isStoredAccount)) {
-          return doc as AccountsDoc;
+          // A demo account added after this browser was seeded joins the others. Only where the demo accounts are
+          // already in use: someone who started without them doesn't get them later, and nothing is overwritten.
+          const known = doc as AccountsDoc;
+          const seeded = seed.some((s) => known.accounts.some((a) => a.id === s.id));
+          const missing = seed.filter((s) => !known.accounts.some((a) => a.id === s.id || a.email === s.email));
+          if (!seeded || !missing.length) return known;
+          const createdAt = new Date().toISOString();
+          for (const { password, ...account } of missing) known.accounts.push({ ...account, createdAt, password: await hashPassword(password, iterations) });
+          save(known);
+          return known;
         }
       } catch {
         // fall through

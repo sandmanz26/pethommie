@@ -1,4 +1,4 @@
-import { addDays, nights, stayPetIds } from "./logic";
+import { addDays, isShared, nights, stayPetIds } from "./logic";
 import { paidAmount } from "./payments";
 import type { Booking, HotelData, ISODate, Invoice, InvoiceLine, Language, TaxProfile } from "./types";
 
@@ -52,7 +52,8 @@ const WORDS = {
 /** The lines of a stay's invoice: the nights, then each add-on and discount as typed. */
 export function invoiceLines(data: HotelData, booking: Booking, language: Language): InvoiceLine[] {
   const cage = data.cages.find((c) => c.id === booking.cageId);
-  const n = Math.max(0, nights(booking.checkIn, booking.checkOut));
+  // In a shared room each pet pays the nightly rate, so the quantity is pet-nights.
+  const n = Math.max(0, nights(booking.checkIn, booking.checkOut)) * (isShared(cage) ? stayPetIds(booking).length : 1);
   const names = petNames(data, booking);
   return [
     { label: WORDS[language].boarding(names, cage?.name ?? "-"), quantity: n, unitPrice: cage?.pricePerNight ?? 0, amount: n * (cage?.pricePerNight ?? 0) },

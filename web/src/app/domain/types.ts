@@ -12,13 +12,22 @@ export type Hotel = {
   createdAt: string;
 };
 
+/**
+ * A place pets stay in. A cage holds one stay (its pets share it, at one price). A shared room or play area
+ * (cage-free hotels, home boarding) holds `capacity` pets at once, each paying the nightly rate.
+ */
 export type Cage = {
   id: string;
   name: string;
   size: CageSize;
-  /** Nightly rate in rupiah. */
+  /** Nightly rate in rupiah: for the cage, or for each pet in a shared room. */
   pricePerNight: number;
+  /** 1 for a cage; the number of pets a shared room takes. */
+  capacity: number;
 };
+
+/** What the hotel calls its places, so the screens speak its language: cages, rooms, or spaces. */
+export type UnitTerm = "cage" | "room" | "space";
 
 /** The language a person reads: the operator's screen, an owner's messages, an invoice. */
 export type Language = "id" | "en";
@@ -43,18 +52,26 @@ export type Pet = {
   notes: string;
 };
 
-export type PaymentMethod = "cash" | "qris" | "transfer";
+export type PaymentMethod = "cash" | "qris" | "transfer" | "ewallet" | "card";
+/** deposit: paid before the stay. payment: any other money in. refund: money given back (counts against the stay). */
+export type PaymentKind = "deposit" | "payment" | "refund";
 
-/** Money received for a stay (a deposit, a part payment, the balance). Recorded by hand: nothing here talks to a bank. */
+/** Money for a stay: a deposit, a part payment, the balance, or a refund. Recorded by hand: nothing here talks to a bank. */
 export type Payment = {
   id: string;
-  /** When it was received. */
+  /** When it was received (or given back). */
   at: string;
-  /** Rupiah, a whole number above zero. */
+  /** Rupiah, a whole number above zero. A refund is a positive amount with kind "refund". */
   amount: number;
   method: PaymentMethod;
+  kind: PaymentKind;
+  /** Transfer or QRIS reference, receipt number: whatever lets the operator find it in the bank later. */
+  reference: string;
   note: string;
 };
+
+/** Where a booking came from, for the reports. */
+export type BookingSource = "walk_in" | "whatsapp" | "instagram" | "link" | "referral" | "other";
 
 /** What the pet looked like when it arrived. The record an operator can point to if there is a dispute later. */
 export type Arrival = {
@@ -91,6 +108,7 @@ export type Booking = {
   checkIn: ISODate;
   checkOut: ISODate;
   status: BookingStatus;
+  source: BookingSource;
   payments: Payment[];
   charges: Charge[];
   /** Filled at check-in; null if the pet was checked in without one. */
@@ -144,6 +162,7 @@ export type HotelSettings = {
   paymentInstructions: string;
   invoiceLanguage: Language;
   tax: TaxProfile;
+  unitTerm: UnitTerm;
 };
 
 export type InvoiceLine = { label: string; quantity: number; unitPrice: number; amount: number };
@@ -179,7 +198,7 @@ export type Invoice = {
 };
 
 export type HotelData = {
-  version: 3;
+  version: 4;
   hotel: Hotel | null;
   settings: HotelSettings;
   cages: Cage[];
@@ -199,10 +218,11 @@ export const defaultSettings = (): HotelSettings => ({
   paymentInstructions: "",
   invoiceLanguage: "id",
   tax: { regime: "none", taxpayer: "individual", basis: "cash", pkp: false, ppnPercent: 11, pricesIncludeTax: false },
+  unitTerm: "cage",
 });
 
 export const emptyData = (): HotelData => ({
-  version: 3,
+  version: 4,
   hotel: null,
   settings: defaultSettings(),
   cages: [],

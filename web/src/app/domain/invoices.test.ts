@@ -147,7 +147,7 @@ describe("buildInvoice", () => {
 
 describe("what an invoice says about its stay", () => {
   const d = (): HotelData => {
-    const data = aSmallHotel({ cages: [aCage("s1")], bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", status: "checked_out", payments: [{ id: "p", at: "2026-10-16T08:00:00.000Z", amount: 40_000, method: "cash", note: "" }] })] });
+    const data = aSmallHotel({ cages: [aCage("s1")], bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", status: "checked_out", payments: [{ id: "p", at: "2026-10-16T08:00:00.000Z", amount: 40_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] })] });
     const r = buildInvoice(data, "b1", { id: "i1", issuedOn: "2026-10-16" });
     if (!("invoice" in r)) throw new Error();
     return { ...data, invoices: [r.invoice] };
@@ -156,7 +156,7 @@ describe("what an invoice says about its stay", () => {
   it("is unpaid, part paid or paid by the stay's payments", () => {
     const data = d(); // total 100.000
     expect(invoicePayment(data, data.invoices[0])).toBe("partial");
-    data.bookings[0].payments.push({ id: "q", at: "2026-10-16T09:00:00.000Z", amount: 60_000, method: "qris", note: "" });
+    data.bookings[0].payments.push({ id: "q", at: "2026-10-16T09:00:00.000Z", amount: 60_000, method: "qris", kind: "payment" as const, reference: "", note: "" });
     expect(invoicePayment(data, data.invoices[0])).toBe("paid");
     data.bookings[0].payments = [];
     expect(invoicePayment(data, data.invoices[0])).toBe("unpaid");

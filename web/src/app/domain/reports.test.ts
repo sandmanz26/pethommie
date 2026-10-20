@@ -18,7 +18,7 @@ describe("periodRange", () => {
   });
 });
 
-const pay = (amount: number, at: string): Payment => ({ id: at + amount, at, amount, method: "cash", note: "" });
+const pay = (amount: number, at: string): Payment => ({ id: at + amount, at, amount, method: "cash", kind: "payment" as const, reference: "", note: "" });
 const owner = anOwner("o1");
 const week = { from: "2026-10-05", to: "2026-10-12" }; // 7 days; 3 cages -> 21 cage-nights
 
