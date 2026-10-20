@@ -9,7 +9,8 @@
       -> only the ones listed in ICONS below, with slivers of neighbouring icons removed
       -> public/icons/ui/<usage-name>.webp  (named by what they are used for)
 
-  resources/backgrounds/*          full scenes with an empty middle, shown behind a form or a call to action
+  resources/backgrounds/*          full scenes with an empty middle, shown behind a form or a call to action;
+                                   a transparent (faded) middle is kept
       -> public/backgrounds/<name>.webp (max 1600 px wide) and <name>-800.webp for phones
 
   resources/photos/*.jpg|png|webp  real photos
@@ -162,7 +163,9 @@ def main() -> None:
     for src in sorted((ROOT / "resources" / "backgrounds").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"} or (only and slug(src) not in only):
             continue
-        scene = Image.open(src).convert("RGB")
+        scene = Image.open(src)
+        # A scene that fades out (an alpha channel) keeps it, so the page shows through the faded part.
+        scene = scene.convert("RGBA" if "A" in scene.getbands() else "RGB")
         print(f"{src.name}:")
         for width, suffix in ((PHOTO_MAX, ""), (800, "-800")):
             copy = scene.copy()
