@@ -23,7 +23,7 @@ export function CustomersPage() {
         {shown.length ? (
           shown.map((c) => <CustomerRow key={c.owner.id} customer={c} />)
         ) : (
-          <EmptyState art="dog">{q ? t.customersPage.noMatch(q) : t.customersPage.empty}</EmptyState>
+          <EmptyState icon="pets">{q ? t.customersPage.noMatch(q) : t.customersPage.empty}</EmptyState>
         )}
       </div>
     </>

@@ -6,7 +6,6 @@ import { DEMO_PASSWORD, demoAccounts } from "@/app/auth/demoAccounts";
 import { loginIssues, type Issue } from "@/app/auth/validation";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
-import { Illustration } from "@/app/design-system/atoms/Illustration";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
@@ -47,7 +46,6 @@ export function LoginPage() {
   return (
     <FocusLayout>
       <form className="pg-flow" onSubmit={submit} noValidate>
-        <Illustration name="dog-walking" height={130} />
         <div className="pg-flow__head pg-flow__head--center">
           <Heading level={1}>{a.title}</Heading>
           <Muted>{a.lead}</Muted>

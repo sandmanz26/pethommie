@@ -66,7 +66,7 @@ export function PaymentsPage() {
             return <ReceivableRow key={r.booking.id} row={r} pet={pet} owner={data.owners.find((o) => o.id === pet?.ownerId)} reminderHref={reminder(r)} />;
           })
         ) : (
-          <EmptyState art="reservation">{filter === "all" ? p.empty : p.emptyFilter}</EmptyState>
+          <EmptyState icon="bookings">{filter === "all" ? p.empty : p.emptyFilter}</EmptyState>
         )}
       </div>
       <Muted>{p.hint}</Muted>

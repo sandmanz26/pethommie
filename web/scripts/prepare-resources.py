@@ -36,26 +36,9 @@ CELL = 4  # components are found on a grid 4x coarser than the image
 PAD = 16  # transparent margin kept around the trimmed illustration
 
 # Icons the app uses: public name -> "<set folder>/<file>" in resources/icons. Add a line to use another one.
-ICONS = {
-    "meal": "app/10_kibble",
-    "drink": "app/15_bone",  # the sheet was sliced one tile off: the water bowl sits in this tile, right of the bone
-    "play": "play/06_cat_ball",
-    "toilet": "care/11_litterbox_kucing",
-    "medicine": "care/05_sick",
-    "mood": "play/01_happy_dog",
-    "note": "app/07_report",
-    "incident": "care/06_kucing_bingung",
-    "dog": "app/02_user_dog",
-    "cat": "app/03_user_cat",
-    "money": "app/12_money",
-    "bag": "app/08_bag",
-    "report": "app/07_report",
-    "dog-house": "play/09_dog_house",
-    "no-carrier": "play/07_dog_carrier_crossed",
-    "reservation": "care/07_reservasi",
-}
+ICONS: dict[str, str] = {}
 ICON_PAD = 2
-ICON_CROPS = {"drink": (24, 0, 64, 64)}  # keep only this box of the tile (left, top, right, bottom)
+ICON_CROPS: dict[str, tuple[int, int, int, int]] = {}  # name -> keep only this box of the tile (left, top, right, bottom)
 
 
 def slug(path: Path) -> str:

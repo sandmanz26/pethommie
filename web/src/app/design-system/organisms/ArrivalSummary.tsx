@@ -1,7 +1,6 @@
 import type { Arrival } from "@/app/domain/types";
 import { timeOf } from "@/app/domain/logic";
 import { Badge } from "@/app/design-system/atoms/Badge";
-import { UiIcon } from "@/app/design-system/atoms/UiIcon";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
@@ -13,7 +12,6 @@ export function ArrivalSummary({ arrival }: { arrival: Arrival | null }) {
   return (
     <section className="ds-panel" aria-labelledby="arrival-title">
       <span className="ds-panel__title">
-        <UiIcon name="bag" size={28} />
         <Heading level={2} size="md">
           <span id="arrival-title">{a.title}</span>
         </Heading>

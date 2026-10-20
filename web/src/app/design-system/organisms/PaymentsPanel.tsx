@@ -4,7 +4,6 @@ import { bookingTotal, formatRupiah, timeOf, dayOf, formatDate } from "@/app/dom
 import { balanceDue, paidAmount, paymentStatus, type PaymentIssue } from "@/app/domain/payments";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
 import { Button } from "@/app/design-system/atoms/Button";
-import { UiIcon } from "@/app/design-system/atoms/UiIcon";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -59,7 +58,6 @@ export function PaymentsPanel({
     <section className="ds-panel" aria-labelledby="payments-title">
       <div className="ds-panel__head">
         <span className="ds-panel__title">
-          <UiIcon name="money" size={28} />
           <Heading level={2} size="md">
             <span id="payments-title">{p.title}</span>
           </Heading>

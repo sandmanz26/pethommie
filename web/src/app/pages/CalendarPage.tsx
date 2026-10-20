@@ -44,7 +44,7 @@ export function CalendarPage() {
           </ul>
         </>
       ) : (
-        <EmptyState art="dog-house" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{c.empty}</EmptyState>
+        <EmptyState icon="cages" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{c.empty}</EmptyState>
       )}
     </>
   );

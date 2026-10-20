@@ -118,8 +118,7 @@ the text is also shown for copying.
 
 ### Offline (PWA)
 
-`vite-plugin-pwa` generates a service worker that precaches the built app, fonts, icons and
-illustrations. It is registered only from the operator app (`app/pwa/useServiceWorker.ts`) with
+`vite-plugin-pwa` generates a service worker that precaches the built app, fonts and icons. It is registered only from the operator app (`app/pwa/useServiceWorker.ts`) with
 scope `/app`, so the website and its large films are never controlled by it. Updates are
 offered in a banner, never forced, so a reload can't interrupt someone mid-form. Fonts are
 self-hosted (`@fontsource-variable`), which is what lets them work offline and keeps the CSP
@@ -201,7 +200,7 @@ in CI are the next step if the UI changes often.
 
 - Vercel, Root Directory `web`. `web/vercel.json`: SPA rewrite (so `/app/bookings` survives a
   refresh), security headers (CSP, `X-Frame-Options`, `nosniff`, referrer and permissions policy),
-  long cache for hashed assets, a day for films and illustrations, `X-Robots-Tag: noindex` on
+  long cache for hashed assets, a day for films, `X-Robots-Tag: noindex` on
   `/app/*`.
 - The CSP allows inline *styles* (React sets some); fonts and scripts are `self` only. If you
   add a third-party script or API, extend it in `vercel.json`.
@@ -220,7 +219,7 @@ Honest list, roughly by importance:
 2. Sign-ups from the landing page aren't visible to the owner (see §3.4).
 3. One hotel per account; no staff roles or invitations. No password reset, email verification or
    rate limiting (all need a server).
-4. Binary assets (about 37 MB of frames, source videos and illustrations) live in git. Fine now; consider
+4. Binary assets (about 37 MB of frames and source videos) live in git. Fine now; consider
    Git LFS or an asset bucket if they keep growing.
 5. No screenshot tests in CI (§7). The landing page's tour images are captured by a script, not on every build.
 6. Offline works per phone: data is not synced, and nothing here has been tried on a real Android

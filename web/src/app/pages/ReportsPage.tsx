@@ -46,7 +46,7 @@ export function ReportsPage() {
       />
 
       {data.cages.length === 0 ? (
-        <EmptyState art="dog-house" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{r.noCages}</EmptyState>
+        <EmptyState icon="cages" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{r.noCages}</EmptyState>
       ) : (
         <>
           <div className="pg-stats pg-stats--wide">

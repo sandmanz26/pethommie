@@ -32,7 +32,7 @@ export function CustomerDetailPage() {
     return (
       <>
         <PageHeader title={c.title} back={{ to: "/app/customers", label: t.common.back }} />
-        <EmptyState art="dog">{c.notFound}</EmptyState>
+        <EmptyState icon="pets">{c.notFound}</EmptyState>
       </>
     );
   }

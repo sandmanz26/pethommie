@@ -46,10 +46,9 @@ src/
 public/
   films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
   films/turntable/   V2: 213 WebP frames of the illustrated turntable (17.75 s, 12 fps, 1600 px)
-  illustrations/     generated from resources/illustrations (transparent WebP cut-outs)
 media/             source videos from Higgsfield (kept out of public/, so not deployed)
 resources/         raw images and photos you drop in; scripts/prepare-resources.py makes the
-                   web versions in public/illustrations and public/photos (see resources/README.md)
+                   web versions in public/illustrations, public/icons/ui and public/photos (see resources/README.md)
 ```
 
 Import rules: `./x` only for files in the same folder; everything else through the `@/` alias
@@ -118,7 +117,7 @@ Company name, contact email and WhatsApp for the footer, legal pages and Help co
 The SaaS lives under `/app` as its own lazily-loaded bundle. A first visit goes to
 `/app/onboarding`: a welcome screen, then hotel name and WhatsApp → cages (one-tap
 Home / Small / Large presets, then counts and nightly prices per size) → a done screen with
-the first task to pick. Each step has an illustration from `public/illustrations`. "Explore
+the first task to pick. "Explore
 with sample data" skips it and fills every screen. Once a hotel exists, `/app/onboarding`
 redirects to `/app`; Settings → Delete all data brings the onboarding back.
 

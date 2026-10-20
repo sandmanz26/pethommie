@@ -86,7 +86,7 @@ export function InvoicesPage() {
           </table>
         </div>
       ) : (
-        <EmptyState art="reservation">
+        <EmptyState icon="bookings">
           {p.empty}
           <br />
           <Muted>{p.emptyHint}</Muted>

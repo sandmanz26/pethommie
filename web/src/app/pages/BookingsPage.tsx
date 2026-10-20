@@ -74,7 +74,7 @@ export function BookingsPage() {
           })
         ) : (
           <EmptyState
-            art="reservation"
+            icon="bookings"
             action={
               filter === "upcoming" && (
                 <Button to="/app/bookings/new" icon="plus" size="sm">

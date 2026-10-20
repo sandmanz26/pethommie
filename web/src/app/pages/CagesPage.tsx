@@ -56,7 +56,7 @@ export function CagesPage() {
         </>
       )}
 
-      {data.cages.length === 0 && <EmptyState art="dog-house">{t.cages.empty}</EmptyState>}
+      {data.cages.length === 0 && <EmptyState icon="cages">{t.cages.empty}</EmptyState>}
 
       {SIZE_ORDER.map((s) => {
         const cages = bySize(s);

@@ -31,7 +31,7 @@ export function InvoicePage() {
     return (
       <>
         <PageHeader title={t.nav.invoices} back={{ to: "/app/invoices", label: p.back }} />
-        <EmptyState art="reservation">{p.notFound}</EmptyState>
+        <EmptyState icon="bookings">{p.notFound}</EmptyState>
       </>
     );
   }

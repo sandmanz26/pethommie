@@ -3,8 +3,7 @@ import type { CareEntry, CareKind, ISODate } from "@/app/domain/types";
 import { CARE_KINDS, CARE_PRESETS, NEEDS_NOTE, type CareIssue } from "@/app/domain/careLog";
 import { formatDate, stayDay, timeOf } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
-import { UiIcon } from "@/app/design-system/atoms/UiIcon";
-import { CARE_ICON } from "@/app/design-system/atoms/uiIcons";
+import { CARE_EMOJI } from "@/app/domain/messages";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -83,7 +82,7 @@ export function CareLogPanel({
           <div className="ds-chips" role="group" aria-label={c.title}>
             {CARE_KINDS.map((k) => (
               <button key={k} type="button" className="ds-chip" aria-pressed={k === kind} onClick={() => (setKind(k), setError(undefined))}>
-                <UiIcon name={CARE_ICON[k]} size={28} /> {c.kinds[k]}
+                <span aria-hidden="true">{CARE_EMOJI[k]}</span> {c.kinds[k]}
               </button>
             ))}
           </div>
@@ -126,7 +125,7 @@ export function CareLogPanel({
             <li key={e.id} className={e.kind === "incident" ? "is-incident" : ""}>
               <time dateTime={e.at}>{timeOf(e.at, locale)}</time>
               <span>
-                <UiIcon name={CARE_ICON[e.kind]} size={20} /> <b>{c.kinds[e.kind]}</b>
+                <span aria-hidden="true">{CARE_EMOJI[e.kind]}</span> <b>{c.kinds[e.kind]}</b>
                 {label(e) && `: ${label(e)}`}
               </span>
               <Button variant="ghost" size="sm" icon="trash" aria-label={`${c.delete}: ${c.kinds[e.kind]} ${timeOf(e.at, locale)}`} onClick={() => onRemove(e.id)} />
@@ -145,7 +144,7 @@ export function CareLogPanel({
               <li key={e.id} className={e.kind === "incident" ? "is-incident" : ""}>
                 <time dateTime={e.at}>{timeOf(e.at, locale)}</time>
                 <span>
-                  <UiIcon name={CARE_ICON[e.kind]} size={20} /> <b>{c.kinds[e.kind]}</b>
+                  <span aria-hidden="true">{CARE_EMOJI[e.kind]}</span> <b>{c.kinds[e.kind]}</b>
                   {label(e) && `: ${label(e)}`}
                 </span>
               </li>

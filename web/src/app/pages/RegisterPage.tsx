@@ -6,7 +6,6 @@ import { mockRegistration } from "@/app/auth/demoAccounts";
 import { parseRegistration, type Issue, type RegistrationInput, type RegistrationIssues } from "@/app/auth/validation";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
-import { Illustration } from "@/app/design-system/atoms/Illustration";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -59,7 +58,6 @@ export function RegisterPage() {
   return (
     <FocusLayout>
       <form className="pg-flow" onSubmit={submit} noValidate>
-        <Illustration name="setup-store" height={130} />
         <div className="pg-flow__head pg-flow__head--center">
           <Heading level={1}>{a.title}</Heading>
           <Muted>{a.lead}</Muted>
