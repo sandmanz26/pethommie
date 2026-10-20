@@ -1,6 +1,6 @@
 /* Page-level layout only. Components style themselves. */
 .pg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr)); gap: 12px; }
-.pg-stats--compact { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.pg-stats--compact { grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); }
 .pg-stats--compact .ds-stat__value { font-size: 1.35em; }
 .pg-stats--wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); }
 .pg-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 22px; align-items: start; }

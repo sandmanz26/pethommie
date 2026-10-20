@@ -10,6 +10,7 @@ import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import { defaultSettings, type HotelData, type Payment } from "@/app/domain/types";
 import AppRoutes from "./AppRoutes";
+import { choose } from "@/shared/testing/select";
 
 function renderApp(path: string) {
   return render(
@@ -63,7 +64,7 @@ describe("add-ons and discounts", () => {
 
     await user.type(panel.getByLabelText("What for"), "Loyal customer");
     await user.type(panel.getByLabelText("Amount (Rp)"), "25000");
-    await user.selectOptions(panel.getByLabelText("Add-on / Discount"), "discount");
+    await choose(user, panel.getByLabelText("Add-on / Discount"), "discount");
     await user.click(panel.getByRole("button", { name: "Add" }));
     expect(stored().bookings.find((b) => b.id === "b2")!.charges.map((c) => c.amount)).toEqual([75_000, -25_000]);
     // 3 nights × 50.000 + 75.000 − 25.000
@@ -127,7 +128,7 @@ describe("invoices", () => {
     const data = hotel();
     const user = await open("/app/bookings/b2", data);
     // Kopi's owner reads English: the panel starts there
-    expect(await screen.findByRole("combobox", { name: "Language" })).toHaveValue("en");
+    expect(await screen.findByRole("combobox", { name: "Language" })).toHaveAttribute("data-value", "en");
     await user.click(screen.getByRole("button", { name: "Create invoice" }));
     expect(stored().invoices[0].language).toBe("en");
   });
@@ -195,8 +196,8 @@ describe("business and tax settings", () => {
     await screen.findByRole("heading", { name: "Business and invoices" });
     await user.clear(screen.getByLabelText(/Invoice number prefix/));
     await user.type(screen.getByLabelText(/Invoice number prefix/), "kk-1");
-    await user.selectOptions(screen.getByLabelText("How the business is taxed"), "final_umkm");
-    await user.selectOptions(screen.getByLabelText("Count turnover"), "accrual");
+    await choose(user, screen.getByLabelText("How the business is taxed"), "final_umkm");
+    await choose(user, screen.getByLabelText("Count turnover"), "accrual");
     await user.click(screen.getAllByRole("button", { name: "Save" })[1]);
     const { settings } = stored();
     expect(settings.invoicePrefix).toBe("KK1");
@@ -234,7 +235,7 @@ describe("owner language", () => {
 
   it("lets the operator change an owner's language", async () => {
     const user = await open("/app/customers/o1");
-    await user.selectOptions(await screen.findByLabelText("Language of messages and invoices"), "en");
+    await choose(user, await screen.findByLabelText("Language of messages and invoices"), "en");
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(stored().owners.find((o) => o.id === "o1")!.language).toBe("en");
   });

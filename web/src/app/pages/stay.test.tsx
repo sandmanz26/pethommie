@@ -10,6 +10,7 @@ import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCareEntry, aSmallHotel } from "@/app/testing/fixtures";
 import AppRoutes from "./AppRoutes";
+import { choose } from "@/shared/testing/select";
 
 function renderApp(path: string) {
   return render(
@@ -83,7 +84,7 @@ describe("payments", () => {
     expect(within(panel).getByText("Not paid")).toBeInTheDocument();
 
     await user.type(within(panel).getByLabelText(/amount/i), "50000");
-    await user.selectOptions(within(panel).getByLabelText(/method/i), "qris");
+    await choose(user, within(panel).getByLabelText(/method/i), "qris");
     await user.click(within(panel).getByRole("button", { name: /save payment/i }));
 
     expect(stored().bookings[0].payments).toEqual([expect.objectContaining({ amount: 50_000, method: "qris" })]);
@@ -263,7 +264,7 @@ describe("changing a booking", () => {
     const user = await open(stay());
     await user.click(await screen.findByRole("button", { name: /change dates or cage/i }));
     const form = screen.getByRole("form", { name: /change dates or cage/i });
-    await user.selectOptions(within(form).getByLabelText(/^cage/i), "m1");
+    await choose(user, within(form).getByLabelText(/^cage/i), "m1");
     await user.click(within(form).getByRole("button", { name: /save changes/i }));
     expect(stored().bookings[0].cageId).toBe("m1");
     expect(screen.queryByRole("form", { name: /change dates or cage/i })).not.toBeInTheDocument();
@@ -340,7 +341,7 @@ describe("the cage calendar", () => {
     await user.click(cells[1]);
     expect(await screen.findByLabelText(/^check-in$/i)).toHaveValue(tomorrow);
     expect(screen.getByLabelText(/^check-out$/i)).toHaveValue(addDays(tomorrow, 1));
-    expect(screen.getByLabelText(/^cage ·/i)).toHaveValue("s2");
+    expect(screen.getByLabelText(/^cage ·/i)).toHaveAttribute("data-value", "s2");
   });
 
   it("does not offer a night that is taken", async () => {

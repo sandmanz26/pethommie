@@ -8,6 +8,7 @@ import { modeKeyFor } from "@/app/mode/mode";
 import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import AppRoutes from "./AppRoutes";
+import { choose } from "@/shared/testing/select";
 
 function renderApp(path: string) {
   return render(
@@ -54,8 +55,8 @@ describe("pets list", () => {
     expect(screen.getByText("Mochi")).toBeInTheDocument();
     expect(screen.queryByText("Kopi")).not.toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: /^All/ }));
-    await user.selectOptions(screen.getByLabelText("Species"), "cat");
-    await user.selectOptions(screen.getByLabelText("Vaccine"), "attention");
+    await choose(user, screen.getByLabelText("Species"), "cat");
+    await choose(user, screen.getByLabelText("Vaccine"), "attention");
     expect(screen.getByText("Luna")).toBeInTheDocument();
     expect(screen.queryByText("Mochi")).not.toBeInTheDocument();
     expect(screen.getByText("1 result")).toBeInTheDocument();
@@ -67,7 +68,7 @@ describe("pets list", () => {
 describe("bookings list", () => {
   it("filters by source and payment in advanced mode, and searches in both", async () => {
     const user = await open("/app/bookings");
-    await user.selectOptions(await screen.findByLabelText("Booked via"), "whatsapp");
+    await choose(user, await screen.findByLabelText("Booked via"), "whatsapp");
     expect(screen.getByRole("link", { name: "Kopi" })).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: /Staying/ }));
     expect(screen.queryByRole("link", { name: "Mochi" })).not.toBeInTheDocument();

@@ -1,3 +1,4 @@
+import { Select } from "@/shared/ui/Select";
 import { useState, type FormEvent } from "react";
 import { useSiteT } from "@/site/i18n/useSiteT";
 import { normaliseWhatsapp } from "@/shared/lib/phone";
@@ -65,13 +66,13 @@ export function WaitlistForm() {
         </label>
         <label htmlFor="f-cages">
           {f.cages.label}
-          <select id="f-cages" value={cageIndex} onChange={(e) => setCageIndex(Number(e.target.value))}>
+          <Select id="f-cages" value={cageIndex} onChange={(e) => setCageIndex(Number(e.target.value))}>
             {waitlist.cageOptions.map((o, i) => (
               <option key={o} value={i}>
                 {o}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
       <Button type="submit" disabled={busy} className="form__submit">

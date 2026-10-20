@@ -76,7 +76,7 @@ test('the calendar books an empty day', async ({ page }) => {
   await signInWithSampleData(page)
   await page.goto('/app/calendar')
   await page.getByRole('link', { name: /new booking in S-04 from/i }).first().click()
-  await expect(page.getByLabel(/^cage ·/i)).toHaveValue(/.+/)
+  await expect(page.getByLabel(/^cage ·/i)).toHaveAttribute('data-value', /.+/)
   await expect(page.getByRole('heading', { name: 'New booking', level: 1 })).toBeVisible()
 })
 

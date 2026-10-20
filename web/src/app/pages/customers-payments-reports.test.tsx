@@ -10,6 +10,7 @@ import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import type { HotelData, Payment } from "@/app/domain/types";
 import AppRoutes from "./AppRoutes";
+import { choose } from "@/shared/testing/select";
 
 function renderApp(path: string) {
   return render(
@@ -162,10 +163,10 @@ describe("reports", () => {
     const user = await open("/app/reports");
     const main = within(await screen.findByRole("main"));
     const received = () => main.getByText("Money received").closest(".ds-stat");
-    await user.selectOptions(main.getByLabelText("Unit"), "s2");
+    await choose(user, main.getByLabelText("Unit"), "s2");
     expect(received()).toHaveTextContent(rp("75.000"));
-    await user.selectOptions(main.getByLabelText("Unit"), "all");
-    await user.selectOptions(main.getByLabelText("Species"), "dog");
+    await choose(user, main.getByLabelText("Unit"), "all");
+    await choose(user, main.getByLabelText("Species"), "dog");
     expect(received()).toHaveTextContent(rp("50.000"));
     await user.click(main.getByRole("button", { name: /clear filters/i }));
     expect(received()).toHaveTextContent(rp("125.000"));

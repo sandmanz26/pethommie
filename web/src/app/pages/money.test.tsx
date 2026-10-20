@@ -11,6 +11,7 @@ import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import type { HotelData, Invoice, Payment } from "@/app/domain/types";
 import AppRoutes from "./AppRoutes";
+import { choose } from "@/shared/testing/select";
 
 const today = todayISO();
 const stored = (): HotelData => JSON.parse(localStorage.getItem(dataKeyFor("acct-test")) ?? "null");
@@ -94,9 +95,9 @@ describe("transactions", () => {
     expect(main.getByText("Refunds").closest(".ds-stat")).toHaveTextContent(rp("20.000"));
     expect(main.getByText("Net").closest(".ds-stat")).toHaveTextContent(rp("100.000"));
 
-    await user.selectOptions(main.getByLabelText("Method"), "qris");
+    await choose(user, main.getByLabelText("Method"), "qris");
     expect(table.getAllByRole("row")).toHaveLength(2);
-    await user.selectOptions(main.getByLabelText("Method"), "all");
+    await choose(user, main.getByLabelText("Method"), "all");
     await user.type(main.getByRole("searchbox"), "QR-123");
     expect(table.getAllByRole("row")).toHaveLength(2);
   });

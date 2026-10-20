@@ -44,13 +44,6 @@
 .ds-control::placeholder { color: var(--ink-faint); }
 .ds-control:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(27, 26, 23, 0.08); }
 .ds-control[aria-invalid="true"] { border-color: var(--danger); }
-.ds-control--select {
-  appearance: none;
-  padding-right: 36px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%235a564c' stroke-width='2' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-}
 .ds-control--area { min-height: 84px; resize: vertical; line-height: 1.45; }
 
 /* ---------- Badge ---------- */

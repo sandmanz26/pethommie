@@ -612,7 +612,7 @@
   font-weight: 700;
 }
 .form input,
-.form select {
+.form .ui-select__button {
   font: inherit;
   font-weight: 400;
   padding: 10px 12px;
@@ -623,7 +623,8 @@
   width: 100%;
 }
 .form input:focus,
-.form select:focus {
+.form .ui-select__button:focus-visible,
+.form .ui-select.is-open .ui-select__button {
   border-color: var(--ink);
   outline: none;
 }

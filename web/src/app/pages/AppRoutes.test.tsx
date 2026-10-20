@@ -7,6 +7,7 @@ import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
 import { aSmallHotel } from "@/app/testing/fixtures";
 import AppRoutes from "./AppRoutes";
+import { choose, openOptions } from "@/shared/testing/select";
 
 /** The app exactly as App.tsx mounts it, starting at `path`. */
 function renderApp(path: string) {
@@ -111,7 +112,7 @@ describe("booking a stay", () => {
     await user.type(screen.getByLabelText(/^name$/i), "Boba");
     await user.type(screen.getByLabelText(/owner name/i), "Dewi");
     await user.type(screen.getByLabelText(/owner whatsapp/i), "0857 1122 3344");
-    await user.selectOptions(screen.getByLabelText(/^cage ·/i), "s1");
+    await choose(user, screen.getByLabelText(/^cage ·/i), "s1");
     await user.click(screen.getByRole("button", { name: /save booking/i }));
 
     expect(await screen.findByRole("heading", { name: /^bookings$/i })).toBeInTheDocument();
@@ -135,7 +136,7 @@ describe("booking a stay", () => {
     });
     renderApp("/app/bookings/new");
     const cage = await screen.findByLabelText(/^cage ·/i);
-    const options = within(cage).getAllByRole("option").map((o) => (o as HTMLOptionElement).value);
+    const options = (await openOptions(userEvent.setup(), cage)).map((o) => o.dataset.value);
     expect(options).not.toContain("s1");
     expect(options).toEqual(expect.arrayContaining(["s2", "m1"]));
   });
