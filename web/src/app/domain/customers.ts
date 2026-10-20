@@ -10,6 +10,8 @@ export type Customer = {
   stays: number;
   nights: number;
   lastCheckOut: ISODate | null;
+  /** The first stay's check-in: when they became a customer. */
+  firstCheckIn: ISODate | null;
   /** Everything they have paid. */
   paid: number;
   /** Still owed on stays that are not cancelled and have already started. */
@@ -29,6 +31,7 @@ export function customerOf(data: HotelData, owner: Owner): Customer {
     stays: bookings.length,
     nights: bookings.reduce((n, b) => n + nights(b.checkIn, b.checkOut), 0),
     lastCheckOut: bookings.reduce<ISODate | null>((last, b) => (last === null || b.checkOut > last ? b.checkOut : last), null),
+    firstCheckIn: bookings.reduce<ISODate | null>((first, b) => (first === null || b.checkIn < first ? b.checkIn : first), null),
     paid: bookings.reduce((sum, b) => sum + paidAmount(b), 0),
     owed: bookings.filter((b) => b.status !== "booked").reduce((sum, b) => sum + balanceDue(b, cage(b)), 0),
   };

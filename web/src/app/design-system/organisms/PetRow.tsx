@@ -10,14 +10,20 @@ import "./organisms.css";
 
 const tone: Record<VaccineState, Tone> = { ok: "ok", soon: "warn", expired: "danger", unknown: "neutral" };
 
-export function PetRow({ pet, owner, stays, today }: { pet: Pet; owner?: Owner; stays: number; today: string }) {
+/** Where the pet is today, shown as a badge on the row: staying (green) or arriving soon. */
+export type PetRowStay = { tone: Tone; label: string };
+
+export function PetRow({ pet, owner, stays, today, stay }: { pet: Pet; owner?: Owner; stays: number; today: string; stay?: PetRowStay }) {
   const { t } = useAppT();
   const v = vaccineState(pet, today);
   return (
     <Link to={`/app/pets/${pet.id}`} className="ds-petrow">
       <Avatar name={pet.name} species={pet.species} />
       <div className="ds-petrow__main">
-        <b>{pet.name}</b>
+        <span className="ds-petrow__title">
+          <b>{pet.name}</b>
+          {stay && <Badge tone={stay.tone}>{stay.label}</Badge>}
+        </span>
         <span>
           {t.common.species[pet.species]}
           {pet.breed && ` · ${pet.breed}`} · {t.pets.stays(stays)}

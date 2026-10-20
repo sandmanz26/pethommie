@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import type { Booking } from "@/app/domain/types";
+import type { Booking, BookingSource } from "@/app/domain/types";
+import { filterBookings, NO_BOOKING_FILTER, type BookingFilter } from "@/app/domain/filters";
 import { todayISO } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
 import { useStore } from "@/app/store/AppStore";
@@ -8,6 +9,12 @@ import { Button } from "@/app/design-system/atoms/Button";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
+import { Select } from "@/app/design-system/atoms/Input";
+import { Field } from "@/app/design-system/molecules/Field";
+import { FilterBar } from "@/app/design-system/molecules/FilterBar";
+import { SearchField } from "@/app/design-system/molecules/SearchField";
+import { useMode } from "@/app/mode/ModeProvider";
+import { useUnitWords } from "@/app/i18n/useUnitWords";
 import { BookingCard } from "@/app/design-system/organisms/BookingCard";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { useCheckOut } from "./useCheckOut";
@@ -19,18 +26,24 @@ export function BookingsPage() {
   const { data, setBookingStatus } = useStore();
   const checkOut = useCheckOut();
   const { t } = useAppT();
+  const units = useUnitWords();
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const { advanced } = useMode();
+  const [f, setF] = useState<BookingFilter>(NO_BOOKING_FILTER);
+  const set = (patch: Partial<BookingFilter>) => setF((prev) => ({ ...prev, ...patch }));
+  const filtered = JSON.stringify(f) !== JSON.stringify(NO_BOOKING_FILTER);
   const today = todayISO();
 
   const groups = useMemo(() => {
     const byDate = (a: Booking, b: Booking) => a.checkIn.localeCompare(b.checkIn);
+    const matching = filterBookings(data, data.bookings, f);
     return {
-      upcoming: data.bookings.filter((b) => b.status === "booked").sort(byDate),
-      inHouse: data.bookings.filter((b) => b.status === "checked_in").sort((a, b) => a.checkOut.localeCompare(b.checkOut)),
-      past: data.bookings.filter((b) => b.status === "checked_out" || b.status === "cancelled").sort((a, b) => -byDate(a, b)),
+      upcoming: matching.filter((b) => b.status === "booked").sort(byDate),
+      inHouse: matching.filter((b) => b.status === "checked_in").sort((a, b) => a.checkOut.localeCompare(b.checkOut)),
+      past: matching.filter((b) => b.status === "checked_out" || b.status === "cancelled").sort((a, b) => -byDate(a, b)),
     };
-  }, [data.bookings]);
+  }, [data, f]);
 
   const list = groups[filter];
 
@@ -44,6 +57,56 @@ export function BookingsPage() {
           </Button>
         }
       />
+      {data.bookings.length > 0 && (
+        <>
+          <SearchField value={f.q} onChange={(q) => set({ q })} placeholder={t.filters.searchBookings} />
+          {advanced && (
+            <FilterBar count={t.filters.results(list.length)} active={filtered} onClear={() => setF(NO_BOOKING_FILTER)} clearLabel={t.filters.clear}>
+              <Field label={t.filters.payment}>
+                <Select value={f.payment} onChange={(e) => set({ payment: e.target.value as BookingFilter["payment"] })}>
+                  {(["all", "unpaid", "partial", "paid"] as const).map((k) => (
+                    <option key={k} value={k}>
+                      {t.bookings.paymentFilter[k]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label={units.one}>
+                <Select value={f.unitId} onChange={(e) => set({ unitId: e.target.value })}>
+                  <option value="all">{t.filters.any}</option>
+                  {[...data.cages]
+                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                </Select>
+              </Field>
+              <Field label={t.filters.source}>
+                <Select value={f.source} onChange={(e) => set({ source: e.target.value as BookingFilter["source"] })}>
+                  <option value="all">{t.filters.any}</option>
+                  {(Object.keys(t.bookingForm.sources) as BookingSource[]).map((s) => (
+                    <option key={s} value={s}>
+                      {t.bookingForm.sources[s]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label={t.filters.species}>
+                <Select value={f.species} onChange={(e) => set({ species: e.target.value as BookingFilter["species"] })}>
+                  <option value="all">{t.filters.any}</option>
+                  {(["cat", "dog", "rabbit", "other"] as const).map((s) => (
+                    <option key={s} value={s}>
+                      {t.common.species[s]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </FilterBar>
+          )}
+        </>
+      )}
       <Segmented<Filter>
         label={t.bookings.title}
         value={filter}
