@@ -7,6 +7,7 @@ import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { CalendarGrid } from "@/app/design-system/organisms/CalendarGrid";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
+import { useUnitWords } from "@/app/i18n/useUnitWords";
 
 const DAYS = 14;
 
@@ -17,11 +18,12 @@ export function CalendarPage() {
   const [today] = useState(todayISO);
   const [from, setFrom] = useState(today);
   const c = t.calendar;
+  const units = useUnitWords();
 
   return (
     <>
       <PageHeader art="app-cages"
-        title={c.title}
+        title={units.calendar}
         lead={c.lead}
         actions={
           <>

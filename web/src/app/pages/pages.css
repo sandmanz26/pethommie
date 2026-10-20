@@ -96,3 +96,10 @@
 .pg-meter__bar i { display: block; height: 100%; background: var(--ok); }
 .pg-meter--near .pg-meter__bar i { background: var(--warn); }
 .pg-meter--over .pg-meter__bar i { background: var(--danger); }
+
+/* Onboarding, shared rooms: name, places, price per pet, remove. */
+.pg-flow__size.pg-flow__room { grid-template-areas: none; grid-template-columns: 1fr auto; align-items: end; }
+.pg-flow__size.pg-flow__room > * { grid-area: auto; }
+@media (min-width: 600px) {
+  .pg-flow__size.pg-flow__room { grid-template-columns: 1fr auto 150px auto; }
+}

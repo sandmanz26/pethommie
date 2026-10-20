@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Booking } from "@/app/domain/types";
 import { petNames } from "@/app/domain/invoices";
-import { addDays, formatDate, holdsCage, stayPetIds, todayBoard, todayISO, vaccineState } from "@/app/domain/logic";
+import { addDays, formatDate, holdsCage, stayPetIds, todayBoard, totalPlaces, todayISO, vaccineState } from "@/app/domain/logic";
 import { stayingToday } from "@/app/domain/careLog";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -16,11 +16,13 @@ import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { StayingRow } from "@/app/design-system/organisms/StayingRow";
 import { useCheckOut } from "./useCheckOut";
 import "./pages.css";
+import { useUnitWords } from "@/app/i18n/useUnitWords";
 
 export function TodayPage() {
   const { data } = useStore();
   const checkOut = useCheckOut();
   const { t, locale } = useAppT();
+  const units = useUnitWords();
   const [today] = useState(todayISO);
   const board = todayBoard(data, today);
   const hotel = data.hotel!;
@@ -77,7 +79,7 @@ export function TodayPage() {
         <StatCard label={t.today.stats.inHouse} value={board.inHouse.length} tone="ok" />
         <StatCard label={t.today.stats.arriving} value={board.arriving.length + board.lateArrivals.length} tone="info" />
         <StatCard label={t.today.stats.leaving} value={board.leaving.length} tone="warn" />
-        <StatCard label={t.today.stats.free} value={`${board.freeTonight}/${data.cages.length}`} tone="brand" />
+        <StatCard label={units.free} value={`${board.freeTonight}/${totalPlaces(data)}`} tone="brand" />
       </div>
 
       <div className="pg-columns">

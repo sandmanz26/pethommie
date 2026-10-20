@@ -64,7 +64,7 @@ export function BookingEditForm({
           <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
         </Field>
       </div>
-      <Field label={f.cage} error={errors.cage}>
+      <Field label={t.units[data.settings.unitTerm].one} error={errors.cage}>
         <Select value={cageId} onChange={(e) => setCageId(e.target.value)}>
           {cages.map((c) => (
             <option key={c.id} value={c.id}>

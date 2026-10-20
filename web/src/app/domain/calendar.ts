@@ -1,4 +1,4 @@
-import { addDays, holdsCage, nights } from "./logic";
+import { addDays, nights, placesUsed } from "./logic";
 import type { Booking, HotelData, ISODate } from "./types";
 
 /** The cage calendar: for a window of days, where each stay sits on each cage's row. */
@@ -35,7 +35,7 @@ export function calendarBars(data: HotelData, cageId: string, from: ISODate, day
     .sort((a, b) => a.start - b.start);
 }
 
-/** Cages that are free the whole of a night, for "how full are we" counts along the top of the calendar. */
+/** Places taken on a night across the hotel (a cage counts one), for "how full are we" along the top of the calendar. */
 export function occupiedCount(data: HotelData, night: ISODate): number {
-  return data.cages.filter((c) => data.bookings.some((b) => b.cageId === c.id && holdsCage(b) && b.checkIn <= night && night < b.checkOut)).length;
+  return data.cages.reduce((n, c) => n + Math.min(Math.max(1, c.capacity), placesUsed(data, c.id, night)), 0);
 }

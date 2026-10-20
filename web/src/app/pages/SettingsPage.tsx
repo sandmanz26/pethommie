@@ -131,6 +131,13 @@ export function SettingsPage() {
         <Field label={t.settingsBiz.payment} optional={t.common.optional}>
           <Textarea rows={3} value={draft.paymentInstructions} placeholder={t.settingsBiz.paymentPh} onChange={(e) => edit({ paymentInstructions: e.target.value })} />
         </Field>
+        <Field label={t.unitTerm.label} hint={t.unitTerm.hint}>
+          <Select value={draft.unitTerm} onChange={(e) => edit({ unitTerm: e.target.value as HotelSettings["unitTerm"] })}>
+            {(["cage", "room", "space"] as const).map((u) => (
+              <option key={u} value={u}>{t.unitTerm.options[u]}</option>
+            ))}
+          </Select>
+        </Field>
         <Field label={t.settingsBiz.language}>
           <Select value={draft.invoiceLanguage} onChange={(e) => edit({ invoiceLanguage: e.target.value as Language })}>
             <option value="id">{t.settingsBiz.languages.id}</option>

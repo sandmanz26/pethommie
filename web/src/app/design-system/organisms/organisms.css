@@ -179,6 +179,8 @@
 .ds-money dt { font-size: 0.8em; color: var(--ink-soft); }
 .ds-money dd { margin: 0; font: 700 1.05em var(--font-display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .ds-money dd.is-due { color: var(--danger); }
+.ds-paylist__receipt { font-size: 0.85em; font-weight: 700; color: var(--ink-soft); }
+.ds-paylist li.is-refund b { color: var(--danger); }
 .ds-paylist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .ds-paylist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 12px; border-radius: var(--radius-sm); background: var(--paper); }
 .ds-paylist span { display: grid; gap: 1px; min-width: 0; }
@@ -249,6 +251,14 @@
 .ds-cal__free.is-today { background: color-mix(in srgb, var(--info-bg) 45%, transparent); }
 .ds-cal__free:hover, .ds-cal__free:focus-visible { background: var(--ok-bg); outline: none; }
 .ds-cal__free:hover::after, .ds-cal__free:focus-visible::after { content: "+"; position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; color: var(--ok); }
+.ds-cal__room {
+  display: grid; place-items: center; min-height: 52px; border-left: 1px solid var(--line);
+  font-size: 0.8em; font-weight: 700; text-decoration: none; color: var(--ink-soft); font-variant-numeric: tabular-nums;
+}
+.ds-cal__room.is-some { background: color-mix(in srgb, var(--info-bg) 70%, transparent); color: var(--info); }
+.ds-cal__room.is-full { background: var(--danger-bg); color: var(--danger); }
+.ds-cal__room.is-today { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--info) 35%, transparent); }
+a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); color: var(--ok); outline: none; }
 .ds-cal__bar {
   align-self: center; margin: 6px 2px; min-height: 40px; display: flex; align-items: center; padding: 0 10px;
   border-radius: var(--radius-sm); font-weight: 700; font-size: 0.9em; color: var(--surface); text-decoration: none;
@@ -320,3 +330,8 @@
   .tpl-app__main, .tpl-app__content { padding: 0 !important; margin: 0 !important; max-width: none !important; }
   .ds-invdoc { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
 }
+
+/* A shared room on the cages page: how full it is tonight. */
+.ds-cage__meter { display: block; height: 6px; border-radius: 99px; background: var(--surface-sunk); overflow: hidden; }
+.ds-cage__meter i { display: block; height: 100%; background: var(--info); }
+.ds-cage--room .ds-cage__occupant { gap: 4px; }

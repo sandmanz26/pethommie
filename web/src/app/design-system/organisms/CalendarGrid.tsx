@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import type { HotelData, ISODate } from "@/app/domain/types";
-import { addDays, formatDate, todayISO } from "@/app/domain/logic";
+import { addDays, formatDate, isShared, placesUsed, todayISO, totalPlaces } from "@/app/domain/logic";
 import { calendarBars, occupiedCount } from "@/app/domain/calendar";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 /**
  * Cages down the side, days across the top, a bar for each stay. An empty night is a link that opens a new
- * booking for that cage and day, so the calendar is also the quickest way to book.
+ * booking for that cage and day, so the calendar is also the quickest way to book. A shared room shows, for each
+ * day, how many of its places are taken.
  */
 export function CalendarGrid({ data, from, days }: { data: HotelData; from: ISODate; days: number }) {
   const { t, locale } = useAppT();
@@ -21,14 +22,39 @@ export function CalendarGrid({ data, from, days }: { data: HotelData; from: ISOD
       <div className="ds-cal__row ds-cal__head">
         <span className="ds-cal__label" />
         {dates.map((d, i) => (
-          <span key={d} className={`ds-cal__day${d === today ? " is-today" : ""}`} style={{ gridColumn: i + 2 }} title={c.occupied(occupiedCount(data, d), data.cages.length)}>
+          <span key={d} className={`ds-cal__day${d === today ? " is-today" : ""}`} style={{ gridColumn: i + 2 }} title={c.occupied(occupiedCount(data, d), totalPlaces(data))}>
             <small>{formatDate(d, locale, { weekday: "short" })}</small>
             <b>{formatDate(d, locale, { day: "numeric" })}</b>
-            <small>{occupiedCount(data, d)}/{data.cages.length}</small>
+            <small>{occupiedCount(data, d)}/{totalPlaces(data)}</small>
           </span>
         ))}
       </div>
       {data.cages.map((cage) => {
+        // A shared room: each day shows how many of its places are taken; a free place books it.
+        if (isShared(cage)) {
+          return (
+            <div key={cage.id} className="ds-cal__row">
+              <span className="ds-cal__label">
+                <b>{cage.name}</b>
+                <small>{t.cages.capacityShort(cage.capacity)}</small>
+              </span>
+              {dates.map((d, i) => {
+                const used = placesUsed(data, cage.id, d);
+                const label = c.roomDay(used, cage.capacity, formatDate(d, locale, { day: "numeric", month: "short" }));
+                const load = used >= cage.capacity ? "full" : used > 0 ? "some" : "none";
+                return used >= cage.capacity ? (
+                  <span key={d} className={`ds-cal__room is-${load}`} style={{ gridColumn: i + 2 }} title={label} aria-label={label}>
+                    {used}/{cage.capacity}
+                  </span>
+                ) : (
+                  <Link key={d} className={`ds-cal__room is-${load}${d === today ? " is-today" : ""}`} style={{ gridColumn: i + 2 }} to={`/app/bookings/new?cage=${cage.id}&in=${d}&out=${addDays(d, 1)}`} aria-label={label} title={label}>
+                    {used}/{cage.capacity}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        }
         const bars = calendarBars(data, cage.id, from, days);
         const taken = new Set(bars.flatMap((b) => Array.from({ length: b.span }, (_, i) => b.start + i)));
         return (

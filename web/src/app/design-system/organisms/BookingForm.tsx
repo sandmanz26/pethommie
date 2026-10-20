@@ -203,7 +203,7 @@ export function BookingForm({
               </Select>
             </Field>
           )}
-          <Field label={`${f.cage}${validDates ? ` · ${f.free(options.length)}` : ""}`} error={errors.cage}>
+          <Field label={`${t.units[data.settings.unitTerm].one}${validDates ? ` · ${f.free(options.length)}` : ""}`} error={errors.cage}>
             <Select value={selectedCageId} onChange={(e) => setCageId(e.target.value)} disabled={!options.length}>
               <option value="">{options.length ? f.cagePh : "—"}</option>
               {options.map((c) => (

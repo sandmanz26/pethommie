@@ -44,6 +44,7 @@ function Workspace() {
   return (
     <AppLayout
       hotelName={data.hotel.name}
+      labels={{ cages: t.units[data.settings.unitTerm].many }}
       banner={
         <>
           {saveFailed && <Alert tone="warn">{t.common.saveFailed}</Alert>}

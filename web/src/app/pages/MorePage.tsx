@@ -10,10 +10,12 @@ import { moreItems } from "@/app/design-system/organisms/navItems";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { Link } from "react-router-dom";
 import "./pages.css";
+import { useUnitWords } from "@/app/i18n/useUnitWords";
 
 /** Everything that isn't on the phone's tab bar, plus the mode switch. Also reachable on a wide screen. */
 export function MorePage() {
   const { t } = useAppT();
+  const units = useUnitWords();
   const { advanced } = useMode();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +30,7 @@ export function MorePage() {
         {moreItems(advanced).map((i) => (
           <Link key={i.to} to={i.to} className="pg-morelist__item">
             <NavIcon name={i.art} />
-            <span>{t.nav[i.key]}</span>
+            <span>{i.key === "cages" ? units.many : t.nav[i.key]}</span>
             <Icon name="chevronRight" size={18} />
           </Link>
         ))}

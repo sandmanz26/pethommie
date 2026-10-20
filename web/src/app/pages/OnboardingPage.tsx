@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import type { CageSize } from "@/app/domain/types";
-import { formatRupiah, generateCages, SIZE_ORDER } from "@/app/domain/logic";
+import { formatRupiah, generateCages, newId, SIZE_ORDER } from "@/app/domain/logic";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
@@ -38,9 +38,11 @@ function matchPreset(spec: CageSpec): PresetKey {
 
 type Step = 0 | 1 | 2 | 3;
 
+type RoomDraft = { name: string; places: number; price: number };
+
 /** A welcome, then three short steps: name the hotel, set up cages, pick a first task. */
 export function OnboardingPage() {
-  const { data, setHotel, setCages, loadSample } = useStore();
+  const { data, setHotel, setCages, saveSettings, loadSample } = useStore();
   const { mode } = useMode();
   const { t, locale } = useAppT();
   const o = t.onboarding;
@@ -52,13 +54,20 @@ export function OnboardingPage() {
   const [city, setCity] = useState("");
   const [wa, setWa] = useState(formatWhatsapp(account.whatsapp));
   const [spec, setSpec] = useState<CageSpec>(DEFAULT_SPEC);
+  // Cage-free hotels (home boarding, play rooms) set up shared rooms instead: a name, places, a price per pet.
+  const [layout, setLayout] = useState<"cages" | "rooms">("cages");
+  const [rooms, setRooms] = useState<RoomDraft[]>(() => [
+    { name: o.cages.defaultRooms[0], places: 8, price: 60_000 },
+    { name: o.cages.defaultRooms[1], places: 6, price: 85_000 },
+  ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Already set up and not in the middle of this flow: go to the app.
   if (data.hotel && step !== 3) return <Navigate to="/app" replace />;
 
   const totalCages = SIZE_ORDER.reduce((n, s) => n + spec[s].count, 0);
-  const prices = SIZE_ORDER.filter((s) => spec[s].count > 0).map((s) => spec[s].price);
+  const totalPlacesInRooms = rooms.reduce((n, r) => n + r.places, 0);
+  const prices = layout === "rooms" ? rooms.map((r) => r.price) : SIZE_ORDER.filter((s) => spec[s].count > 0).map((s) => spec[s].price);
   const fromPrice = prices.length ? Math.min(...prices) : 0;
   const preset = matchPreset(spec);
 
@@ -79,12 +88,22 @@ export function OnboardingPage() {
 
   function submitCages(e: FormEvent) {
     e.preventDefault();
-    if (totalCages === 0) {
-      setErrors({ cages: o.cages.errNone });
-      return;
+    if (layout === "rooms") {
+      if (!rooms.length || rooms.some((r) => !r.name.trim() || r.places < 2 || !(r.price > 0))) {
+        setErrors({ cages: o.cages.errRooms });
+        return;
+      }
+      setCages(rooms.map((r) => ({ id: newId(), name: r.name.trim(), size: "M", pricePerNight: r.price, capacity: r.places })));
+      saveSettings({ ...data.settings, unitTerm: "room" });
+    } else {
+      if (totalCages === 0) {
+        setErrors({ cages: o.cages.errNone });
+        return;
+      }
+      setCages(generateCages(spec));
+      saveSettings({ ...data.settings, unitTerm: "cage" });
     }
     setErrors({});
-    setCages(generateCages(spec));
     setHotel({ name: name.trim(), city: city.trim(), whatsapp: normaliseWhatsapp(wa) ?? "", createdAt: new Date().toISOString() });
     setStep(3);
   }
@@ -164,42 +183,79 @@ export function OnboardingPage() {
             <Heading level={1}>{o.cages.title}</Heading>
             <Muted>{o.cages.lead}</Muted>
           </div>
-          <div className="pg-flow__presets">
-            <Segmented
-              label={o.cages.presets.label}
-              value={preset}
-              onChange={pickPreset}
-              options={[
-                { value: "home", label: o.cages.presets.home, count: 6 },
-                { value: "small", label: o.cages.presets.small, count: 12 },
-                { value: "large", label: o.cages.presets.large, count: 30 },
-                { value: "custom", label: o.cages.presets.custom },
-              ]}
-            />
-          </div>
-          <div className="pg-flow__sizes">
-            {SIZE_ORDER.map((s) => (
-              <div className="pg-flow__size" key={s}>
-                <div className="pg-flow__sizename">
-                  <b>{t.common.sizes[s]}</b>
-                  <span>{s}-01…</span>
-                </div>
-                <Stepper
-                  label={`${t.common.sizes[s]} · ${o.cages.count}`}
-                  value={spec[s].count}
-                  onChange={(n) => setSpec({ ...spec, [s]: { ...spec[s], count: n } })}
-                />
-                <Field label={o.cages.price} hint={formatRupiah(spec[s].price, locale)}>
-                  <Input
-                    inputMode="numeric"
-                    value={spec[s].price}
-                    onChange={(e) => setSpec({ ...spec, [s]: { ...spec[s], price: parseInt(e.target.value.replace(/\D/g, "") || "0", 10) } })}
-                  />
-                </Field>
+          <Segmented
+            label={o.cages.layout.label}
+            value={layout}
+            onChange={(v) => (setLayout(v), setErrors({}))}
+            options={[
+              { value: "cages", label: o.cages.layout.cages },
+              { value: "rooms", label: o.cages.layout.rooms },
+            ]}
+          />
+          {layout === "rooms" ? (
+            <>
+              <Muted>{o.cages.roomsLead}</Muted>
+              <div className="pg-flow__sizes">
+                {rooms.map((r, i) => (
+                  <div className="pg-flow__size pg-flow__room" key={i}>
+                    <Field label={o.cages.roomName}>
+                      <Input value={r.name} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} />
+                    </Field>
+                    <Stepper label={`${r.name || o.cages.roomName} · ${o.cages.places}`} value={r.places} onChange={(n) => setRooms(rooms.map((x, k) => (k === i ? { ...x, places: n } : x)))} />
+                    <Field label={o.cages.pricePerPet} hint={formatRupiah(r.price, locale)}>
+                      <Input inputMode="numeric" value={r.price} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, price: parseInt(e.target.value.replace(/\D/g, "") || "0", 10) } : x)))} />
+                    </Field>
+                    {rooms.length > 1 && (
+                      <Button variant="ghost" size="sm" icon="trash" aria-label={o.cages.removeRoom(r.name)} onClick={() => setRooms(rooms.filter((_, k) => k !== i))} />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <p className="pg-flow__total">{o.cages.total(totalCages)}</p>
+              <Button variant="secondary" size="sm" icon="plus" onClick={() => setRooms([...rooms, { name: "", places: 4, price: rooms.at(-1)?.price ?? 60_000 }])}>
+                {o.cages.addRoom}
+              </Button>
+              <p className="pg-flow__total">{o.cages.roomsTotal(totalPlacesInRooms)}</p>
+            </>
+          ) : (
+            <>
+              <div className="pg-flow__presets">
+                <Segmented
+                  label={o.cages.presets.label}
+                  value={preset}
+                  onChange={pickPreset}
+                  options={[
+                    { value: "home", label: o.cages.presets.home, count: 6 },
+                    { value: "small", label: o.cages.presets.small, count: 12 },
+                    { value: "large", label: o.cages.presets.large, count: 30 },
+                    { value: "custom", label: o.cages.presets.custom },
+                  ]}
+                />
+              </div>
+              <div className="pg-flow__sizes">
+                {SIZE_ORDER.map((s) => (
+                  <div className="pg-flow__size" key={s}>
+                    <div className="pg-flow__sizename">
+                      <b>{t.common.sizes[s]}</b>
+                      <span>{s}-01…</span>
+                    </div>
+                    <Stepper
+                      label={`${t.common.sizes[s]} · ${o.cages.count}`}
+                      value={spec[s].count}
+                      onChange={(n) => setSpec({ ...spec, [s]: { ...spec[s], count: n } })}
+                    />
+                    <Field label={o.cages.price} hint={formatRupiah(spec[s].price, locale)}>
+                      <Input
+                        inputMode="numeric"
+                        value={spec[s].price}
+                        onChange={(e) => setSpec({ ...spec, [s]: { ...spec[s], price: parseInt(e.target.value.replace(/\D/g, "") || "0", 10) } })}
+                      />
+                    </Field>
+                  </div>
+                ))}
+              </div>
+              <p className="pg-flow__total">{o.cages.total(totalCages)}</p>
+            </>
+          )}
           {errors.cages && <Alert tone="danger">{errors.cages}</Alert>}
           <div className="pg-flow__actions">
             <Button variant="secondary" icon="chevronLeft" onClick={() => setStep(1)}>
@@ -218,7 +274,7 @@ export function OnboardingPage() {
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.done.title(name.trim())}</Heading>
             <p className="pg-flow__summary">
-              <Icon name="check" size={16} /> {o.done.summary(totalCages, formatRupiah(fromPrice, locale))}
+              <Icon name="check" size={16} /> {layout === "rooms" ? o.done.summaryRooms(totalPlacesInRooms, formatRupiah(fromPrice, locale)) : o.done.summary(totalCages, formatRupiah(fromPrice, locale))}
             </p>
             <Muted>{o.done.lead}</Muted>
           </div>

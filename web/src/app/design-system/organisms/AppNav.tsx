@@ -5,11 +5,11 @@ import { Button } from "@/app/design-system/atoms/Button";
 import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
-import { sideItems, tabItems } from "./navItems";
+import { sideItems, tabItems, type NavKey } from "./navItems";
 import "./organisms.css";
 
 /** Sidebar on wide screens, bottom tab bar on phones. */
-export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: () => void }) {
+export function AppNav({ hotelName, onLogout, labels = {} }: { hotelName: string; onLogout: () => void; labels?: Partial<Record<NavKey, string>> }) {
   const { t } = useAppT();
   const { advanced } = useMode();
   return (
@@ -29,7 +29,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
           {sideItems(advanced).map((i) => (
             <NavLink key={i.to} to={i.to} end={i.end} className="ds-sidenav__link">
               <NavIcon name={i.art} />
-              {t.nav[i.key]}
+              {labels[i.key] ?? t.nav[i.key]}
             </NavLink>
           ))}
         </nav>
@@ -50,7 +50,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
         {tabItems.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className="ds-tabbar__link">
             <NavIcon name={i.art} size={24} />
-            <span>{t.nav[i.key]}</span>
+            <span>{labels[i.key] ?? t.nav[i.key]}</span>
           </NavLink>
         ))}
       </nav>
