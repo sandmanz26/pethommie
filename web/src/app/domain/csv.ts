@@ -3,8 +3,8 @@ import { balanceDue, paidAmount } from "./payments";
 import { invoicePayment } from "./invoices";
 import type { Booking, HotelData, Invoice } from "./types";
 
-/** Cells that a spreadsheet would run as a formula get a leading quote, so a name like "=cmd()" stays text. */
-const safe = (cell: string) => (/^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell);
+/** Cells that a spreadsheet would run as a formula get a leading quote, so a name like "=cmd()" stays text. A plain negative number stays a number. */
+const safe = (cell: string) => (/^[=+\-@\t\r]/.test(cell) && !/^-\d+(\.\d+)?$/.test(cell) ? `'${cell}` : cell);
 
 const escape = (cell: string) => {
   const s = safe(cell);

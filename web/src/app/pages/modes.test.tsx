@@ -70,7 +70,7 @@ describe("simple and advanced mode", () => {
     const more = within(await screen.findByRole("navigation", { name: "More" }));
     expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Reports", "Cages", "Settings", "Help", "Back to website"]);
     await user.click(screen.getAllByRole("tab", { name: "Advanced" })[0]);
-    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Invoices", "Reports", "Tax", "Cages", "Settings", "Help", "Back to website"]);
+    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Invoices", "Reports", "Tax", "Cages", "Settings", "Help", "Back to website"]);
   });
 
   it("can be switched in Settings too, and says what each one is", async () => {

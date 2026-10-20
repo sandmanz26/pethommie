@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bookingIssues } from "@/app/domain/bookingRules";
-import { placesUsed, totalPlaces } from "@/app/domain/logic";
+import { dayOf, placesUsed, totalPlaces } from "@/app/domain/logic";
 import { paidAmount } from "@/app/domain/payments";
 import { parseStored } from "./storage";
 import { sampleData } from "./sampleData";
@@ -27,6 +27,12 @@ describe("sample hotels", () => {
     expect(d.bookings.some((b) => b.status === "checked_in")).toBe(true);
     expect(d.invoices.filter((i) => i.status === "void")).toHaveLength(2);
     expect(new Set(d.bookings.map((b) => b.source)).size).toBeGreaterThan(4);
+  });
+
+  it("the advanced one has no booking made, and no money received, after today", () => {
+    const d = advancedSample("2026-10-20");
+    expect(d.bookings.flatMap((b) => b.payments).filter((p) => dayOf(p.at) > "2026-10-20")).toEqual([]);
+    expect(d.bookings.filter((b) => dayOf(b.createdAt) > "2026-10-20")).toEqual([]);
   });
 
   it("the advanced one keeps every rule: no overbooked unit on any night, no pet in two places, no refund above what was paid", () => {

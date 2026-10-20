@@ -66,7 +66,7 @@ export function InvoiceDocument({ invoice, language, paid }: { invoice: Invoice;
         </div>
       </section>
 
-      <div className="ds-invdoc__tablewrap">
+      <div className="ds-invdoc__tablewrap" role="region" tabIndex={0} aria-label={d.description}>
         <table className="ds-invdoc__table">
           <thead>
             <tr>

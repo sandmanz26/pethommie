@@ -100,6 +100,12 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
     return own;
   };
 
+  // When a booking was made: one to three weeks ahead, but never later than this morning.
+  const madeOn = (checkIn: ISODate) => {
+    const day = addDays(checkIn, -between(1, 21));
+    return day < today ? at(day, between(8, 21), between(0, 59)) : at(addDays(today, -between(1, 6)), between(8, 21), between(0, 59));
+  };
+
   for (let d = -175; d <= 28; d++) {
     const day = addDays(today, d);
     const weekend = [5, 6].includes(new Date(`${day}T12:00:00`).getDay());
@@ -126,7 +132,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
         charges: [],
         arrival: null,
         notes: chance(0.15) ? pick(STAY_NOTES) : "",
-        createdAt: at(addDays(day, -between(1, 21)), between(8, 21), between(0, 59)),
+        createdAt: madeOn(day),
       };
       const unit = unitsFor(party).find((c) => cageIsFree(data, c.id, day, checkOut, undefined, isShared(c) ? party.length : 1));
       if (!unit) continue;
@@ -164,10 +170,10 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
       const owed = total - paidAmount({ payments });
       // Most pay in full at pickup; some leave part of it for later, a few still owe all of it. Old debts are mostly settled.
       const pay = chance(b.checkOut < addDays(today, -30) ? 0.985 : 0.9) ? owed : chance(0.6) ? Math.round(owed / 2 / 5_000) * 5_000 : 0;
-      if (pay > 0) payments.push({ id: newId(), at: at(b.checkOut, between(10, 17), between(0, 59)), amount: pay, method: method(), kind: "payment", reference: "", note: "" });
+      if (pay > 0) payments.push({ id: newId(), at: b.checkOut === today ? at(today, 8, between(0, 59)) : at(b.checkOut, between(10, 17), between(0, 59)), amount: pay, method: method(), kind: "payment", reference: "", note: "" });
     }
     if (status === "cancelled" && payments.length && chance(0.6)) {
-      payments.push({ id: newId(), at: at(b.checkIn > today ? today : b.checkIn, 11), amount: Math.round(payments[0].amount / 2 / 5_000) * 5_000, method: "transfer", kind: "refund", reference: "", note: "Pembatalan, DP kembali separuh" });
+      payments.push({ id: newId(), at: b.checkIn >= today ? at(today, 8) : at(b.checkIn, 11), amount: Math.round(payments[0].amount / 2 / 5_000) * 5_000, method: "transfer", kind: "refund", reference: "", note: "Pembatalan, DP kembali separuh" });
     }
     const arrival =
       status === "checked_in" || status === "checked_out"

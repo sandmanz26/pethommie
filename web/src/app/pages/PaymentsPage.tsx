@@ -72,7 +72,10 @@ export function PaymentsPage() {
       <Muted>{p.hint}</Muted>
 
       <section className="pg-section">
-        <Heading level={2} size="md">{p.recentTitle}</Heading>
+        <div className="pg-panel__head">
+          <Heading level={2} size="md">{p.recentTitle}</Heading>
+          <Link to="/app/transactions">{p.transactions}</Link>
+        </div>
         {recent.length ? (
           <ul className="ds-paylist">
             {recent.map(({ booking, payment }) => {

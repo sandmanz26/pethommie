@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aCareEntry } from "@/app/testing/fixtures";
-import { arrivalNotice, bookingConfirmation, careText, dailyReport, pickupReminder, vaccineReminder, waLink } from "./messages";
+import { arrivalNotice, bookingConfirmation, careText, dailyReport, pickupReminder, receiptMessage, vaccineReminder, waLink } from "./messages";
 
 const base = { hotelName: "Rumah Meong", ownerName: "Sari Dewi", petName: "Mochi" };
 const at = (h: number, m = 0) => new Date(2026, 9, 15, h, m).toISOString();
@@ -97,5 +97,16 @@ describe("other messages", () => {
     expect(vaccineReminder({ ...base, expiry: "2026-09-01", state: "expired" })).toContain("sudah habis");
     expect(vaccineReminder({ ...base, expiry: "2026-11-01", state: "soon" })).toContain("akan habis");
     expect(vaccineReminder({ ...base, expiry: "", state: "unknown" })).toContain("belum punya data vaksin");
+  });
+});
+
+describe("receipt and overdue messages", () => {
+  it("thanks for a payment and says what's left, or that it's settled", () => {
+    const m = receiptMessage({ hotelName: "Rumah Meong", ownerName: "Rina K", petName: "Mochi", receipt: "KW-20261020-01", amount: 150_000, refund: false, method: "QRIS", balance: 50_000 });
+    expect(m).toContain("Halo Kak Rina");
+    expect(m).toMatch(/menerima Rp 150\.000 untuk penitipan Mochi \(QRIS\)/);
+    expect(m).toContain("KW-20261020-01");
+    expect(m).toMatch(/Sisa pembayaran: Rp 50\.000/);
+    expect(receiptMessage({ hotelName: "H", ownerName: "", petName: "Kopi", receipt: "R", amount: 1, refund: true, method: "Cash", balance: 0, language: "en" })).toMatch(/has refunded[\s\S]*paid in full/);
   });
 });

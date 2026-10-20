@@ -91,9 +91,13 @@ for (const [name, viewport, locale] of [
       await signInWithSampleData(page, locale)
       await page.goto('/app')
       const bookingHref = await page.locator('a[href*="#care"]').first().getAttribute('href')
-      const paths = [
+      await page.goto('/app/transactions')
+      const receiptHref = (await page.locator('a[href^="/app/receipts/"]').first().getAttribute('href')) ?? '/app'
+      await page.goto('/app/invoices')
+      const invoiceHref = (await page.locator('a[href^="/app/invoices/"]').first().getAttribute('href')) ?? '/app'
+      const paths = [receiptHref, invoiceHref,
         '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings',
-        '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/dashboard', '/app/help', bookingHref!.replace('#care', ''),
+        '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/dashboard', '/app/transactions', '/app/help', bookingHref!.replace('#care', ''),
       ]
       for (const path of paths) {
         await page.goto(path)

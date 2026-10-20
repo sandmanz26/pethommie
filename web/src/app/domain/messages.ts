@@ -259,3 +259,46 @@ export function invoiceMessage(invoice: Invoice, balance: number): string {
         "Thank you!",
       ].join("\n");
 }
+
+/** A receipt sent on WhatsApp: what was received, for what, and what is left. */
+export function receiptMessage(p: Who & { receipt: string; amount: number; refund: boolean; method: string; balance: number }): string {
+  const lang = p.language ?? "id";
+  return lang === "id"
+    ? [
+        greeting(p.ownerName, lang),
+        p.refund
+          ? `${p.hotelName} sudah mengembalikan ${rp(p.amount, lang)} untuk penitipan ${p.petName} (${p.method}). No. bukti: ${p.receipt}.`
+          : `Terima kasih, ${p.hotelName} sudah menerima ${rp(p.amount, lang)} untuk penitipan ${p.petName} (${p.method}). No. kuitansi: ${p.receipt}.`,
+        p.balance > 0 ? `Sisa pembayaran: ${rp(p.balance, lang)}.` : "Status: lunas ✅",
+      ].join("\n")
+    : [
+        greeting(p.ownerName, lang),
+        p.refund
+          ? `${p.hotelName} has refunded ${rp(p.amount, lang)} for ${p.petName}'s stay (${p.method}). Ref: ${p.receipt}.`
+          : `Thank you! ${p.hotelName} received ${rp(p.amount, lang)} for ${p.petName}'s stay (${p.method}). Receipt no. ${p.receipt}.`,
+        p.balance > 0 ? `Balance left: ${rp(p.balance, lang)}.` : "Status: paid in full ✅",
+      ].join("\n");
+}
+
+/** A reminder for an invoice past its due date. */
+export function overdueReminder(invoice: Invoice, balance: number): string {
+  const lang = invoice.language;
+  const how = invoice.seller.paymentInstructions.trim();
+  return lang === "id"
+    ? [
+        greeting(invoice.customer.name, lang),
+        `Dari ${invoice.seller.name}: invoice ${invoice.number} untuk penitipan ${invoice.petNames} sudah lewat jatuh tempo (${date(invoice.dueOn ?? invoice.issuedOn, lang)}).`,
+        `Sisa yang perlu dibayar: ${rp(balance, lang)}`,
+        ...(how ? ["", "Cara membayar:", how] : []),
+        "",
+        "Kalau sudah dibayar, abaikan pesan ini ya. Terima kasih!",
+      ].join("\n")
+    : [
+        greeting(invoice.customer.name, lang),
+        `From ${invoice.seller.name}: invoice ${invoice.number} for ${invoice.petNames}'s stay is past its due date (${date(invoice.dueOn ?? invoice.issuedOn, lang)}).`,
+        `Balance to pay: ${rp(balance, lang)}`,
+        ...(how ? ["", "How to pay:", how] : []),
+        "",
+        "If you have already paid, please ignore this. Thank you!",
+      ].join("\n");
+}

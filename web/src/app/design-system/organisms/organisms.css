@@ -362,3 +362,16 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-cage__meter { display: block; height: 6px; border-radius: 99px; background: var(--surface-sunk); overflow: hidden; }
 .ds-cage__meter i { display: block; height: 100%; background: var(--info); }
 .ds-cage--room .ds-cage__occupant { gap: 4px; }
+
+/* ---------- Receipt (kuitansi) ---------- */
+.ds-receipt { max-width: 720px; }
+.ds-receipt__rows { display: grid; grid-template-columns: minmax(8rem, auto) 1fr; gap: 10px 20px; margin: 0; padding: 16px 0; border-top: 1.5px solid #1b1a17; border-bottom: 1px solid #d9d5cb; }
+.ds-receipt__rows dt { font: 800 0.72rem var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: #5a564c; padding-top: 3px; }
+.ds-receipt__rows dd { margin: 0; }
+.ds-receipt__amount { font: 700 1.5rem var(--font-display); font-variant-numeric: tabular-nums; }
+.ds-receipt__words { font-style: italic; }
+.ds-receipt__foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; }
+.ds-receipt__foot .ds-invdoc__totals { justify-self: auto; }
+.ds-receipt__sign { display: grid; justify-items: center; gap: 6px; min-width: 12rem; font-size: 0.88rem; color: #5a564c; }
+.ds-receipt__sign i { display: block; width: 100%; height: 56px; border-bottom: 1px solid #1b1a17; }
+@media (max-width: 520px) { .ds-receipt__rows { grid-template-columns: 1fr; gap: 2px 0; } .ds-receipt__rows dd { margin-bottom: 8px; } }

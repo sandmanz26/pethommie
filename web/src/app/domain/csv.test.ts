@@ -8,7 +8,9 @@ describe("toCsv", () => {
   });
 
   it("keeps a spreadsheet from running a name as a formula", () => {
-    for (const evil of ["=HYPERLINK(1)", "+1", "-1", "@SUM(A1)"]) expect(toCsv([[evil]])).toBe(`'${evil}\r\n`);
+    for (const evil of ["=HYPERLINK(1)", "+1", "-1+cmd|' /C calc'!A0", "-A1", "@SUM(A1)"]) expect(toCsv([[evil]])).toMatch(new RegExp(`^"?'`));
+    // A plain negative amount (a refund) stays a number the spreadsheet can add up.
+    expect(toCsv([["-20000", "-12.5"]])).toBe("-20000,-12.5\r\n");
   });
 });
 
