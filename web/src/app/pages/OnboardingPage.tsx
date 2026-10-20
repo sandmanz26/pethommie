@@ -9,6 +9,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Icon } from "@/app/design-system/atoms/Icon";
 import { Input } from "@/app/design-system/atoms/Input";
+import { Illustration } from "@/app/design-system/atoms/Illustration";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -103,6 +104,7 @@ export function OnboardingPage() {
 
       {step === 0 && (
         <div className="pg-flow">
+          <Illustration name="app-welcome" height={170} />
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.welcome.title}</Heading>
             <Muted>{o.welcome.lead}</Muted>
@@ -128,6 +130,7 @@ export function OnboardingPage() {
 
       {step === 1 && (
         <form className="pg-flow" onSubmit={submitHotel} noValidate>
+          <Illustration name="app-hotel" height={140} />
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.hotel.title}</Heading>
             <Muted>{o.hotel.lead}</Muted>
@@ -154,6 +157,7 @@ export function OnboardingPage() {
 
       {step === 2 && (
         <form className="pg-flow" onSubmit={submitCages} noValidate>
+          <Illustration name="app-cages" height={130} />
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.cages.title}</Heading>
             <Muted>{o.cages.lead}</Muted>
@@ -208,6 +212,7 @@ export function OnboardingPage() {
 
       {step === 3 && (
         <div className="pg-flow">
+          <Illustration name="app-done" height={160} />
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.done.title(name.trim())}</Heading>
             <p className="pg-flow__summary">

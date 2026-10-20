@@ -3,9 +3,14 @@
 Drop raw images here. They are kept in the repo but **not** deployed. The web-ready versions are
 generated into `public/`, which is what the site serves.
 
-What is here now: `illustrations/0*_feature_*.png` (one diorama per feature on the landing page, generated in the
-style of the V2 turntable film), `backgrounds/pet_hotel_scene.webp` (register page) and `backgrounds/faq_scene.webp`
-(only its two bottom corners are used, see `CORNERS` in the script).
+What is here now, all generated in the style of the V2 turntable film:
+
+- `illustrations/0*_feature_*.png`: one diorama per feature on the landing page; `1*_pricing_*.png`: the two plans.
+- `illustrations/2*_app_*.png`: the operator app's onboarding steps, empty states and page banners.
+- `icons/nav_sheet.png`: the 16 navigation icons on one 4 x 4 sheet, cut by the script into `public/icons/nav/`
+  (names in `NAV_ICONS`, and in `src/app/design-system/atoms/art.ts`; a test checks the files exist).
+- `backgrounds/pet_hotel_scene.webp` (register), `backgrounds/login_scene.png` (login), `backgrounds/faq_scene.webp`
+  (only its two bottom corners are used, see `CORNERS`).
 
 | Put it in | What | Becomes |
 |---|---|---|

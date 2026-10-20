@@ -37,7 +37,7 @@ export function TaxPage() {
 
   return (
     <>
-      <PageHeader title={p.title} lead={p.lead} />
+      <PageHeader art="feature-tax" title={p.title} lead={p.lead} />
       <Alert tone="info">
         <b>{p.disclaimerTitle}.</b> {p.disclaimer(formatDate(TAX_RULES_AS_OF, locale, { day: "numeric", month: "long", year: "numeric" }))}
       </Alert>

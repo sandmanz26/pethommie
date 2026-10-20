@@ -17,13 +17,13 @@ export function CustomersPage() {
   const shown = all.filter((c) => matchesCustomer(c, q));
   return (
     <>
-      <PageHeader title={t.customersPage.title} lead={t.customersPage.lead} />
+      <PageHeader art="app-guests" title={t.customersPage.title} lead={t.customersPage.lead} />
       {all.length > 0 && <SearchField value={q} onChange={setQ} placeholder={t.customersPage.search} />}
       <div className="pg-list">
         {shown.length ? (
           shown.map((c) => <CustomerRow key={c.owner.id} customer={c} />)
         ) : (
-          <EmptyState icon="pets">{q ? t.customersPage.noMatch(q) : t.customersPage.empty}</EmptyState>
+          <EmptyState art="app-guests">{q ? t.customersPage.noMatch(q) : t.customersPage.empty}</EmptyState>
         )}
       </div>
     </>

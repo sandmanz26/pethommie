@@ -42,6 +42,16 @@ PAD = 16  # transparent margin kept around the trimmed illustration
 
 # Icons the app uses: public name -> "<set folder>/<file>" in resources/icons. Add a line to use another one.
 ICONS: dict[str, str] = {}
+# The navigation icons come on one generated sheet, a 4 x 4 grid, read row by row.
+NAV_SHEET = "icons/nav_sheet.png"
+NAV_ICONS = [
+    "today", "bookings", "calendar", "pets",
+    "customers", "payments", "invoices", "reports",
+    "tax", "cages", "settings", "help",
+    "more", "website", "logout", "new-booking",
+]
+NAV_SIZE = 96  # shown at 24 to 28 CSS px
+
 # Corners cut from a background, shown at a fixed size instead of stretching the whole scene over a section:
 # public name -> (source slug, (left, top, right, bottom), fade in px on (left, top, right) edges).
 CORNERS = {
@@ -212,6 +222,18 @@ def main() -> None:
         corner.putalpha(Image.fromarray((alpha * ramp).astype(np.uint8)))
         print(f"{name}:")
         save_webp(corner, ROOT / "public" / "backgrounds" / f"{name}.webp", 85)
+    sheet_path = ROOT / "resources" / NAV_SHEET
+    if sheet_path.exists() and (not only or "nav" in only):
+        sheet = Image.open(sheet_path).convert("RGBA")
+        cell = sheet.width // 4
+        for i, name in enumerate(NAV_ICONS):
+            tile = sheet.crop(((i % 4) * cell, (i // 4) * cell, (i % 4 + 1) * cell, (i // 4 + 1) * cell))
+            icon = trim(clean_cutout(tile), ICON_PAD)
+            side = max(icon.size)
+            square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+            square.paste(icon, ((side - icon.width) // 2, (side - icon.height) // 2))
+            square = square.resize((NAV_SIZE, NAV_SIZE), Image.LANCZOS)
+            save_webp(square, ROOT / "public" / "icons" / "nav" / f"{name}.webp", 90)
     for src in sorted((ROOT / "resources" / "photos").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue

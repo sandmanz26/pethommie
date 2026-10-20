@@ -28,7 +28,7 @@ export function PetsPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader art="app-pets"
         title={t.pets.title}
         actions={
           <Button to="/app/pets/new" icon="plus">
@@ -50,7 +50,7 @@ export function PetsPage() {
           ))
         ) : (
           <EmptyState
-            icon="pets"
+            art="app-pets"
             action={
               !q && (
                 <Button to="/app/pets/new" icon="plus" size="sm">

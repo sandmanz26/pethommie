@@ -129,6 +129,7 @@ export const id: Messages = {
     plans: [
       {
         name: "Akses awal",
+        art: "pricing-free",
         price: "Gratis",
         unit: "30 hari",
         points: ["Semua fitur", "Tanpa kartu kredit", "Dibantu pindah dari buku catatan"],
@@ -137,6 +138,7 @@ export const id: Messages = {
       },
       {
         name: "Paket Lebaran",
+        art: "pricing-lebaran",
         price: "Rp299rb",
         unit: "per musim",
         points: ["Link booking dengan DP", "Daftar tunggu saat penuh", "Rapor ke semua pemilik, cepat"],

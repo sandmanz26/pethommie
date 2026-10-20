@@ -3,6 +3,7 @@ import { useAuth } from "@/app/auth/AuthProvider";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Icon } from "@/app/design-system/atoms/Icon";
+import { NavIcon } from "@/app/design-system/atoms/NavIcon";
 import { Heading } from "@/app/design-system/atoms/Text";
 import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { moreItems } from "@/app/design-system/organisms/navItems";
@@ -26,13 +27,13 @@ export function MorePage() {
       <nav className="pg-morelist" aria-label={t.more.title}>
         {moreItems(advanced).map((i) => (
           <Link key={i.to} to={i.to} className="pg-morelist__item">
-            <Icon name={i.icon} />
+            <NavIcon name={i.art} />
             <span>{t.nav[i.key]}</span>
             <Icon name="chevronRight" size={18} />
           </Link>
         ))}
         <Link to="/" className="pg-morelist__item">
-          <Icon name="home" />
+          <NavIcon name="website" />
           <span>{t.nav.backToSite}</span>
           <Icon name="chevronRight" size={18} />
         </Link>
@@ -44,7 +45,7 @@ export function MorePage() {
             navigate("/app/login", { replace: true });
           }}
         >
-          <Icon name="logout" />
+          <NavIcon name="logout" />
           <span>{t.nav.logout}</span>
         </button>
       </nav>

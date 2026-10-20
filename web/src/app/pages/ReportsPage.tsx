@@ -37,7 +37,7 @@ export function ReportsPage() {
 
   return (
     <>
-      <PageHeader title={r.title} lead={r.lead} />
+      <PageHeader art="feature-care" title={r.title} lead={r.lead} />
       <Segmented<PeriodKind>
         label={r.title}
         value={kind}
@@ -46,7 +46,7 @@ export function ReportsPage() {
       />
 
       {data.cages.length === 0 ? (
-        <EmptyState icon="cages" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{r.noCages}</EmptyState>
+        <EmptyState art="app-cage" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{r.noCages}</EmptyState>
       ) : (
         <>
           <div className="pg-stats pg-stats--wide">

@@ -103,3 +103,9 @@
 /* Text for screen readers only. */
 .ds-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
+
+/* ---------- Illustration and illustrated icons ---------- */
+.ds-illus { display: flex; justify-content: center; align-items: center; height: var(--illus-h, 140px); }
+.ds-illus img { display: block; height: 100%; width: auto; max-width: 100%; object-fit: contain; }
+@media (max-height: 700px) { .ds-illus { height: calc(var(--illus-h, 140px) * 0.75); } }
+.ds-navicon { display: block; flex: none; object-fit: contain; }

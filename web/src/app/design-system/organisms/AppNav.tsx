@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Hanko } from "@/shared/ui/Hanko";
-import { Icon } from "@/app/design-system/atoms/Icon";
+import { NavIcon } from "@/app/design-system/atoms/NavIcon";
 import { Button } from "@/app/design-system/atoms/Button";
 import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { useMode } from "@/app/mode/ModeProvider";
@@ -28,7 +28,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
         <nav className="ds-sidenav__links" aria-label="App">
           {sideItems(advanced).map((i) => (
             <NavLink key={i.to} to={i.to} end={i.end} className="ds-sidenav__link">
-              <Icon name={i.icon} />
+              <NavIcon name={i.art} />
               {t.nav[i.key]}
             </NavLink>
           ))}
@@ -36,11 +36,11 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
         <div className="ds-sidenav__foot">
           <ModeSwitch />
           <NavLink to="/" className="ds-sidenav__link">
-            <Icon name="home" />
+            <NavIcon name="website" />
             {t.nav.backToSite}
           </NavLink>
           <button type="button" className="ds-sidenav__link" onClick={onLogout}>
-            <Icon name="logout" />
+            <NavIcon name="logout" />
             {t.nav.logout}
           </button>
         </div>
@@ -49,7 +49,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
       <nav className="ds-tabbar" aria-label="App">
         {tabItems.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className="ds-tabbar__link">
-            <Icon name={i.icon} size={22} />
+            <NavIcon name={i.art} size={24} />
             <span>{t.nav[i.key]}</span>
           </NavLink>
         ))}

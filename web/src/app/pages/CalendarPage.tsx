@@ -20,7 +20,7 @@ export function CalendarPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader art="app-cages"
         title={c.title}
         lead={c.lead}
         actions={
@@ -44,7 +44,7 @@ export function CalendarPage() {
           </ul>
         </>
       ) : (
-        <EmptyState icon="cages" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{c.empty}</EmptyState>
+        <EmptyState art="app-cage" action={<Button to="/app/cages" size="sm">{t.nav.cages}</Button>}>{c.empty}</EmptyState>
       )}
     </>
   );

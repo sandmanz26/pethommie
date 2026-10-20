@@ -36,7 +36,7 @@ export function InvoicesPage() {
 
   return (
     <>
-      <PageHeader title={p.title} lead={p.lead} />
+      <PageHeader art="feature-payments" title={p.title} lead={p.lead} />
       <div className="pg-toolbar">
         <Field label={p.month}>
           <Input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
@@ -86,7 +86,7 @@ export function InvoicesPage() {
           </table>
         </div>
       ) : (
-        <EmptyState icon="bookings">
+        <EmptyState art="feature-payments">
           {p.empty}
           <br />
           <Muted>{p.emptyHint}</Muted>

@@ -36,7 +36,7 @@ export function BookingsPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader art="feature-calendar"
         title={t.bookings.title}
         actions={
           <Button to="/app/bookings/new" icon="plus">
@@ -74,7 +74,7 @@ export function BookingsPage() {
           })
         ) : (
           <EmptyState
-            icon="bookings"
+            art="feature-calendar"
             action={
               filter === "upcoming" && (
                 <Button to="/app/bookings/new" icon="plus" size="sm">

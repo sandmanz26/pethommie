@@ -85,7 +85,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title={t.settings.title} />
+      <PageHeader art="app-hotel" title={t.settings.title} />
 
       <form className="ds-form__section pg-settings" onSubmit={save} noValidate>
         <Heading level={2} size="md">{t.settings.hotel}</Heading>

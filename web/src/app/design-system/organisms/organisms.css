@@ -40,7 +40,8 @@
     color: var(--ink-faint); text-decoration: none; font-size: 0.7em; font-weight: 700; border-radius: var(--radius-sm);
   }
   .ds-tabbar__link.active { color: var(--ink); }
-  .ds-tabbar__link.active svg { color: var(--seal); }
+  .ds-tabbar__link .ds-navicon { opacity: 0.75; filter: saturate(0.7); transition: transform 0.15s ease; }
+  .ds-tabbar__link.active .ds-navicon { opacity: 1; filter: none; transform: translateY(-1px) scale(1.08); }
 }
 
 /* ---------- PageHeader ---------- */
@@ -48,6 +49,27 @@
 .ds-pagehead__main { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .ds-pagehead__main > div { display: grid; gap: 4px; min-width: 0; }
 .ds-pagehead__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* With an illustration: a soft banner on wide screens, the plain header on phones. */
+.ds-pagehead--art .ds-pagehead__art { display: none; }
+@media (min-width: 900px) {
+  .ds-pagehead--art {
+    position: relative;
+    align-items: center;
+    min-height: 128px;
+    padding: 18px 168px 18px 24px;
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(60% 120% at 92% 70%, #fff6e6 0%, transparent 70%),
+      linear-gradient(120deg, #f6ead6, #ece6d2 60%, #e3ead6);
+  }
+  .ds-pagehead--art .ds-pagehead__art {
+    display: flex;
+    position: absolute;
+    right: 18px;
+    bottom: 10px;
+    pointer-events: none;
+  }
+}
 
 /* ---------- BookingCard ---------- */
 .ds-booking {

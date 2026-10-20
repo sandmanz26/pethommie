@@ -15,6 +15,13 @@ import { DemoAccountsPanel } from "@/app/design-system/organisms/DemoAccountsPan
 import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
 import "./pages.css";
 
+const SCENE = {
+  src: "/backgrounds/login-scene.webp",
+  srcSet: "/backgrounds/login-scene-800.webp 800w, /backgrounds/login-scene.webp 1600w",
+  width: 1600,
+  height: 905,
+};
+
 export function LoginPage() {
   const { t } = useAppT();
   const a = t.auth.login;
@@ -44,7 +51,7 @@ export function LoginPage() {
   }
 
   return (
-    <FocusLayout>
+    <FocusLayout art={SCENE}>
       <form className="pg-flow" onSubmit={submit} noValidate>
         <div className="pg-flow__head pg-flow__head--center">
           <Heading level={1}>{a.title}</Heading>

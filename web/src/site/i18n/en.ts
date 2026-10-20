@@ -139,6 +139,7 @@ export const en = {
     plans: [
       {
         name: "Early access",
+        art: "pricing-free",
         price: "Free",
         unit: "for 30 days",
         points: ["Every feature", "No card needed", "Help moving from your notebook"],
@@ -147,6 +148,7 @@ export const en = {
       },
       {
         name: "Lebaran package",
+        art: "pricing-lebaran",
         price: "Rp299k",
         unit: "per season",
         points: ["Booking link with deposits", "Waitlist when you're full", "Reports to every owner, fast"],

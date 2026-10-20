@@ -15,13 +15,16 @@ export function Pricing() {
         <div className="plans">
           {pricing.plans.map((plan) => (
             <article key={plan.name} className={`plan${plan.soon ? " plan--soon" : " plan--main"}`}>
-              <h3>
-                {plan.name}
-                {plan.soon && <span className="feature__soon">{pricing.soon}</span>}
-              </h3>
-              <p className="plan__price">
-                {plan.price} <small>{plan.unit}</small>
-              </p>
+              <img className="plan__art" src={`/illustrations/${plan.art}.webp`} alt="" loading="lazy" decoding="async" />
+              <div className="plan__head">
+                <h3>
+                  {plan.name}
+                  {plan.soon && <span className="feature__soon">{pricing.soon}</span>}
+                </h3>
+                <p className="plan__price">
+                  {plan.price} <small>{plan.unit}</small>
+                </p>
+              </div>
               <ul className="ticks">
                 {plan.points.map((p) => (
                   <li key={p}>{p}</li>

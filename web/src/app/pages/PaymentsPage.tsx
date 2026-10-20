@@ -39,7 +39,7 @@ export function PaymentsPage() {
 
   return (
     <>
-      <PageHeader title={p.title} lead={p.lead} />
+      <PageHeader art="feature-payments" title={p.title} lead={p.lead} />
       <div className="pg-stats pg-stats--wide">
         <StatCard label={p.owedTotal} value={rp(owed)} tone={owed > 0 ? "warn" : "ok"} />
         <StatCard label={p.filters.left} value={count("left")} tone={count("left") ? "danger" : "neutral"} />
@@ -66,7 +66,7 @@ export function PaymentsPage() {
             return <ReceivableRow key={r.booking.id} row={r} pet={pet} owner={data.owners.find((o) => o.id === pet?.ownerId)} reminderHref={reminder(r)} />;
           })
         ) : (
-          <EmptyState icon="bookings">{filter === "all" ? p.empty : p.emptyFilter}</EmptyState>
+          <EmptyState art="feature-payments">{filter === "all" ? p.empty : p.emptyFilter}</EmptyState>
         )}
       </div>
       <Muted>{p.hint}</Muted>

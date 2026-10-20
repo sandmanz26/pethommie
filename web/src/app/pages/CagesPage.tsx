@@ -23,7 +23,7 @@ export function CagesPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader art="app-cage"
         title={t.cages.title}
         lead={t.cages.lead}
         actions={
@@ -56,7 +56,7 @@ export function CagesPage() {
         </>
       )}
 
-      {data.cages.length === 0 && <EmptyState icon="cages">{t.cages.empty}</EmptyState>}
+      {data.cages.length === 0 && <EmptyState art="app-cage">{t.cages.empty}</EmptyState>}
 
       {SIZE_ORDER.map((s) => {
         const cages = bySize(s);
