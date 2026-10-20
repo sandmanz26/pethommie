@@ -129,7 +129,7 @@ describe("booking a stay", () => {
     await signedInAs({
       data: aSmallHotel({
         bookings: [
-          { id: "b1", petId: "p1", cageId: "s1", checkIn: iso(today), checkOut: iso(out), status: "booked", payments: [], arrival: null, notes: "", createdAt: "2026-10-01T00:00:00.000Z" },
+          { id: "b1", petId: "p1", cageId: "s1", checkIn: iso(today), checkOut: iso(out), status: "booked", payments: [], charges: [], companionIds: [], arrival: null, notes: "", createdAt: "2026-10-01T00:00:00.000Z" },
         ],
       }),
     });

@@ -33,7 +33,7 @@ export function PaymentsPage() {
     const owner = data.owners.find((o) => o.id === pet?.ownerId);
     return waLink(
       owner?.whatsapp ?? "",
-      paymentReminder({ hotelName: data.hotel?.name ?? "", ownerName: owner?.name ?? "", petName: pet?.name ?? "", checkOut: r.booking.checkOut, balance: r.balance, left: r.group === "left" }),
+      paymentReminder({ hotelName: data.hotel?.name ?? "", ownerName: owner?.name ?? "", petName: pet?.name ?? "", language: owner?.language, checkOut: r.booking.checkOut, balance: r.balance, left: r.group === "left" }),
     );
   };
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { todayISO } from "@/app/domain/logic";
+import { involvesPet, todayISO } from "@/app/domain/logic";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -44,7 +44,7 @@ export function PetsPage() {
               key={p.id}
               pet={p}
               owner={data.owners.find((o) => o.id === p.ownerId)}
-              stays={data.bookings.filter((b) => b.petId === p.id && b.status !== "cancelled").length}
+              stays={data.bookings.filter((b) => involvesPet(b, p.id) && b.status !== "cancelled").length}
               today={today}
             />
           ))

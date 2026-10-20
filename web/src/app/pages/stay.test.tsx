@@ -315,7 +315,7 @@ describe("messages to the owner", () => {
   });
 
   it("warns that there is no number to send to, and still lets the operator pick the contact", async () => {
-    await signedInAs({ data: aSmallHotel({ owners: [{ id: "o1", name: "Owner o1", whatsapp: "" }], bookings: [stay()] }) });
+    await signedInAs({ data: aSmallHotel({ owners: [{ id: "o1", name: "Owner o1", whatsapp: "", language: "id" }], bookings: [stay()] }) });
     localStorage.setItem(modeKeyFor("acct-test"), "advanced");
     renderApp("/app/bookings/b1");
     const panel = await screen.findByRole("region", { name: /messages to the owner/i });

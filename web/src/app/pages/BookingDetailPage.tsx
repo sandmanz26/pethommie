@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { dayOf, formatDate, nights, todayISO } from "@/app/domain/logic";
+import { petNames } from "@/app/domain/invoices";
 import { entriesOn, reportWasSent } from "@/app/domain/careLog";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useStore } from "@/app/store/AppStore";
@@ -12,8 +13,10 @@ import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { ArrivalSummary } from "@/app/design-system/organisms/ArrivalSummary";
 import { BookingEditForm } from "@/app/design-system/organisms/BookingEditForm";
+import { ChargesPanel } from "@/app/design-system/organisms/ChargesPanel";
 import { CareLogPanel } from "@/app/design-system/organisms/CareLogPanel";
 import { CheckInForm } from "@/app/design-system/organisms/CheckInForm";
+import { InvoicePanel } from "@/app/design-system/organisms/InvoicePanel";
 import { MessagesPanel } from "@/app/design-system/organisms/MessagesPanel";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { PaymentsPanel } from "@/app/design-system/organisms/PaymentsPanel";
@@ -62,6 +65,7 @@ export function BookingDetailPage() {
   const pet = data.pets.find((p) => p.id === booking.petId);
   const owner = data.owners.find((o) => o.id === pet?.ownerId);
   const cage = data.cages.find((c) => c.id === booking.cageId);
+  const names = petNames(data, booking);
   const hotel = data.hotel;
   const staying = booking.status === "checked_in";
   const sentAt = data.reportsSent.find((r) => r.bookingId === id && r.date === today)?.at ?? null;
@@ -70,7 +74,7 @@ export function BookingDetailPage() {
   return (
     <>
       <PageHeader
-        title={pet?.name ?? "—"}
+        title={names || "—"}
         lead={[owner?.name, owner?.whatsapp && formatWhatsapp(owner.whatsapp)].filter(Boolean).join(" · ")}
         back={{ to: "/app/bookings", label: t.common.back }}
         actions={
@@ -112,6 +116,14 @@ export function BookingDetailPage() {
             </div>
           )}
           {(staying || booking.status === "checked_out") && <ArrivalSummary arrival={booking.arrival} />}
+          {advanced && booking.status !== "cancelled" && (
+            <ChargesPanel
+              booking={booking}
+              cage={cage}
+              onAdd={editable ? (charge) => store.addCharge(booking.id, charge) : undefined}
+              onRemove={editable ? (chargeId) => store.removeCharge(booking.id, chargeId) : undefined}
+            />
+          )}
           <PaymentsPanel
             simple={!advanced}
             booking={booking}
@@ -119,7 +131,8 @@ export function BookingDetailPage() {
             onAdd={booking.status === "cancelled" ? undefined : (payment) => store.recordPayment(booking.id, payment)}
             onRemove={booking.status === "cancelled" ? undefined : (paymentId) => store.removePayment(booking.id, paymentId)}
           />
-          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} owner={owner} cage={cage} />}
+          {advanced && booking.status !== "cancelled" && <InvoicePanel data={data} booking={booking} onIssue={(request) => store.issueInvoice(booking.id, request)} />}
+          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} petName={names} owner={owner} cage={cage} />}
         </div>
 
         {(staying || booking.status === "checked_out") && (
@@ -140,6 +153,7 @@ export function BookingDetailPage() {
                 booking={booking}
                 pet={pet}
                 owner={owner}
+                petName={names}
                 date={today}
                 entries={entriesOn(data, booking.id, today)}
                 sentAt={reportWasSent(data, booking.id, today) ? sentAt : null}

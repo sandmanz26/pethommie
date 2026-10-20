@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
+import type { HotelSettings, Language } from "@/app/domain/types";
 import { parseStored } from "@/app/store/storage";
 import { useAppT } from "@/app/i18n/useAppT";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
 import { Button } from "@/app/design-system/atoms/Button";
-import { Input } from "@/app/design-system/atoms/Input";
+import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
+import { Checkbox } from "@/app/design-system/atoms/Checkbox";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
@@ -17,7 +19,7 @@ import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
 
 export function SettingsPage() {
-  const { data, setHotel, loadSample, reset, importData } = useStore();
+  const { data, setHotel, saveSettings, loadSample, reset, importData } = useStore();
   const { t } = useAppT();
   const navigate = useNavigate();
   const account = useAccount();
@@ -28,6 +30,12 @@ export function SettingsPage() {
   const [wa, setWa] = useState(formatWhatsapp(hotel.whatsapp));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+  const [draft, setDraft] = useState<HotelSettings>(data.settings);
+  const [ppnText, setPpnText] = useState(String(data.settings.tax.ppnPercent));
+  const [bizErrors, setBizErrors] = useState<{ prefix?: string; ppn?: string }>({});
+  const [bizSaved, setBizSaved] = useState(false);
+  const edit = (patch: Partial<HotelSettings>) => (setDraft((d) => ({ ...d, ...patch })), setBizSaved(false));
+  const editTax = (patch: Partial<HotelSettings["tax"]>) => edit({ tax: { ...draft.tax, ...patch } });
   const [confirm, setConfirm] = useState<"reset" | "sample" | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [restore, setRestore] = useState<{ status: "idle" | "bad" | "newer" | "done" } | { status: "ask"; data: typeof data }>({ status: "idle" });
@@ -53,6 +61,17 @@ export function SettingsPage() {
     if (Object.keys(err).length) return;
     setHotel({ ...hotel, name: name.trim(), city: city.trim(), whatsapp: normalised ?? "" });
     setSaved(true);
+  }
+
+  function saveBusiness(e: FormEvent) {
+    e.preventDefault();
+    const ppn = Number(ppnText.replace(",", "."));
+    const issues = saveSettings({ ...draft, tax: { ...draft.tax, ppnPercent: ppnText.trim() === "" ? NaN : ppn } });
+    setBizErrors({
+      prefix: issues.includes("prefix") ? t.settingsBiz.errPrefix : undefined,
+      ppn: issues.includes("ppn") ? t.settingsTax.errPpn : undefined,
+    });
+    setBizSaved(issues.length === 0);
   }
 
   function exportJson() {
@@ -86,6 +105,79 @@ export function SettingsPage() {
           <span className="ds-form__spacer" />
           <Button type="submit" icon="check">
             {t.common.save}
+          </Button>
+        </div>
+      </form>
+
+      <form className="ds-form__section pg-settings" onSubmit={saveBusiness} noValidate id="business">
+        <Heading level={2} size="md">{t.settingsBiz.title}</Heading>
+        <Muted>{t.settingsBiz.lead}</Muted>
+        <Field label={t.settingsBiz.legalName} optional={t.common.optional}>
+          <Input value={draft.legalName} placeholder={t.settingsBiz.legalNamePh} onChange={(e) => edit({ legalName: e.target.value })} />
+        </Field>
+        <Field label={t.settingsBiz.address} optional={t.common.optional}>
+          <Input value={draft.address} onChange={(e) => edit({ address: e.target.value })} />
+        </Field>
+        <div className="ds-form__row">
+          <Field label={t.settingsBiz.npwp} hint={t.settingsBiz.npwpHint} optional={t.common.optional}>
+            <Input value={draft.npwp} inputMode="numeric" onChange={(e) => edit({ npwp: e.target.value })} />
+          </Field>
+          <Field label={t.settingsBiz.prefix} hint={t.settingsBiz.prefixHint(`${draft.invoicePrefix.replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "INV"}-${new Date().getFullYear()}-0001`)} error={bizErrors.prefix}>
+            <Input value={draft.invoicePrefix} onChange={(e) => edit({ invoicePrefix: e.target.value })} />
+          </Field>
+        </div>
+        <Field label={t.settingsBiz.payment} optional={t.common.optional}>
+          <Textarea rows={3} value={draft.paymentInstructions} placeholder={t.settingsBiz.paymentPh} onChange={(e) => edit({ paymentInstructions: e.target.value })} />
+        </Field>
+        <Field label={t.settingsBiz.language}>
+          <Select value={draft.invoiceLanguage} onChange={(e) => edit({ invoiceLanguage: e.target.value as Language })}>
+            <option value="id">{t.settingsBiz.languages.id}</option>
+            <option value="en">{t.settingsBiz.languages.en}</option>
+          </Select>
+        </Field>
+
+        <div id="tax">
+          <Heading level={2} size="md">{t.settingsTax.title}</Heading>
+        </div>
+        <Muted>{t.settingsTax.lead}</Muted>
+        <div className="ds-form__row">
+          <Field label={t.settingsTax.regime}>
+            <Select value={draft.tax.regime} onChange={(e) => editTax({ regime: e.target.value as HotelSettings["tax"]["regime"] })}>
+              {(["none", "final_umkm", "general"] as const).map((r) => (
+                <option key={r} value={r}>{t.settingsTax.regimes[r]}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label={t.settingsTax.taxpayer}>
+            <Select value={draft.tax.taxpayer} onChange={(e) => editTax({ taxpayer: e.target.value as HotelSettings["tax"]["taxpayer"] })}>
+              {(["individual", "other"] as const).map((r) => (
+                <option key={r} value={r}>{t.settingsTax.taxpayers[r]}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+        <Field label={t.settingsTax.basis} hint={t.settingsTax.basisHint}>
+          <Select value={draft.tax.basis} onChange={(e) => editTax({ basis: e.target.value as HotelSettings["tax"]["basis"] })}>
+            {(["cash", "accrual"] as const).map((r) => (
+              <option key={r} value={r}>{t.settingsTax.bases[r]}</option>
+            ))}
+          </Select>
+        </Field>
+        <Checkbox label={t.settingsTax.pkp} checked={draft.tax.pkp} onChange={(e) => editTax({ pkp: e.target.checked })} />
+        <Muted>{t.settingsTax.pkpHint}</Muted>
+        {draft.tax.pkp && (
+          <>
+            <Field label={t.settingsTax.ppn} hint={t.settingsTax.ppnHint} error={bizErrors.ppn}>
+              <Input value={ppnText} inputMode="decimal" onChange={(e) => (setPpnText(e.target.value), setBizSaved(false))} />
+            </Field>
+            <Checkbox label={t.settingsTax.includes} checked={draft.tax.pricesIncludeTax} onChange={(e) => editTax({ pricesIncludeTax: e.target.checked })} />
+          </>
+        )}
+        <div className="ds-form__actions">
+          {bizSaved && <Alert tone="ok">{t.settingsBiz.saved}</Alert>}
+          <span className="ds-form__spacer" />
+          <Button type="submit" icon="check">
+            {t.settingsBiz.save}
           </Button>
         </div>
       </form>

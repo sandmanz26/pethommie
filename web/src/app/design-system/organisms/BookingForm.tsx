@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { scheduleIssues } from "@/app/domain/bookingRules";
+import { bookingIssues, scheduleIssues } from "@/app/domain/bookingRules";
 import { normaliseWhatsapp } from "@/shared/lib/phone";
 import type { Booking, CageSize, HotelData, PaymentMethod, Species } from "@/app/domain/types";
 import {
@@ -17,6 +17,7 @@ import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { Heading } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
+import { CompanionPicker } from "@/app/design-system/molecules/CompanionPicker";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
@@ -53,6 +54,7 @@ export function BookingForm({
   const today = todayISO();
 
   const [petId, setPetId] = useState(initialPetId ?? "");
+  const [companions, setCompanions] = useState<string[]>([]);
   const [adding, setAdding] = useState(data.pets.length === 0);
   const [np, setNp] = useState<NewPetQuick>({ name: "", species: "cat", ownerName: "", whatsapp: "" });
   const [checkIn, setCheckIn] = useState(initialCheckIn ?? today);
@@ -75,6 +77,8 @@ export function BookingForm({
   const n = validDates ? nights(checkIn, checkOut) : 0;
   const total = bookingTotal({ checkIn, checkOut }, cage);
   const pet = data.pets.find((p) => p.id === petId);
+  const siblings = !adding && pet ? data.pets.filter((p) => p.ownerId === pet.ownerId && p.id !== pet.id) : [];
+  const chosenCompanions = companions.filter((id) => siblings.some((s) => s.id === id));
   const vState = pet ? vaccineState(pet, checkIn) : null;
   const sortedPets = useMemo(() => [...data.pets].sort((a, b) => a.name.localeCompare(b.name)), [data.pets]);
 
@@ -88,7 +92,12 @@ export function BookingForm({
       if (!np.ownerName.trim()) err.npOwner = t.petForm.errOwner;
       if (np.whatsapp.trim() && !normaliseWhatsapp(np.whatsapp)) err.npWa = t.petForm.errWhatsapp;
     } else if (!petId) err.pet = f.errPet;
-    const issues = scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut });
+    const issues = [
+      ...scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut }),
+      ...bookingIssues(data, { id: "", petId: adding ? "" : petId, companionIds: adding ? [] : chosenCompanions, cageId: selectedCageId, checkIn, checkOut, status: "booked", payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion"),
+    ];
+    if (issues.includes("pet_busy")) err.pet = f.errPetBusy;
+    if (issues.includes("companion")) err.companions = f.errCompanion;
     if (issues.includes("dates")) err.dates = f.errDates;
     if (issues.includes("cage")) err.cage = f.errCage;
     if (issues.includes("cage_taken")) err.cage = f.errTaken;
@@ -103,6 +112,8 @@ export function BookingForm({
         checkIn,
         checkOut,
         status: "booked",
+        companionIds: adding ? [] : chosenCompanions,
+        charges: [],
         payments: depositAmount > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: depositAmount, method, note: "" }] : [],
         arrival: null,
         notes: notes.trim(),
@@ -160,6 +171,7 @@ export function BookingForm({
             </Select>
           </Field>
         )}
+        {siblings.length > 0 && <CompanionPicker pets={siblings} value={chosenCompanions} onChange={setCompanions} error={errors.companions} />}
         {vState && vState !== "ok" && <Alert tone={vState === "expired" ? "danger" : "warn"}>{f.vaccineWarn[vState]}</Alert>}
       </fieldset>
 

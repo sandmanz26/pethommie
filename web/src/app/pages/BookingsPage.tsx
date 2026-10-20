@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Booking } from "@/app/domain/types";
 import { todayISO } from "@/app/domain/logic";
+import { petNames } from "@/app/domain/invoices";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -62,6 +63,7 @@ export function BookingsPage() {
                 key={b.id}
                 booking={b}
                 pet={pet}
+                names={petNames(data, b)}
                 owner={data.owners.find((o) => o.id === pet?.ownerId)}
                 cage={data.cages.find((c) => c.id === b.cageId)}
                 checkInTo={b.status === "booked" && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}

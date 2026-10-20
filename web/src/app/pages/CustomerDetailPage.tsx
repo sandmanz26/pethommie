@@ -6,7 +6,8 @@ import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
-import { Input } from "@/app/design-system/atoms/Input";
+import { Input, Select } from "@/app/design-system/atoms/Input";
+import type { Language } from "@/app/domain/types";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
@@ -15,7 +16,8 @@ import { StatCard } from "@/app/design-system/molecules/StatCard";
 import { BookingCard } from "@/app/design-system/organisms/BookingCard";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { PetRow } from "@/app/design-system/organisms/PetRow";
-import { todayISO } from "@/app/domain/logic";
+import { involvesPet, todayISO } from "@/app/domain/logic";
+import { petNames } from "@/app/domain/invoices";
 import "./pages.css";
 
 /** One owner: contact, pets, history, and what they owe. */
@@ -53,6 +55,7 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
   const [name, setName] = useState(owner.name);
   const [wa, setWa] = useState(owner.whatsapp ? formatWhatsapp(owner.whatsapp) : "");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [language, setLanguage] = useState<Language>(owner.language);
   const [saved, setSaved] = useState(false);
   const today = todayISO();
   const rp = (n: number) => formatRupiah(n, locale);
@@ -71,7 +74,7 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
     }
     setErrors(err);
     if (Object.keys(err).length) return;
-    saveOwner({ id: owner.id, name: name.trim(), whatsapp: number ?? "" });
+    saveOwner({ id: owner.id, name: name.trim(), whatsapp: number ?? "", language });
     setSaved(true);
   }
 
@@ -103,7 +106,7 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
         <div className="pg-section">
           <Heading level={2} size="md">{c.petsTitle}</Heading>
           {customer.pets.map((p) => (
-            <PetRow key={p.id} pet={p} owner={owner} stays={data.bookings.filter((b) => b.petId === p.id && b.status !== "cancelled").length} today={today} />
+            <PetRow key={p.id} pet={p} owner={owner} stays={data.bookings.filter((b) => involvesPet(b, p.id) && b.status !== "cancelled").length} today={today} />
           ))}
           <form className="ds-form ds-form--panel" onSubmit={save} noValidate aria-label={c.editTitle}>
             <Heading level={2} size="md">{c.editTitle}</Heading>
@@ -112,6 +115,12 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
             </Field>
             <Field label={c.whatsapp} error={errors.wa} optional={t.common.optional}>
               <Input value={wa} onChange={(e) => (setWa(e.target.value), setSaved(false))} inputMode="tel" placeholder="08xx xxxx xxxx" />
+            </Field>
+            <Field label={c.language} hint={c.languageHint}>
+              <Select value={language} onChange={(e) => (setLanguage(e.target.value as Language), setSaved(false))}>
+                <option value="id">{c.languages.id}</option>
+                <option value="en">{c.languages.en}</option>
+              </Select>
             </Field>
             <div className="ds-form__actions">
               <Button type="submit" icon="check">{c.save}</Button>
@@ -125,7 +134,7 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
           {stays.length ? (
             stays.map((b) => {
               const pet = data.pets.find((p) => p.id === b.petId);
-              return <BookingCard key={b.id} booking={b} pet={pet} owner={owner} cage={data.cages.find((x) => x.id === b.cageId)} />;
+              return <BookingCard key={b.id} booking={b} pet={pet} names={petNames(data, b)} owner={owner} cage={data.cages.find((x) => x.id === b.cageId)} />;
             })
           ) : (
             <Muted>{c.noStays}</Muted>

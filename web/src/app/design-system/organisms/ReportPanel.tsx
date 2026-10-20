@@ -15,6 +15,7 @@ export function ReportPanel({
   booking,
   pet,
   owner,
+  petName,
   date,
   entries,
   sentAt,
@@ -24,6 +25,8 @@ export function ReportPanel({
   booking: Booking;
   pet: Pet;
   owner: Owner | undefined;
+  /** Names of every pet in the stay, when more than one share it. */
+  petName?: string;
   date: ISODate;
   entries: CareEntry[];
   /** When it was sent today, if it was. */
@@ -37,12 +40,13 @@ export function ReportPanel({
       dailyReport({
         hotelName: hotel.name,
         ownerName: owner?.name ?? "",
-        petName: pet.name,
+        petName: petName ?? pet.name,
+        language: owner?.language,
         date,
         day: stayDay(booking.checkIn, date),
         entries,
       }),
-    [hotel.name, owner?.name, pet.name, date, booking.checkIn, entries],
+    [hotel.name, owner?.name, owner?.language, petName, pet.name, date, booking.checkIn, entries],
   );
   return (
     <section className="ds-panel" aria-labelledby="report-title">
@@ -70,7 +74,7 @@ export function ReportPanel({
         status={<Muted>{sentAt ? r.sent(timeOf(sentAt, locale)) : r.notSent}</Muted>}
         onOpen={onSent}
       />
-      <Muted>{r.language}</Muted>
+      <Muted>{r.language(t.settingsBiz.languages[owner?.language ?? "id"])}</Muted>
     </section>
   );
 }

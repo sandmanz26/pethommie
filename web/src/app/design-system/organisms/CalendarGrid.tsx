@@ -55,7 +55,7 @@ export function CalendarGrid({ data, from, days }: { data: HotelData; from: ISOD
                 style={{ gridColumn: `${b.start + 2} / span ${b.span}` }}
                 to={`/app/bookings/${b.booking.id}`}
               >
-                {petName(b.booking.petId)}
+                {[b.booking.petId, ...b.booking.companionIds].map(petName).join(" & ")}
               </Link>
             ))}
           </div>

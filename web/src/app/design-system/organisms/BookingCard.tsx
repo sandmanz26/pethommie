@@ -17,6 +17,7 @@ const shortDate = (iso: string, locale: string) => formatDate(iso, locale, { day
 export function BookingCard({
   booking,
   pet,
+  names,
   owner,
   cage,
   checkInTo,
@@ -25,6 +26,8 @@ export function BookingCard({
 }: {
   booking: Booking;
   pet?: Pet;
+  /** Every pet in the stay, when more than one share the cage. */
+  names?: string;
   owner?: Owner;
   cage?: Cage;
   /** Where to do the check-in (the booking page, where the arrival record is filled). */
@@ -42,7 +45,7 @@ export function BookingCard({
       <div className="ds-booking__main">
         <div className="ds-booking__top">
           <Link className="ds-booking__name" to={`/app/bookings/${booking.id}`}>
-            {pet?.name ?? "—"}
+            {names || pet?.name || "—"}
           </Link>
           <Badge tone={statusTone[booking.status]}>{t.bookings.status[booking.status]}</Badge>
         </div>

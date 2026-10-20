@@ -8,7 +8,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 /** A pet that is staying now, with what has been logged today and whether the owner has had the report. */
-export function StayingRow({ booking, pet, today, entries, reportSent }: { booking: Booking; pet: Pet | undefined; today: string; entries: CareEntry[]; reportSent: boolean }) {
+export function StayingRow({ booking, pet, names, today, entries, reportSent }: { booking: Booking; pet: Pet | undefined; names?: string; today: string; entries: CareEntry[]; reportSent: boolean }) {
   const { t } = useAppT();
   const s = t.stayingNow;
   const total = Math.max(1, nights(booking.checkIn, booking.checkOut));
@@ -18,7 +18,7 @@ export function StayingRow({ booking, pet, today, entries, reportSent }: { booki
       <Avatar name={pet?.name ?? "?"} species={pet?.species ?? "other"} />
       <div className="ds-staying__main">
         <Link className="ds-booking__name" to={`/app/bookings/${booking.id}`}>
-          {pet?.name ?? "—"}
+          {names || pet?.name || "—"}
         </Link>
         <span className="ds-booking__meta">
           {s.day(Math.min(stayDay(booking.checkIn, today), total), total)} · {entries.length ? s.entries(entries.length) : s.noEntries}

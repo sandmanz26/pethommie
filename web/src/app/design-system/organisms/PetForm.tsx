@@ -9,7 +9,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 export type PetDraft = Omit<Pet, "id" | "ownerId">;
-export type OwnerDraft = Omit<Owner, "id">;
+export type OwnerDraft = Omit<Owner, "id" | "language">;
 
 const SPECIES: Species[] = ["cat", "dog", "rabbit", "other"];
 

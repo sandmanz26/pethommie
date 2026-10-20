@@ -9,10 +9,10 @@ import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 /** The other messages an operator keeps typing by hand: confirmation, arrival, pickup, vaccine. */
-export function MessagesPanel({ hotel, booking, pet, owner, cage }: { hotel: Hotel; booking: Booking; pet: Pet; owner: Owner | undefined; cage: Cage | undefined }) {
+export function MessagesPanel({ hotel, booking, pet, owner, cage, petName }: { hotel: Hotel; booking: Booking; pet: Pet; owner: Owner | undefined; cage: Cage | undefined; petName?: string }) {
   const { t } = useAppT();
   const m = t.messages;
-  const base = { hotelName: hotel.name, ownerName: owner?.name ?? "", petName: pet.name };
+  const base = { hotelName: hotel.name, ownerName: owner?.name ?? "", petName: petName ?? pet.name, language: owner?.language };
   const wa = owner?.whatsapp ?? "";
   const vState = vaccineState(pet, todayISO());
   const items: { key: string; label: string; text: string }[] = [
@@ -34,6 +34,7 @@ export function MessagesPanel({ hotel, booking, pet, owner, cage }: { hotel: Hot
         <Muted>{m.lead}</Muted>
       </div>
       {!wa && <Alert tone="info">{t.report.noWhatsapp}</Alert>}
+      <Muted>{t.report.language(t.settingsBiz.languages[owner?.language ?? "id"])}</Muted>
       {items.map((i) => (
         <details key={i.key} className="ds-earlier">
           <summary>{i.label}</summary>

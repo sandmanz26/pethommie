@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Booking } from "@/app/domain/types";
-import { addDays, formatDate, holdsCage, todayBoard, todayISO, vaccineState } from "@/app/domain/logic";
+import { petNames } from "@/app/domain/invoices";
+import { addDays, formatDate, holdsCage, stayPetIds, todayBoard, todayISO, vaccineState } from "@/app/domain/logic";
 import { stayingToday } from "@/app/domain/careLog";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -29,6 +30,7 @@ export function TodayPage() {
       key={b.id}
       booking={b}
       pet={data.pets.find((p) => p.id === b.petId)}
+      names={petNames(data, b)}
       owner={data.owners.find((o) => o.id === data.pets.find((p) => p.id === b.petId)?.ownerId)}
       cage={data.cages.find((c) => c.id === b.cageId)}
       checkInTo={action === "in" ? `/app/bookings/${b.id}#checkin` : undefined}
@@ -38,7 +40,7 @@ export function TodayPage() {
 
   // Vaccine alerts for pets staying now or arriving in the next 7 days.
   const alertPetIds = new Set(
-    data.bookings.filter((b) => holdsCage(b) && b.checkIn <= addDays(today, 7)).map((b) => b.petId),
+    data.bookings.filter((b) => holdsCage(b) && b.checkIn <= addDays(today, 7)).flatMap(stayPetIds),
   );
   const alerts = data.pets
     .filter((p) => alertPetIds.has(p.id))
@@ -100,7 +102,7 @@ export function TodayPage() {
         <Heading level={2} size="md">{t.stayingNow.title}</Heading>
         {staying.length ? (
           staying.map(({ booking, entries, reportSent }) => (
-            <StayingRow key={booking.id} booking={booking} pet={data.pets.find((p) => p.id === booking.petId)} today={today} entries={entries} reportSent={reportSent} />
+            <StayingRow key={booking.id} booking={booking} pet={data.pets.find((p) => p.id === booking.petId)} names={petNames(data, booking)} today={today} entries={entries} reportSent={reportSent} />
           ))
         ) : (
           <EmptyState art="dog-house">{t.stayingNow.empty}</EmptyState>

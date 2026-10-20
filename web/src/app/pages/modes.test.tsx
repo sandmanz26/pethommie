@@ -47,11 +47,11 @@ describe("simple and advanced mode", () => {
   it("offers the everyday pages in simple mode and adds customers, payments and reports in advanced", async () => {
     const user = await open("/app");
     await screen.findByRole("heading", { name: "Today", level: 1 });
-    for (const hidden of ["Customers", "Payments", "Reports"]) expect(sidebar().queryByRole("link", { name: hidden })).not.toBeInTheDocument();
+    for (const hidden of ["Customers", "Payments", "Invoices", "Reports", "Tax"]) expect(sidebar().queryByRole("link", { name: hidden })).not.toBeInTheDocument();
     for (const shown of ["Today", "Bookings", "Calendar", "Pets", "Cages", "Settings", "Help"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
 
     await user.click(sidebar().getByRole("tab", { name: "Advanced" }));
-    for (const shown of ["Customers", "Payments", "Reports"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
+    for (const shown of ["Customers", "Payments", "Invoices", "Reports", "Tax"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
   });
 
   it("remembers the choice for this account, and only this account", async () => {
@@ -70,7 +70,7 @@ describe("simple and advanced mode", () => {
     const more = within(await screen.findByRole("navigation", { name: "More" }));
     expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Cages", "Settings", "Help", "Back to website"]);
     await user.click(screen.getAllByRole("tab", { name: "Advanced" })[0]);
-    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Customers", "Payments", "Reports", "Cages", "Settings", "Help", "Back to website"]);
+    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Customers", "Payments", "Invoices", "Reports", "Tax", "Cages", "Settings", "Help", "Back to website"]);
   });
 
   it("can be switched in Settings too, and says what each one is", async () => {

@@ -24,6 +24,9 @@ import { CustomersPage } from "./CustomersPage";
 import { CustomerDetailPage } from "./CustomerDetailPage";
 import { PaymentsPage } from "./PaymentsPage";
 import { ReportsPage } from "./ReportsPage";
+import { InvoicesPage } from "./InvoicesPage";
+import { InvoicePage } from "./InvoicePage";
+import { TaxPage } from "./TaxPage";
 import { HelpPage } from "./HelpPage";
 import { PetsPage } from "./PetsPage";
 import { PetEditPage } from "./PetEditPage";
@@ -96,6 +99,9 @@ export default function AppRoutes() {
               <Route path="customers" element={<CustomersPage />} />
               <Route path="customers/:id" element={<CustomerDetailPage />} />
               <Route path="payments" element={<PaymentsPage />} />
+              <Route path="invoices" element={<InvoicesPage />} />
+              <Route path="invoices/:id" element={<InvoicePage />} />
+              <Route path="tax" element={<TaxPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="help" element={<HelpPage />} />
               <Route path="pets" element={<PetsPage />} />
