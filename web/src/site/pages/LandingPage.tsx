@@ -7,13 +7,17 @@ import { film } from "@/site/content/film";
 import { Hero } from "@/site/sections/Hero";
 import { ProductTour } from "@/site/sections/ProductTour";
 import { Features } from "@/site/sections/Features";
+import { Kinds } from "@/site/sections/Kinds";
+import { LinkSpot } from "@/site/sections/LinkSpot";
+import { Compare } from "@/site/sections/Compare";
+import { Insights } from "@/site/sections/Insights";
 import { Pricing } from "@/site/sections/Pricing";
 import { Faq } from "@/site/sections/Faq";
 import { FinalCta } from "@/site/sections/FinalCta";
 
 /**
- * The story first (one stay, scrubbed by scroll), then the proof (real screens), what it does, what it costs,
- * the questions people ask, and one last ask.
+ * The story first (one stay, scrubbed by scroll), then the proof (real screens), who it is for, what it does,
+ * what changes, the numbers, the booking link, what it costs, the questions people ask, and one last ask.
  */
 export function LandingPage() {
   const { t } = useSiteT();
@@ -25,6 +29,10 @@ export function LandingPage() {
         <InkFilm film={film} intro={<Hero />} />
         <ProductTour />
         <Features />
+        <Kinds />
+        <Insights />
+        <Compare />
+        <LinkSpot />
         <Pricing />
         <Faq />
         <FinalCta />

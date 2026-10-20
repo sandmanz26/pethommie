@@ -165,7 +165,7 @@ def screens() -> None:
     """PNG captures from scripts/capture-features.mjs -> WebP sized for the landing page; the PNG is removed."""
     for src in sorted((ROOT / "public" / "screens").glob("*.png")):
         shot = Image.open(src).convert("RGB")
-        shot.thumbnail((520 if "-phone-" in src.name else 640, 4000), Image.LANCZOS)
+        shot.thumbnail((520 if "-phone-" in src.name else 1200 if src.name.startswith("wide-") else 640, 4000), Image.LANCZOS)
         print(f"{src.name}:")
         save_webp(shot, src.with_suffix(".webp"), 82)
         src.unlink()

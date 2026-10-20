@@ -4,15 +4,14 @@ import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { Features } from "./Features";
 
 describe("Features", () => {
-  it("says plainly which promise is not built yet", () => {
+  it("promises only what is built: nothing is marked as coming", () => {
     render(
       <LocaleProvider>
         <Features />
       </LocaleProvider>,
     );
-    const soon = screen.getAllByText("Soon");
-    expect(soon).toHaveLength(1);
-    expect(within(soon[0].closest(".feature") as HTMLElement).getByRole("heading")).toHaveTextContent("Booking link with deposit");
+    expect(screen.queryByText("Soon")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("heading", { name: "Booking link" }).closest(".feature") as HTMLElement).getByText(/Book a stay at/)).toBeInTheDocument();
   });
 
   it("shows the real screen of every feature that exists, in the visitor's language, and none for the one that doesn't", () => {

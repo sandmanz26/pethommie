@@ -6,6 +6,10 @@ import { Faq } from "./Faq";
 import { FinalCta } from "./FinalCta";
 import { Pricing } from "./Pricing";
 import { ProductTour } from "./ProductTour";
+import { Kinds } from "./Kinds";
+import { Compare } from "./Compare";
+import { Insights } from "./Insights";
+import { LinkSpot } from "./LinkSpot";
 
 const wrap = (node: React.ReactNode) => render(<LocaleProvider>{node}</LocaleProvider>);
 
@@ -62,5 +66,33 @@ describe("landing sections", () => {
     expect(help).toHaveAttribute("open");
     await userEvent.click(within(help).getByRole("button", { name: "Contact me on WhatsApp" }));
     expect(within(help).getByRole("alert")).toHaveTextContent(/fill in your pet hotel name/i);
+  });
+
+  it("speaks to every kind of pet hotel, each with its picture", () => {
+    wrap(<Kinds />);
+    const items = screen.getAllByRole("listitem");
+    expect(items.map((li) => within(li).getByRole("heading").textContent)).toEqual(["Pet hotel with cages", "Cage-free & daycare", "Home boarding", "Cattery & small pets"]);
+    expect(items[1].querySelector("img")).toHaveAttribute("src", "/illustrations/kind-rooms.webp");
+  });
+
+  it("sets the day before and after side by side, as a table", () => {
+    wrap(<Compare />);
+    const table = screen.getByRole("table", { name: /from notebook and chats/i });
+    const rows = within(table).getAllByRole("row");
+    expect(rows).toHaveLength(6);
+    expect(within(rows[2]).getByRole("rowheader")).toHaveTextContent("Who still owes us?");
+    expect(within(rows[2]).getAllByRole("cell")[1]).toHaveTextContent(/reminder ready to send/);
+  });
+
+  it("shows the real dashboard in the visitor's language, and says the booking link takes no payment", () => {
+    wrap(
+      <>
+        <Insights />
+        <LinkSpot />
+      </>,
+    );
+    expect(screen.getByRole("img", { name: /the pethommie dashboard/i })).toHaveAttribute("src", "/screens/wide-dashboard-en.webp");
+    expect(screen.getByText(/no payment on the page yet/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Make my link" })).toHaveAttribute("href", "/app/register");
   });
 });
