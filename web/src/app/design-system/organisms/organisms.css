@@ -375,3 +375,22 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-receipt__sign { display: grid; justify-items: center; gap: 6px; min-width: 12rem; font-size: 0.88rem; color: #5a564c; }
 .ds-receipt__sign i { display: block; width: 100%; height: 56px; border-bottom: 1px solid #1b1a17; }
 @media (max-width: 520px) { .ds-receipt__rows { grid-template-columns: 1fr; gap: 2px 0; } .ds-receipt__rows dd { margin-bottom: 8px; } }
+
+/* ---------- Who a booking is for ---------- */
+.ds-guest__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ds-guest__result, .ds-guest__owner {
+  display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; width: 100%;
+  padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  color: var(--ink); font: inherit; text-align: left;
+}
+.ds-guest__result { cursor: pointer; }
+.ds-guest__result:hover, .ds-guest__result:focus-visible { border-color: var(--ink); background: var(--surface-sunk); outline: none; }
+.ds-guest__result span, .ds-guest__owner span { display: grid; min-width: 0; }
+.ds-guest__result small, .ds-guest__owner small { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-guest__owner { border-color: var(--ok); background: var(--ok-bg); }
+.ds-guest__avatar { display: grid !important; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--paper); font-weight: 800; color: var(--seal); }
+.ds-guest__pets { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ds-guest__pets legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
+.ds-guest__pet { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 10px 2px 2px; border-radius: var(--radius-sm); background: var(--paper); }
+.ds-guest__newpet { display: grid; gap: 8px; padding: 12px; border-radius: var(--radius); background: var(--paper); }
+.ds-guest .ds-form__row { align-items: start; }

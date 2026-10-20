@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { newId } from "@/app/domain/logic";
+import { normaliseWhatsapp } from "@/shared/lib/phone";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -24,14 +25,17 @@ export function BookingNewPage() {
         initialCheckIn={params.get("in") ?? undefined}
         initialCheckOut={params.get("out") ?? undefined}
         onCancel={() => navigate(-1)}
-        onSubmit={(booking, newPet) => {
-          let petId = booking.petId;
-          if (newPet) {
-            const ownerId = saveOwner({ name: newPet.ownerName, whatsapp: newPet.whatsapp });
-            petId = newId();
-            savePet({ id: petId, name: newPet.name, species: newPet.species, breed: "", ownerId, vaccineExpiry: "", notes: "" });
+        onSubmit={(booking, guest) => {
+          // A new owner and a new pet are saved first, so the stay can point at them.
+          const ownerId = guest.ownerId ?? saveOwner({ name: guest.newOwner!.name.trim(), whatsapp: normaliseWhatsapp(guest.newOwner!.whatsapp) ?? "" });
+          let { petId, companionIds } = booking;
+          if (guest.newPet) {
+            const id = newId();
+            savePet({ id, name: guest.newPet.name.trim(), species: guest.newPet.species, breed: "", ownerId, vaccineExpiry: "", notes: "" });
+            if (petId) companionIds = [...companionIds, id];
+            else petId = id;
           }
-          if (saveBooking({ ...booking, petId }).length === 0) navigate("/app/bookings");
+          if (saveBooking({ ...booking, petId, companionIds }).length === 0) navigate("/app/bookings");
         }}
       />
     </>

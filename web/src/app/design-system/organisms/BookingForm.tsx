@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { bookingIssues, scheduleIssues } from "@/app/domain/bookingRules";
-import { normaliseWhatsapp } from "@/shared/lib/phone";
-import type { Booking, BookingSource, CageSize, HotelData, PaymentMethod, Species } from "@/app/domain/types";
+import type { Booking, BookingSource, CageSize, HotelData, PaymentMethod } from "@/app/domain/types";
+import { emptyGuest, guestErrors, type GuestDraft, type GuestErrors } from "@/app/domain/guest";
 import {
   addDays,
   bookingTotal,
@@ -17,18 +17,15 @@ import {
 } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
-import { Heading } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
-import { CompanionPicker } from "@/app/design-system/molecules/CompanionPicker";
 import { Field } from "@/app/design-system/molecules/Field";
+import { GuestPicker } from "./GuestPicker";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
-export type NewPetQuick = { name: string; species: Species; ownerName: string; whatsapp: string };
-
 /**
- * Create a booking in one screen. Only free cages for the chosen dates are offered,
- * so a double booking can't be entered. A new pet can be added inline.
+ * Create a booking in one screen: who it is for (an owner on record, or a new one, and the pets staying), the
+ * dates, and a unit. Only free units for the chosen dates are offered, so a double booking can't be entered.
  */
 export function BookingForm({
   data,
@@ -48,17 +45,19 @@ export function BookingForm({
   initialCheckOut?: string;
   /** Simple mode: no cage-size filter, so the cage list is just the free ones. */
   simple?: boolean;
-  onSubmit: (booking: Booking, newPet?: NewPetQuick) => void;
+  /** The booking, and who it is for: the page saves a new owner or pet first. `booking.petId` is empty when the only pet is new. */
+  onSubmit: (booking: Booking, guest: GuestDraft) => void;
   onCancel: () => void;
 }) {
   const { t, locale } = useAppT();
   const f = t.bookingForm;
   const today = todayISO();
 
-  const [petId, setPetId] = useState(initialPetId ?? "");
-  const [companions, setCompanions] = useState<string[]>([]);
-  const [adding, setAdding] = useState(data.pets.length === 0);
-  const [np, setNp] = useState<NewPetQuick>({ name: "", species: "cat", ownerName: "", whatsapp: "" });
+  const [guest, setGuest] = useState<GuestDraft>(() => {
+    const pet = data.pets.find((p) => p.id === initialPetId);
+    if (pet) return { ownerId: pet.ownerId, newOwner: null, petIds: [pet.id], newPet: null };
+    return data.owners.length ? emptyGuest() : { ownerId: null, newOwner: { name: "", whatsapp: "" }, petIds: [], newPet: { name: "", species: "cat" } };
+  });
   const [checkIn, setCheckIn] = useState(initialCheckIn ?? today);
   const [checkOut, setCheckOut] = useState(initialCheckOut ?? addDays(initialCheckIn ?? today, 2));
   const [size, setSize] = useState<CageSize | "">("");
@@ -68,13 +67,15 @@ export function BookingForm({
   const [source, setSource] = useState<BookingSource>("whatsapp");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [guestErr, setGuestErr] = useState<GuestErrors>({});
 
   const validDates = checkOut > checkIn;
-  const pet = data.pets.find((p) => p.id === petId);
-  const siblings = !adding && pet ? data.pets.filter((p) => p.ownerId === pet.ownerId && p.id !== pet.id) : [];
-  const chosenCompanions = companions.filter((id) => siblings.some((s) => s.id === id));
+  // The owner's pets that are staying: the first is the one the stay is booked for, the rest share the unit.
+  const chosen = guest.ownerId ? guest.petIds.filter((id) => data.pets.some((p) => p.id === id && p.ownerId === guest.ownerId)) : [];
+  const petId = chosen[0] ?? "";
+  const chosenCompanions = chosen.slice(1);
   // A cage holds the whole party; a shared room needs a place for each pet.
-  const party = 1 + chosenCompanions.length;
+  const party = Math.max(1, chosen.length + (guest.newPet ? 1 : 0));
   const options = useMemo(
     () => (validDates ? data.cages.filter((c) => (!size || c.size === size) && cageIsFree(data, c.id, checkIn, checkOut, undefined, isShared(c) ? party : 1)) : []),
     [data, checkIn, checkOut, size, validDates, party],
@@ -83,103 +84,55 @@ export function BookingForm({
   const selectedCageId = options.some((c) => c.id === cageId) ? cageId : "";
   const cage = data.cages.find((c) => c.id === selectedCageId);
   const n = validDates ? nights(checkIn, checkOut) : 0;
-  const total = bookingTotal({ checkIn, checkOut, companionIds: chosenCompanions }, cage);
-  const vState = pet ? vaccineState(pet, checkIn) : null;
-  const sortedPets = useMemo(() => [...data.pets].sort((a, b) => a.name.localeCompare(b.name)), [data.pets]);
+  // Priced for the whole party: in a shared room each pet pays, including one not saved yet.
+  const total = bookingTotal({ checkIn, checkOut, companionIds: Array.from({ length: party - 1 }, (_, i) => String(i)) }, cage);
+  const states = chosen.map((id) => data.pets.find((p) => p.id === id)).flatMap((p) => (p ? [vaccineState(p, checkIn)] : []));
+  const vState = states.includes("expired") ? "expired" : states.includes("soon") ? "soon" : states.includes("unknown") ? "unknown" : null;
 
   const depositAmount = parseInt(deposit.replace(/\D/g, "") || "0", 10);
 
   function submit(e: FormEvent) {
     e.preventDefault();
     const err: Record<string, string> = {};
-    if (adding) {
-      if (!np.name.trim()) err.npName = t.petForm.errName;
-      if (!np.ownerName.trim()) err.npOwner = t.petForm.errOwner;
-      if (np.whatsapp.trim() && !normaliseWhatsapp(np.whatsapp)) err.npWa = t.petForm.errWhatsapp;
-    } else if (!petId) err.pet = f.errPet;
+    const g = t.guest;
+    const gErr = guestErrors(data, guest, { owner: g.errOwner, ownerName: g.errOwnerName, whatsapp: t.petForm.errWhatsapp, taken: g.errTaken, pets: g.errPets, petName: g.errPetName });
     const issues = [
       ...scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut, places: isShared(cage) ? party : 1 }),
-      ...bookingIssues(data, { id: "", petId: adding ? "" : petId, companionIds: adding ? [] : chosenCompanions, cageId: selectedCageId, checkIn, checkOut, status: "booked", source, payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion"),
+      ...(petId ? bookingIssues(data, { id: "", petId, companionIds: chosenCompanions, cageId: selectedCageId, checkIn, checkOut, status: "booked", source, payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion") : []),
     ];
-    if (issues.includes("pet_busy")) err.pet = f.errPetBusy;
+    if (issues.includes("pet_busy")) gErr.pets = f.errPetBusy;
     if (issues.includes("companion")) err.companions = f.errCompanion;
     if (issues.includes("dates")) err.dates = f.errDates;
     if (issues.includes("cage")) err.cage = f.errCage;
     if (issues.includes("cage_taken")) err.cage = f.errTaken;
     setErrors(err);
-    if (Object.keys(err).length) return;
+    setGuestErr(gErr);
+    if (Object.keys(err).length || Object.keys(gErr).length) return;
 
     onSubmit(
       {
         id: newId(),
-        petId: adding ? "" : petId,
+        petId,
         cageId: selectedCageId,
         checkIn,
         checkOut,
         status: "booked",
         source,
-        companionIds: adding ? [] : chosenCompanions,
+        companionIds: chosenCompanions,
         charges: [],
         payments: depositAmount > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: depositAmount, method, kind: "deposit", reference: "", note: "" }] : [],
         arrival: null,
         notes: notes.trim(),
         createdAt: new Date().toISOString(),
       },
-      adding ? { ...np, whatsapp: np.whatsapp.trim() ? normaliseWhatsapp(np.whatsapp) ?? "" : "" } : undefined,
+      guest,
     );
   }
 
   return (
     <form className="ds-form" onSubmit={submit} noValidate>
-      <fieldset className="ds-form__section">
-        <div className="ds-form__sectionhead">
-          <Heading level={2} size="sm">{adding ? f.newPetTitle : f.pet}</Heading>
-          {data.pets.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setAdding((a) => !a)}>
-              {adding ? t.common.cancel : f.newPet}
-            </Button>
-          )}
-        </div>
-        {adding ? (
-          <>
-            <div className="ds-form__row">
-              <Field label={t.petForm.name} error={errors.npName}>
-                <Input value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} placeholder={t.petForm.namePh} autoFocus />
-              </Field>
-              <Field label={t.petForm.species}>
-                <Select value={np.species} onChange={(e) => setNp({ ...np, species: e.target.value as Species })}>
-                  {(["cat", "dog", "rabbit", "other"] as Species[]).map((s) => (
-                    <option key={s} value={s}>
-                      {t.common.species[s]}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
-            <div className="ds-form__row">
-              <Field label={t.petForm.ownerName} error={errors.npOwner}>
-                <Input value={np.ownerName} onChange={(e) => setNp({ ...np, ownerName: e.target.value })} placeholder={t.petForm.ownerPh} />
-              </Field>
-              <Field label={t.petForm.ownerWa} error={errors.npWa} optional={t.common.optional}>
-                <Input value={np.whatsapp} onChange={(e) => setNp({ ...np, whatsapp: e.target.value })} placeholder="08xx xxxx xxxx" inputMode="tel" />
-              </Field>
-            </div>
-          </>
-        ) : (
-          <Field label={f.pet} error={errors.pet}>
-            <Select value={petId} onChange={(e) => setPetId(e.target.value)}>
-              <option value="">{f.petPh}</option>
-              {sortedPets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} · {data.owners.find((o) => o.id === p.ownerId)?.name ?? ""}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
-        {siblings.length > 0 && <CompanionPicker pets={siblings} value={chosenCompanions} onChange={setCompanions} error={errors.companions} />}
-        {vState && vState !== "ok" && <Alert tone={vState === "expired" ? "danger" : "warn"}>{f.vaccineWarn[vState]}</Alert>}
-      </fieldset>
+      <GuestPicker data={data} value={guest} onChange={setGuest} errors={guestErr} on={checkIn} />
+      {vState && <Alert tone={vState === "expired" ? "danger" : "warn"}>{f.vaccineWarn[vState]}</Alert>}
 
       <fieldset className="ds-form__section">
         <div className="ds-form__row">

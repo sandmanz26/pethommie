@@ -103,23 +103,26 @@ describe("a hotel that is already set up", () => {
 });
 
 describe("booking a stay", () => {
-  it("adds a new pet and owner in the same step, and shows the booking", async () => {
+  it("adds a new owner and their pet in the same step, and shows the booking", async () => {
     const user = userEvent.setup();
     await signedInAs({ data: aSmallHotel() });
     renderApp("/app/bookings/new");
 
-    await user.click(await screen.findByRole("button", { name: /\+ new pet/i }));
-    await user.type(screen.getByLabelText(/^name$/i), "Boba");
+    await user.click(await screen.findByRole("button", { name: /^new owner$/i }));
     await user.type(screen.getByLabelText(/owner name/i), "Dewi");
     await user.type(screen.getByLabelText(/owner whatsapp/i), "0857 1122 3344");
+    await user.type(screen.getByLabelText(/pet's name/i), "Boba");
     await choose(user, screen.getByLabelText(/^cage ·/i), "s1");
     await user.click(screen.getByRole("button", { name: /save booking/i }));
 
     expect(await screen.findByRole("heading", { name: /^bookings$/i })).toBeInTheDocument();
     const saved = stored();
     expect(saved.bookings).toHaveLength(1);
-    expect(saved.pets.map((p: { name: string }) => p.name)).toContain("Boba");
-    expect(saved.owners.map((o: { whatsapp: string }) => o.whatsapp)).toContain("6285711223344");
+    const boba = saved.pets.find((p: { name: string }) => p.name === "Boba");
+    const dewi = saved.owners.find((o: { name: string }) => o.name === "Dewi");
+    expect(dewi.whatsapp).toBe("6285711223344");
+    expect(boba.ownerId).toBe(dewi.id);
+    expect(saved.bookings[0].petId).toBe(boba.id);
     expect(within(screen.getByRole("main")).getByText("Boba")).toBeInTheDocument();
   });
 
