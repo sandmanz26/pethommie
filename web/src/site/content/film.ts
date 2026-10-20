@@ -10,6 +10,11 @@ export type Film = {
   frameSrc: (i: number) => string;
   /** A representative frame for the switcher thumbnail. */
   poster: string;
+  /**
+   * Where the action is, in frame pixels. Given when the scene is small in its frame (the turntable is a little
+   * diorama in the middle of a wide shot): that part is fitted into the scene area instead of the whole frame.
+   */
+  focus?: { x: number; y: number; w: number; h: number };
 };
 
 const frames = (id: FilmId) => (i: number) => `/films/${id}/f${String(i + 1).padStart(4, "0")}.webp`;
@@ -32,6 +37,8 @@ export const films: Record<FilmId, Film> = {
     paper: "#f6ebd8",
     frameSrc: frames("turntable"),
     poster: "/films/turntable/f0205.webp",
+    // the diorama, measured over every frame (it stays within x 511-1067, y 180-825), plus a margin
+    focus: { x: 470, y: 150, w: 640, h: 710 },
   },
 };
 

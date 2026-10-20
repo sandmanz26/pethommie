@@ -1,27 +1,31 @@
 import { useSiteT } from "@/site/i18n/useSiteT";
-import { BrushLine } from "@/site/components/ui/BrushLine";
+import { LineIcon } from "@/site/components/ui/LineIcon";
 import "./sections.css";
 
+/** What it does, one line each. */
 export function Features() {
   const { features } = useSiteT().t;
   return (
-    <section className="section" id="features">
+    <section className="section section--deep" id="features">
       <div className="wrap">
-        <div className="section-head">
+        <div className="section-head section-head--center">
           <span className="eyebrow">{features.eyebrow}</span>
           <h2>{features.title}</h2>
-          <p>{features.lead}</p>
         </div>
-        <BrushLine />
-        <div className="features">
+        <ul className="features">
           {features.items.map((f) => (
-            <div className="feature" key={f.title}>
-              <h3>{f.title}</h3>
-              {f.soon && <span className="feature__soon">{features.soon}</span>}
+            <li className={`feature${f.soon ? " feature--soon" : ""}`} key={f.title}>
+              <span className="feature__icon">
+                <LineIcon name={f.icon} />
+              </span>
+              <h3>
+                {f.title}
+                {f.soon && <span className="feature__soon">{features.soon}</span>}
+              </h3>
               <p>{f.body}</p>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

@@ -3,6 +3,9 @@
 }
 
 .film__stage {
+  /* Width of the deck column on wide screens. Read by the scene area below. */
+  --deck-w: min(32rem, 40vw);
+  --stacked: 0;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -18,13 +21,13 @@
   display: block;
 }
 
-/* Soft vignette so captions read on the paper. */
+/* Soft vignette so the deck reads on the paper. */
 .film__stage::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(120% 90% at 50% 50%, transparent 55%, color-mix(in srgb, var(--paper) 85%, transparent));
+  background: radial-gradient(120% 90% at 60% 50%, transparent 55%, color-mix(in srgb, var(--paper) 85%, transparent));
 }
 
 .film__veil {
@@ -47,6 +50,314 @@
   color: var(--ink-soft);
 }
 
+/* ---------- Where the scene sits: beside the deck ---------- */
+.film__framebox {
+  position: absolute;
+  top: 84px;
+  bottom: 72px;
+  left: calc(var(--gutter) + var(--deck-w) + 32px);
+  right: var(--gutter);
+  pointer-events: none;
+}
+
+/* ---------- The deck: the opening, then one moment at a time ---------- */
+.film__deck {
+  position: absolute;
+  z-index: 3;
+  top: 84px;
+  bottom: 72px;
+  left: var(--gutter);
+  width: var(--deck-w);
+  display: grid;
+  align-items: center;
+}
+/* All items share one grid cell. The outgoing one leaves quickly; the next arrives after it, so they never stack. */
+.film__deck-item {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: 14px;
+  align-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear 0.15s;
+}
+.film__deck-item.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.3s ease 0.15s,
+    transform 0.3s ease 0.15s,
+    visibility 0s linear 0.15s;
+}
+
+.inscription {
+  padding: 20px 22px 22px;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  backdrop-filter: blur(3px);
+  border-left: 3px solid var(--ink);
+  border-radius: 0 14px 14px 0;
+}
+.inscription__when {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--seal);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.inscription h2 {
+  font-size: var(--step-2);
+  margin-bottom: 8px;
+}
+.inscription p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* ---------- The app screen that goes with a moment ---------- */
+.moment {
+  justify-self: start;
+  width: min(100%, 22rem);
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: 18px;
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent),
+    0 18px 40px -22px rgba(27, 26, 23, 0.55);
+}
+.moment__app {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.moment__app::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--seal);
+}
+.moment__title {
+  font-weight: 800;
+}
+.moment__note {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+.moment ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.moment__pet {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  align-items: center;
+}
+.moment__pet small {
+  display: block;
+  color: var(--ink-soft);
+}
+.moment__avatar {
+  grid-row: span 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: #f6d6b8;
+}
+.moment__chips,
+.moment__invoice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.moment__chips i,
+.moment__paid {
+  font-style: normal;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: #dcefdc;
+  color: #24572b;
+}
+.moment__invoice {
+  justify-content: space-between;
+}
+
+.moment__cal {
+  display: grid;
+  gap: 6px;
+}
+.moment__calrow {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.moment__days {
+  height: 24px;
+  border-radius: 8px;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(14.28% - 1px), color-mix(in srgb, var(--ink) 9%, transparent) calc(14.28% - 1px) 14.28%);
+  position: relative;
+}
+.moment__bar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  display: flex;
+  align-items: center;
+  padding-inline: 8px;
+  border-radius: 6px;
+  font-style: normal;
+  font-size: 0.74rem;
+  color: #fff;
+  background: var(--ink);
+  white-space: nowrap;
+}
+.moment__bar--0 {
+  left: 14%;
+  width: 58%;
+  background: var(--seal);
+}
+.moment__bar--1 {
+  left: 0;
+  width: 44%;
+}
+.moment__bar--free {
+  left: 0;
+  right: 0;
+  justify-content: center;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1.5px dashed var(--wash);
+}
+
+.moment__checks li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.moment__checks li::before {
+  content: "✓";
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #fff;
+  background: #2f7a3a;
+}
+
+.moment__log li {
+  display: grid;
+  grid-template-columns: 3rem auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.moment__log time {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.moment__sum {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.moment__sum div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.moment__sum dt {
+  color: var(--ink-soft);
+}
+.moment__sum dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.moment__total {
+  padding-top: 6px;
+  border-top: 1px dashed var(--wash);
+}
+.moment__total dt {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.moment__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.moment__stats span {
+  display: grid;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--paper) 70%, #fff);
+}
+.moment__stats b {
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+.moment__stats small {
+  color: var(--ink-soft);
+}
+
+.moment__bubble {
+  justify-self: start;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px 8px;
+  border-radius: 4px 14px 14px 14px;
+  background: #e1f6cb;
+}
+.moment__bubble ul {
+  gap: 2px;
+}
+.moment__bubble li::before {
+  content: "• ";
+}
+.moment__bubble small {
+  justify-self: end;
+  font-size: 0.7rem;
+  color: #3b6e4b;
+}
+
+/* ---------- Story clock ---------- */
 .film__progress {
   position: absolute;
   z-index: 3;
@@ -75,157 +386,109 @@
   width: 0;
   background: var(--ink);
 }
+.film__tick {
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
 .film__clock {
   font-variant-numeric: tabular-nums;
   min-width: 7.5em;
   text-align: right;
 }
-
-/* Captions scroll over the sticky stage. */
-.film__chapters {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.chapter {
-  position: absolute;
-  left: 0;
-  right: 0;
-  padding-inline: var(--gutter);
-  display: flex;
-  pointer-events: auto;
-}
-.chapter--right {
-  justify-content: flex-end;
-}
-.chapter--intro {
-  top: 16vh;
-}
-
-.inscription {
-  max-width: 26rem;
-  padding: 22px 24px 24px;
-  background: color-mix(in srgb, var(--paper) 88%, transparent);
-  backdrop-filter: blur(2px);
-  border-left: 3px solid var(--ink);
-}
-.chapter--right .inscription {
-  border-left: 0;
-  border-right: 3px solid var(--ink);
-  text-align: right;
-}
-.inscription__when {
-  display: block;
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--seal);
+.film__skip {
+  color: var(--ink);
   font-weight: 700;
-  margin-bottom: 8px;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.inscription h2 {
-  font-size: var(--step-2);
-  margin-bottom: 10px;
-}
-.inscription p {
-  color: var(--ink-soft);
+.film__skip:hover {
+  color: var(--seal);
 }
 
-/* Where the scene sits. The whole stage on wide screens; above the caption deck on phones. */
-.film__framebox {
+/* The captions as text, for screen readers only. */
+.film__script {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-/* Caption deck: phones and portrait tablets only. */
-.film__deck {
-  display: none;
-}
-
-@media (max-width: 720px) {
-  .chapter,
-  .chapter--right {
-    justify-content: flex-start;
-  }
-  .inscription {
-    max-width: 100%;
-  }
-}
-
+/* ---------- Phones and portrait tablets: the scene on top, the deck below it ---------- */
 @media (max-width: 720px), (orientation: portrait) and (max-width: 1100px) {
+  .film__stage {
+    --stacked: 1;
+  }
   .film__framebox {
     top: calc(env(safe-area-inset-top, 0px) + 64px);
+    bottom: 0;
+    left: 0;
+    right: 0;
   }
-
-  /* The drifting captions stay in the page for screen readers but are drawn in the deck. */
-  .chapter--story {
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-  }
-
-  /* All items share one grid cell, so the deck is as tall as its longest caption and never jumps. */
   .film__deck {
-    display: grid;
-    position: absolute;
-    z-index: 3;
-    left: var(--gutter);
+    top: auto;
     right: var(--gutter);
-    /* clears the progress line and the compact film switcher */
+    width: auto;
+    /* clears the story clock and the compact film switcher */
     bottom: calc(env(safe-area-inset-bottom, 0px) + 116px);
     align-items: end;
-    pointer-events: none;
   }
-  /* The outgoing caption leaves quickly; the next one arrives after it, so they never stack. */
   .film__deck-item {
-    grid-area: 1 / 1;
-    opacity: 0;
-    transform: translateY(10px);
-    transition:
-      opacity 0.15s ease,
-      transform 0.15s ease;
+    gap: 10px;
+    align-content: end;
   }
-  .film__deck-item.is-active {
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity 0.3s ease 0.15s,
-      transform 0.3s ease 0.15s;
-  }
-  .film__deck .inscription {
+  .inscription {
     max-width: 34rem;
-    padding: 14px 18px 16px;
+    padding: 12px 16px 14px;
     background: var(--paper);
     backdrop-filter: none;
   }
-  .film__deck .inscription h2 {
+  .inscription h2 {
     font-size: var(--step-1);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
-  .film__deck .inscription p {
+  .inscription p {
     font-size: 0.95rem;
     line-height: 1.5;
   }
+  .moment {
+    padding: 10px 12px 12px;
+    gap: 6px;
+    font-size: 0.82rem;
+  }
 }
 
-/* Short phones: keep the scene readable by trimming long captions. */
-@media (max-width: 720px) and (max-height: 700px) {
-  .chapter--intro {
-    top: calc(env(safe-area-inset-top, 0px) + 72px);
+@media (max-width: 720px) {
+  /* The app screen tells the rest; keep the scene in view. */
+  /* The deck says when it is, so the clock and the chapter marks make way for a longer rail. */
+  .inscription p,
+  .film__label,
+  .film__clock,
+  .film__tick {
+    display: none;
   }
-  .film__deck .inscription p {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
+}
+
+/* Short phones: a smaller app screen. */
+@media (max-width: 720px) and (max-height: 700px) {
+  .moment__note,
+  .moment__app {
+    display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .film__deck-item {
+  .film__deck-item,
+  .film__deck-item.is-active {
     transition: none;
   }
 }

@@ -38,7 +38,7 @@ src/
     i18n/      en.ts (default) and id.ts: all copy, chapter timings, prices; useSiteT
     content/   film registry: frame count, duration, paper colour per film
     components/  ink (the scroll film), film-switcher, layout (TopBar, Footer), ui
-    sections/  Hero, Features, RaporPreview, LebaranPackage, WaitlistForm
+    sections/  Hero, ProductTour, Features, Pricing, Faq, FinalCta (with WaitlistForm)
     hooks/ lib/ pages/ styles/
   app/       the operator product (see below)
   App.tsx    routes: site pages, and /app/* lazy-loaded
@@ -62,11 +62,14 @@ forwards and backwards on every browser, which seeking a `<video>` does not.
 
 - Frames load coarse-to-fine (every 30th, 10th, 3rd, then all) so a fast scroll shows the whole story early.
 - Scroll handling runs once per animation frame and never re-renders React.
-- Caption positions come from `chapters.<film>[].at` (seconds into that film) in each `site/i18n/*.ts` file.
+- Captions come from `chapters.<film>[]` in each `site/i18n/*.ts` file: `at` is the second of the film they belong
+  to, `moment` the small app screen drawn beside them (`components/ink/Moment.tsx`, sample data from `film.moments`).
+- Wide screens: a deck on the left shows the opening (the hero), then one caption and its app screen at a time; the
+  scene fills the rest. A film whose scene is small in its frame gives a `focus` box (`content/film.ts`) and is
+  fitted into the area beside the deck; the turntable does.
 - Two films ship today. The floating switcher picks one; `<html data-film>` swaps the page palette to match.
-- Phones and portrait tablets (≤720 px, or portrait up to 1100 px): the scene sits above a caption
-  deck that shows the current chapter, so captions never cover the illustration. The drifting
-  captions stay in the page for screen readers. The V1/V2 switcher compacts to one row there and
+- Phones and portrait tablets (≤720 px, or portrait up to 1100 px): the scene sits above the same
+  deck, so captions never cover the illustration. Screen readers get the captions as a list. The V1/V2 switcher compacts to one row there and
   fades out once the film has scrolled past.
 
 To replace the film with a new video:
@@ -100,8 +103,9 @@ note. When an API exists, add a store that calls it and export it as
 
 ## Website
 
-Sections of the landing page (`src/site/sections`): the film, How it works, Product tour (real screens), Features,
-Simple/Advanced, Daily report, Trust, Lebaran package, FAQ, Waitlist; plus `/privacy` and `/terms`
+Sections of the landing page (`src/site/sections`): the film (the story of one stay,
+with the hero as its opening), Product tour (real screens behind tabs), Features (one line each), Pricing, FAQ, and a
+last call to action over the pet hotel scene with an optional "help me set up" form. Kept short on purpose; plus `/privacy` and `/terms`
 (`site/pages/LegalPage.tsx`, words in the site copy, written to describe what the product does today). Nothing on it
 is invented: there are no testimonials or customer numbers, and what isn't built is marked **Coming soon**.
 

@@ -2,7 +2,7 @@ import { useSiteT } from "@/site/i18n/useSiteT";
 import { Button } from "@/site/components/ui/Button";
 import "./sections.css";
 
-/** Opening inscription, sits over the first frames of the ink film. */
+/** The opening: shown in the film's deck until the story starts. */
 export function Hero() {
   const { hero } = useSiteT().t;
   return (
@@ -19,6 +19,7 @@ export function Hero() {
           {hero.secondaryCta.label}
         </Button>
       </div>
+      <p className="hero__note">{hero.note}</p>
       <div className="hero__hint">
         <i aria-hidden="true" />
         {hero.scrollHint}

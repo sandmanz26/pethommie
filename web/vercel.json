@@ -42,7 +42,7 @@
       ]
     },
     {
-      "source": "/(films|illustrations|photos)/(.*)",
+      "source": "/(films|illustrations|photos|backgrounds)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

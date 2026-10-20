@@ -13,6 +13,13 @@ import { PasswordInput } from "@/app/design-system/molecules/PasswordField";
 import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
 import "./pages.css";
 
+const SCENE = {
+  src: "/backgrounds/pet-hotel-scene.webp",
+  srcSet: "/backgrounds/pet-hotel-scene-800.webp 800w, /backgrounds/pet-hotel-scene.webp 1586w",
+  width: 1586,
+  height: 992,
+};
+
 const EMPTY: RegistrationInput = { name: "", hotelName: "", email: "", whatsapp: "", password: "" };
 
 export function RegisterPage() {
@@ -56,7 +63,7 @@ export function RegisterPage() {
   }
 
   return (
-    <FocusLayout>
+    <FocusLayout art={SCENE}>
       <form className="pg-flow" onSubmit={submit} noValidate>
         <div className="pg-flow__head pg-flow__head--center">
           <Heading level={1}>{a.title}</Heading>

@@ -1,8 +1,11 @@
 // English copy (default locale). This file defines the shape every locale must match.
 // Edit text here, not in components.
 
-/** A caption over the film. `at` is the second in the film where it sits mid-screen. */
-export type Chapter = { at: number; side: "left" | "right"; when: string; title: string; body: string };
+/** The small app screen shown beside a caption. */
+export type MomentKind = "profile" | "booking" | "checkin" | "care" | "extra" | "night" | "report" | "pickup";
+/** A caption of the film. `at` is the second of the film it belongs to. */
+export type Chapter = { at: number; moment: MomentKind; when: string; title: string; body: string };
+export type FeatureIcon = "calendar" | "check" | "log" | "chat" | "invoice" | "chart" | "offline" | "link";
 
 export const en = {
   meta: {
@@ -17,12 +20,10 @@ export const en = {
   nav: {
     ariaLabel: "Main",
     links: [
-      { href: "#features", label: "Features" },
       { href: "#tour", label: "See it" },
-      { href: "#report", label: "Daily report" },
-      { href: "#peak-season", label: "Lebaran package" },
+      { href: "#features", label: "Features" },
+      { href: "#pricing", label: "Pricing" },
       { href: "#faq", label: "FAQ" },
-      { href: "#join", label: "Sign up" },
     ],
     login: "Log in",
     cta: "Try it free",
@@ -32,15 +33,18 @@ export const en = {
     titleStart: "Fully booked, and still ",
     titleAccent: "calm",
     titleEnd: ".",
-    lead: "Pethommie is pet hotel management software for operators in Indonesia. A cage calendar, check-in, payments, a daily care log, and reports to owners on WhatsApp, all from one Android phone, even without signal.",
+    lead: "Bookings, check-in, the daily care log, payments and WhatsApp reports for your pet hotel. On one phone, even without signal.",
     primaryCta: { href: "/app/register", label: "Try free for 30 days" },
-    secondaryCta: { href: "#features", label: "See the features" },
-    scrollHint: "Scroll to follow one stay from the operator's side",
+    secondaryCta: { href: "/app/login", label: "Open the demo" },
+    note: "No card needed · Bahasa Indonesia & English",
+    scrollHint: "Scroll to follow one stay",
   },
   film: {
     ariaLabel: "One pet's stay, from booking to pickup",
     loading: "Loading the film",
     label: "One stay",
+    skip: "Skip the story",
+    inApp: "In Pethommie",
     switcher: { label: "Hero film", options: { ink: "V1 · Ink", turntable: "V2 · Turntable" }, drag: "Drag to move" },
     /** Story clock under each film, keyed to the video's beats (seconds). */
     clock: {
@@ -65,161 +69,113 @@ export const en = {
         { at: 16.5, label: "Day 5 · 16:00" },
       ],
     },
-  },
-  /** Captions per film. */
-  chapters: {
-    ink: [
-      {
-        at: 3.8,
-        side: "right",
-        when: "Day 1 · 08:30 · Drop-off",
-        title: "The booking is done before the owner arrives.",
-        body: "Owners book from the link in your Instagram bio, upload their pet's vaccine card, and pay a deposit by QRIS. The cage is locked on your calendar right away. No back-and-forth chats, no double bookings.",
-      },
-      {
-        at: 6.5,
-        side: "left",
-        when: "Day 1 · 09:15 · Check-in",
-        title: "Check-in in under a minute.",
-        body: "Staff photograph the pet's condition on arrival, check vaccines, and note any food the owner brought. Everything is timestamped, so if there's ever a complaint, you have a record.",
-      },
-      {
-        at: 9.5,
-        side: "right",
-        when: "Day 1 · 21:00 · Night shift",
-        title: "The night shift knows what to do.",
-        body: "Feeding and medication schedules for every cage show up on staff phones. Finished tasks get ticked off, so shift handovers don't depend on anyone's memory.",
-      },
-      {
-        at: 12,
-        side: "left",
-        when: "Day 2 · 07:30 · Morning report",
-        title: "Reports go out. Chats go down.",
-        body: "One tap sends a photo and a daily summary to each owner on WhatsApp. They relax, and you stop answering \"how is my baby doing?\" one message at a time.",
-      },
-      {
-        at: 14,
-        side: "right",
-        when: "Day 5 · 16:00 · Pickup",
-        title: "Paid in full, and they'll be back.",
-        body: "The remaining balance goes out by QRIS at pickup. Every stay is on record, so you know who your regulars are and their next booking takes seconds.",
-      },
-    ],
-    turntable: [
-      {
-        at: 2,
-        side: "right",
-        when: "D-3 · Pet profiles",
-        title: "Every guest has a profile.",
-        body: "Pet, owner, WhatsApp number, vaccines and care notes in one place. Regulars are saved, so their next booking takes seconds.",
-      },
-      {
-        at: 4,
-        side: "left",
-        when: "Day 1 · 08:30 · Arrival",
-        title: "The booking is done before they walk in.",
-        body: "Owners book from the link in your Instagram bio and pay a deposit by QRIS. The cage is locked on your calendar right away. No back-and-forth chats, no double bookings.",
-      },
-      {
-        at: 6,
-        side: "right",
-        when: "Day 1 · 09:15 · Check-in",
-        title: "Check-in in under a minute.",
-        body: "Staff photograph the pet's condition, check the vaccine card and note any food the owner brought. Everything is timestamped, so if there's ever a complaint, you have a record.",
-      },
-      {
-        at: 8,
-        side: "left",
-        when: "Day 1 · 10:00 · Playtime",
-        title: "Every play session, on the record.",
-        body: "Staff log play, meals, toilet breaks and medication for each pet from their phone. Shift handovers stay tidy and nothing gets missed.",
-      },
-      {
-        at: 10,
-        side: "right",
-        when: "Day 1 · 15:00 · Grooming",
-        title: "Grooming, on the same bill.",
-        body: "Add grooming or bathing as an extra service during the stay. It goes straight onto the owner's invoice, so nothing is forgotten at pickup.",
-      },
-      {
-        at: 12,
-        side: "left",
-        when: "Day 1 · 21:00 · Lights out",
-        title: "Know every cage, every night.",
-        body: "The cage calendar shows who is sleeping where tonight and which cages are free. The night shift sees feeding and medication tasks on their phone.",
-      },
-      {
-        at: 14,
-        side: "right",
-        when: "Day 2 · 07:30 · Morning report",
-        title: "Reports go out. Chats go down.",
-        body: "One tap sends a photo and daily summary to each owner on WhatsApp. They relax, and you stop answering \"how is my baby doing?\" one message at a time.",
-      },
-      {
-        at: 16.8,
-        side: "left",
-        when: "Day 5 · 16:00 · Pickup",
-        title: "Paid in full, and they'll be back.",
-        body: "The balance goes out by QRIS at pickup. Every stay is on record, so you know who your regulars are and their next booking is faster.",
-      },
-    ],
-  } as Record<"ink" | "turntable", Chapter[]>,
-  features: {
-    eyebrow: "Built for operators",
-    soon: "Coming soon",
-    title: "Your whole boarding workflow in one app.",
-    lead: "Made for pet hotels with 10 to 150 cages that still run on notebooks, spreadsheets, and WhatsApp chats. Not a point-of-sale app with hotel features bolted on.",
-    items: [
-      { title: "Cage calendar", body: "Cages down the side, days across the top. Tap an empty day to book it. A booked slot can't be filled twice." },
-      { title: "Booking link with QRIS deposit", body: "Put it in your Instagram bio or send it on WhatsApp. A slot only locks once the deposit is in, so fewer guests go no-show.", soon: true },
-      { title: "Vaccine checks", body: "Every pet's vaccine date is tracked. Expired and soon-to-expire vaccines are flagged on your board and while you book." },
-      { title: "Check-in record and payments", body: "A short checklist when a pet arrives, and every deposit and payment on the stay. Check-out warns you if money is still owed." },
-      { title: "Daily and incident log", body: "Meals, medication, toileting, mood, and anything unusual, all timestamped. Shift handovers stay tidy." },
-      { title: "Reports to owners on WhatsApp", body: "One tap opens WhatsApp with the day's summary written for you. Add a photo and send it from your pet hotel's own number." },
-      { title: "Works when the signal drops", body: "Open it once, install it on your phone, and it keeps working without signal. Everything is saved on that phone for now; syncing between phones comes later." },
-    ],
-  },
-  report: {
-    eyebrow: "Daily pet report",
-    title: "The reason owners book with you again.",
-    body: "An owner's biggest worry is not knowing how their pet is doing. A daily report answers that before they ask. Every entry is also kept on record in case there's ever a complaint or dispute.",
-    points: [
-      "Sent from your pet hotel's own WhatsApp number",
-      "Meals, water, play, toilet and mood in one message; add a photo before you send",
-      "Owners don't need to install anything",
-    ],
-    phoneAriaLabel: "Example daily report on WhatsApp",
-    sample: {
-      hotel: "Rumah Meong Bintaro",
-      subtitle: "Daily report · example",
-      image: "/films/ink/f0084.webp",
-      imageAlt: "Illustration of a caretaker petting a dog",
-      heading: "Mochi's report · Day 2",
-      lines: ["Finished breakfast (owner's Royal Canin)", "Played 20 min, napped 3 hours", "Mood: relaxed, happy to be petted"],
-      sentAt: "07:32",
-      reply: "Oh what a relief, thank you so much 🥹",
-      replyAt: "07:40",
+    /** The small app screens shown next to each caption. Sample data, in the visitor's language. */
+    moments: {
+      profile: { title: "Mochi", meta: "Persian cat · Rina K.", chips: ["Vaccine OK", "3 stays"] },
+      booking: { title: "Cage calendar", rows: [["S-01", "Mochi"], ["S-02", "Kopi"]], freeCage: "M-01", free: "Free", note: "S-01 booked · 20 → 24 Oct" },
+      checkin: { title: "Check-in · 09:15", items: ["Healthy", "Flea-free", "Weight 4.2 kg", "Own food, 2× a day"] },
+      care: { title: "Care log · today", items: [["07:30", "🍽️", "Meal · finished"], ["10:00", "🎾", "Play · 20 min"], ["12:10", "🚽", "Toilet · normal"]] },
+      extra: { title: "Mochi's stay", lines: [["4 nights × Rp50.000", "Rp200.000"], ["Grooming", "Rp75.000"]], total: ["Total", "Rp275.000"] },
+      night: { title: "Tonight", stats: [["9/12", "cages free"], ["3", "staying"]], note: "Tomorrow: 2 arrivals, 1 pickup" },
+      report: { title: "Mochi's report · Day 2", lines: ["Finished breakfast", "Played 20 minutes", "Mood: happy"], time: "07:32 ✓✓" },
+      pickup: { title: "INV-2026-0012", status: "Paid", lines: [["Total", "Rp275.000"], ["Balance", "Rp0"]], note: "Next stay: two taps" },
     },
   },
-  peakSeason: {
-    eyebrow: "Lebaran package",
-    title: "Your busiest week, without the chaos.",
-    lead: "Before Lebaran (Eid al-Fitr), boarding demand can jump three to seven times. The Lebaran package gets your bookings, capacity, and owner updates ready for peak season, so you can take more guests without more chaos.",
-    timeline: [
-      { day: "D-30", tag: "open", body: "Your Lebaran booking link goes live with required deposits and vaccine checks." },
-      { day: "D-7", tag: "full", body: "When cages fill up, slots close on their own and new requests join a waitlist. If someone cancels, you know who's next." },
-      { day: "D+0", tag: "reports", body: "Daily reports to dozens of owners at once, without answering chats one by one." },
-      { day: "D+7", tag: "pickup", body: "Pickups are scheduled and balance invoices go out by QRIS." },
+  /** Captions per film. `moment` picks the app screen shown beside it. */
+  chapters: {
+    ink: [
+      { at: 3.8, moment: "booking", when: "Day 1 · 08:30 · Drop-off", title: "Every cage, booked once.", body: "Bookings sit on the cage calendar. A taken cage can't be booked twice." },
+      { at: 6.5, moment: "checkin", when: "Day 1 · 09:15 · Check-in", title: "Check-in in under a minute.", body: "Health, fleas, weight and food on record. Expiring vaccines get flagged." },
+      { at: 9.5, moment: "care", when: "Day 1 · 21:00 · Night shift", title: "Nothing forgotten at handover.", body: "Meals, play, toilet and medicine: one tap each, with the time." },
+      { at: 12, moment: "report", when: "Day 2 · 07:30 · Morning report", title: "Reports go out. Chats go down.", body: "The day's report is written for you. Add a photo and send it from your WhatsApp." },
+      { at: 14, moment: "pickup", when: "Day 5 · 16:00 · Pickup", title: "Paid in full, back next month.", body: "Payments, invoice and history in one place. Regulars rebook in seconds." },
     ],
-    price: "Rp299k",
-    priceUnit: "per Lebaran season",
-    priceNote: "Pay once for the season. After Lebaran, subscribe only if it works for you.",
-    cta: { href: "#join", label: "Get the Lebaran package" },
+    turntable: [
+      { at: 2, moment: "profile", when: "D-3 · Pet profiles", title: "Every guest has a profile.", body: "Pet, owner, WhatsApp and vaccines in one place. Regulars are saved." },
+      { at: 4, moment: "booking", when: "Day 1 · 08:30 · Arrival", title: "Every cage, booked once.", body: "Bookings sit on the cage calendar. A taken cage can't be booked twice." },
+      { at: 6, moment: "checkin", when: "Day 1 · 09:15 · Check-in", title: "Check-in in under a minute.", body: "Health, fleas, weight and food on record. Expiring vaccines get flagged." },
+      { at: 8, moment: "care", when: "Day 1 · 10:00 · Playtime", title: "Every play session, on record.", body: "Meals, play, toilet and medicine: one tap each, with the time." },
+      { at: 10, moment: "extra", when: "Day 1 · 15:00 · Grooming", title: "Extras land on the same bill.", body: "Grooming, pickup or a discount, added to the stay and its invoice." },
+      { at: 12, moment: "night", when: "Day 1 · 21:00 · Lights out", title: "Know every cage, every night.", body: "Who sleeps where tonight, and what's free tomorrow." },
+      { at: 14, moment: "report", when: "Day 2 · 07:30 · Morning report", title: "Reports go out. Chats go down.", body: "The day's report is written for you. Add a photo and send it from your WhatsApp." },
+      { at: 16.8, moment: "pickup", when: "Day 5 · 16:00 · Pickup", title: "Paid in full, back next month.", body: "Payments, invoice and history in one place. Regulars rebook in seconds." },
+    ],
+  } as Record<"ink" | "turntable", Chapter[]>,
+  tour: {
+    eyebrow: "See it",
+    title: "The real app, not a mockup.",
+    items: [
+      { key: "today", title: "Today", body: "Who arrives, who leaves, whose report is still unsent." },
+      { key: "booking", title: "One stay", body: "Check-in, payments, care log and the owner's report on one page." },
+      { key: "calendar", title: "Calendar", body: "Cages down the side, days across. Tap a free day to book." },
+    ],
+    tabsLabel: "Screens",
+    imageAlt: (title: string) => `Pethommie screen: ${title}`,
+    cta: "Open the demo",
+    ctaNote: "No sign-up. Sample data included.",
+  },
+  features: {
+    eyebrow: "Features",
+    title: "Everything a pet hotel runs on.",
+    soon: "Soon",
+    items: [
+      { icon: "calendar", title: "Cage calendar", body: "Tap a free day to book. No double bookings." },
+      { icon: "check", title: "Check-in & vaccines", body: "A one-minute checklist. Expiring vaccines flagged." },
+      { icon: "log", title: "Daily care log", body: "Meals, play, toilet, medicine, with the time." },
+      { icon: "chat", title: "WhatsApp reports", body: "Written for you, sent from your own number." },
+      { icon: "invoice", title: "Payments & invoices", body: "Deposits, balances, invoices in two languages." },
+      { icon: "chart", title: "Monthly & tax reports", body: "Turnover and PPh final estimate, CSV for your accountant." },
+      { icon: "offline", title: "Works offline", body: "Keeps going when the signal drops." },
+      { icon: "link", title: "Booking link with deposit", body: "Owners book from your Instagram bio.", soon: true },
+    ] as { icon: FeatureIcon; title: string; body: string; soon?: boolean }[],
+  },
+  pricing: {
+    eyebrow: "Pricing",
+    title: "Start free. Pay only if it helps.",
+    soon: "Coming soon",
+    plans: [
+      {
+        name: "Early access",
+        price: "Free",
+        unit: "for 30 days",
+        points: ["Every feature", "No card needed", "Help moving from your notebook"],
+        cta: { href: "/app/register", label: "Start free" },
+        soon: false,
+      },
+      {
+        name: "Lebaran package",
+        price: "Rp299k",
+        unit: "per season",
+        points: ["Booking link with deposits", "Waitlist when you're full", "Reports to every owner, fast"],
+        cta: { href: "#join", label: "Tell me when it's ready" },
+        soon: true,
+      },
+    ],
+    note: "The price after the trial is announced before anyone is charged.",
+  },
+  faq: {
+    eyebrow: "Questions",
+    title: "What people ask first.",
+    items: [
+      { q: "How much does it cost?", a: "Free for 30 days, no card. The price after that is announced before anyone is charged." },
+      { q: "Does it work on my phone?", a: "Yes. Open it in your Android browser and add it to your home screen. Laptops work too." },
+      { q: "Do I need internet?", a: "Only the first time. After that it opens and works without a connection." },
+      { q: "Where is my data?", a: "On your own device for now, not on our server. Download a backup from Settings now and then." },
+      { q: "Does it send WhatsApp messages by itself?", a: "No. It writes the message and opens your WhatsApp. You press send, from your own number." },
+      { q: "Does it do my taxes?", a: "It estimates PPh final and exports a sheet for your accountant. It doesn't file anything." },
+      { q: "Can my staff use it?", a: "On the same device today. Separate staff logins and syncing between phones are coming." },
+    ],
+  },
+  cta: {
+    title: "Your next full house, calm.",
+    lead: "Set up your cages in five minutes and run tomorrow from your phone.",
+    primary: { href: "/app/register", label: "Try free for 30 days" },
+    secondary: { href: "/app/login", label: "Open the demo" },
+    chips: ["No card needed", "Works offline", "Bahasa Indonesia & English"],
+    help: "Rather we set it up with you?",
+    helpLead: "Leave your details. We'll reach out on WhatsApp and help move your records over.",
   },
   waitlist: {
-    eyebrow: "Early access for pet hotels",
-    title: "We'll help you set up until it runs.",
-    lead: "Fill in a few details. Our team will reach out on WhatsApp, help move your customer records from notebooks or spreadsheets, and show your staff how to use the app. Free for 30 days, no credit card.",
     fields: {
       hotelName: { label: "Pet hotel name", placeholder: "e.g. Rumah Meong Bintaro" },
       city: { label: "City", placeholder: "e.g. South Tangerang" },
@@ -227,7 +183,7 @@ export const en = {
       whatsapp: { label: "WhatsApp number", placeholder: "08xx xxxx xxxx" },
     },
     cageOptions: ["Under 15", "15 to 50", "50 to 150", "More than 150"],
-    submit: "Sign up my pet hotel",
+    submit: "Contact me on WhatsApp",
     errors: {
       missing: "Please fill in your pet hotel name, city, and WhatsApp number.",
       whatsapp: "That WhatsApp number doesn't look right. A valid example: 0812 3456 7890.",
@@ -239,69 +195,6 @@ export const en = {
     title: "This page isn't on the scroll.",
     body: "The address may have a typo, or the page has moved.",
     cta: "Back to home",
-  },
-  tour: {
-    eyebrow: "See it",
-    title: "The real app, not a mockup.",
-    lead: "These are screens from Pethommie with sample data. Open the demo and click around yourself.",
-    items: [
-      { key: "today", title: "Today at a glance", body: "Who arrives, who leaves, who is staying, and whose daily report is still unsent." },
-      { key: "booking", title: "One page per stay", body: "The check-in record, payments, the daily care log and the owner's report, together." },
-      { key: "calendar", title: "Cage calendar", body: "Cages down the side, days across the top. Tap an empty day to book it." },
-    ],
-    imageAlt: (title: string) => `Pethommie screen: ${title}`,
-    cta: "Open the demo",
-    ctaNote: "No sign-up. Pick a demo account on the login page.",
-  },
-  howItWorks: {
-    eyebrow: "How it works",
-    title: "Up and running in an afternoon.",
-    steps: [
-      { title: "Add your cages", body: "Pick a preset or type how many you have and what a night costs. About five minutes." },
-      { title: "Run the day", body: "Book, check in, tap the care log, record payments. It keeps working without signal." },
-      { title: "Send the report", body: "One tap opens WhatsApp with the day's summary already written. You press send." },
-    ],
-  },
-  modes: {
-    eyebrow: "Your pace",
-    title: "Starts simple. Grows with you.",
-    simple: {
-      title: "Simple",
-      lead: "For the busy day: only what you touch every day.",
-      points: ["Today, bookings, calendar, pets and cages", "Quick check-in: two checks and a weight", "One tap to mark a stay paid in full", "A care log you fill in with taps"],
-    },
-    advanced: {
-      title: "Advanced",
-      lead: "For when you want the whole picture.",
-      points: ["Customers, with their history and what they owe", "Payments: who to remind, with the message ready", "Reports: occupancy, money received, returning guests, CSV export", "Every field: full check-in record, message templates, cage-size filter"],
-    },
-    note: "Switch any time. It only changes what you see, never your data.",
-  },
-  trust: {
-    eyebrow: "Honest about what it is",
-    title: "What you can count on today.",
-    items: [
-      { title: "Works without signal", body: "Open it once, install it on your phone, and it keeps working, even in a back room with no bars." },
-      { title: "Your data stays with you", body: "For now everything is stored on your own device. Download a backup any time and restore it any time." },
-      { title: "You send the messages", body: "Pethommie writes the WhatsApp message. You press send from your own number. Nothing goes out behind your back." },
-      { title: "It never touches your money", body: "You record what you receive: cash, QRIS, transfer. Pethommie doesn't process payments." },
-      { title: "Made for Indonesian pet hotels", body: "Bahasa Indonesia first, rupiah, WhatsApp, QRIS, and the Lebaran rush." },
-      { title: "Still early", body: "Accounts on a server, syncing between phones and the public booking link come next. Join the waitlist and you'll hear first." },
-    ],
-  },
-  faq: {
-    eyebrow: "Questions",
-    title: "What people ask first.",
-    items: [
-      { q: "What is Pethommie?", a: "Software for pet hotels: bookings, a cage calendar, check-in, payments, a daily care log, and reports you send to owners on WhatsApp." },
-      { q: "How much does it cost?", a: "Free for 30 days, no credit card. We'll announce the price before anyone is charged, and early-access hotels hear first." },
-      { q: "Does it work on my phone?", a: "Yes. Open it in your Android phone's browser and add it to your home screen. It also works on a laptop." },
-      { q: "Do I need internet?", a: "Only the first time you open it. After that it opens and works without a connection." },
-      { q: "Where is my data?", a: "On your own device for now. It isn't sent to us. Download a backup from Settings now and then, because clearing your browser's data would erase it." },
-      { q: "Does it send WhatsApp messages by itself?", a: "No, and that is on purpose. It writes the message and opens your WhatsApp with it filled in. You press send, so it comes from your number." },
-      { q: "Can my staff use it too?", a: "They can use the same phone or device today. Separate staff logins and syncing between phones come with accounts on a server." },
-      { q: "I use a notebook or a spreadsheet. Can I move over?", a: "Yes. Sign up for early access and we'll help you move your customer records. You can always download your stays as a spreadsheet." },
-    ],
   },
   legal: {
     updated: "Last updated 20 October 2026",

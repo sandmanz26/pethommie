@@ -4,7 +4,7 @@ import "./sections.css";
 export function Faq() {
   const faq = useSiteT().t.faq;
   return (
-    <section className="section" id="faq">
+    <section className="section section--deep" id="faq">
       <div className="wrap faq">
         <div className="section-head">
           <span className="eyebrow">{faq.eyebrow}</span>

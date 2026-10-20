@@ -43,7 +43,7 @@ body.site::before {
 
 .section {
   padding-inline: var(--gutter);
-  padding-block: clamp(72px, 10vw, 140px);
+  padding-block: clamp(64px, 8vw, 112px);
 }
 
 .section-head {

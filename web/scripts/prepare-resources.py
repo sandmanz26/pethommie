@@ -9,6 +9,9 @@
       -> only the ones listed in ICONS below, with slivers of neighbouring icons removed
       -> public/icons/ui/<usage-name>.webp  (named by what they are used for)
 
+  resources/backgrounds/*          full scenes with an empty middle, shown behind a form or a call to action
+      -> public/backgrounds/<name>.webp (max 1600 px wide) and <name>-800.webp for phones
+
   resources/photos/*.jpg|png|webp  real photos
       -> rotated upright, EXIF removed, longest side capped at 1600 px
       -> public/photos/<name>.webp
@@ -156,7 +159,16 @@ def main() -> None:
         canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
         canvas.paste(icon, ((side - icon.width) // 2, (side - icon.height) // 2))
         save_webp(canvas, ROOT / "public" / "icons" / "ui" / f"{name}.webp", 92)
-    for src in sorted((ROOT / "resources" / "photos").iterdir()):
+    for src in sorted((ROOT / "resources" / "backgrounds").glob("*")):
+        if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"} or (only and slug(src) not in only):
+            continue
+        scene = Image.open(src).convert("RGB")
+        print(f"{src.name}:")
+        for width, suffix in ((PHOTO_MAX, ""), (800, "-800")):
+            copy = scene.copy()
+            copy.thumbnail((width, width), Image.LANCZOS)
+            save_webp(copy, ROOT / "public" / "backgrounds" / f"{slug(src)}{suffix}.webp", 80)
+    for src in sorted((ROOT / "resources" / "photos").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue
         if only and slug(src) not in only:

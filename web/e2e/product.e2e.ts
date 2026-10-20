@@ -128,15 +128,19 @@ for (const [name, viewport] of [
   })
 }
 
-test('the landing page shows the tour images and they load', async ({ page }) => {
+test('the landing page shows each tour screen and it loads, and the last ask opens the help form', async ({ page }) => {
   await page.goto('/')
   await page.locator('#tour').scrollIntoViewIfNeeded()
-  const images = page.locator('#tour img')
-  await expect(images).toHaveCount(3)
-  for (const img of await images.all()) {
-    await img.scrollIntoViewIfNeeded()
+  const tabs = page.locator('#tour [role=tab]')
+  await expect(tabs).toHaveCount(3)
+  for (const tab of await tabs.all()) {
+    await tab.click()
+    const img = page.locator('#tour [role=tabpanel]:not([hidden]) img')
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
   }
+  await page.getByRole('link', { name: "Tell me when it's ready" }).click()
+  await expect(page.getByLabel('WhatsApp number')).toBeVisible()
+  await expect(page.locator('#join img')).toHaveJSProperty('complete', true)
   await expect(page.getByRole('contentinfo')).toContainText('All rights reserved')
 })
 

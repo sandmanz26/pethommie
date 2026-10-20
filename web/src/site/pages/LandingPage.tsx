@@ -7,16 +7,16 @@ import { FilmSwitcher } from "@/site/components/film-switcher/FilmSwitcher";
 import { films } from "@/site/content/film";
 import { useFilmChoice } from "@/site/hooks/useFilmChoice";
 import { Hero } from "@/site/sections/Hero";
-import { Features } from "@/site/sections/Features";
-import { RaporPreview } from "@/site/sections/RaporPreview";
-import { LebaranPackage } from "@/site/sections/LebaranPackage";
 import { ProductTour } from "@/site/sections/ProductTour";
-import { HowItWorks } from "@/site/sections/HowItWorks";
-import { Modes } from "@/site/sections/Modes";
-import { Trust } from "@/site/sections/Trust";
+import { Features } from "@/site/sections/Features";
+import { Pricing } from "@/site/sections/Pricing";
 import { Faq } from "@/site/sections/Faq";
-import { WaitlistForm } from "@/site/sections/WaitlistForm";
+import { FinalCta } from "@/site/sections/FinalCta";
 
+/**
+ * The story first (one stay, scrubbed by scroll), then the proof (real screens), what it does, what it costs,
+ * the questions people ask, and one last ask.
+ */
 export function LandingPage() {
   const [filmId, setFilmId] = useFilmChoice();
   const { t } = useSiteT();
@@ -27,15 +27,11 @@ export function LandingPage() {
       <main id="top">
         {/* Keyed by film so switching remounts and preloads the new frames. */}
         <InkFilm key={filmId} film={films[filmId]} intro={<Hero />} />
-        <HowItWorks />
         <ProductTour />
         <Features />
-        <Modes />
-        <RaporPreview />
-        <Trust />
-        <LebaranPackage />
+        <Pricing />
         <Faq />
-        <WaitlistForm />
+        <FinalCta />
       </main>
       <Footer />
       <FilmSwitcher value={filmId} onChange={setFilmId} />

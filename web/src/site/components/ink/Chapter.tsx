@@ -1,4 +1,5 @@
 import type { Chapter as ChapterData } from "@/site/i18n/en";
+import { Moment } from "./Moment";
 
 /** The caption card: when, title, body. */
 export function Inscription({ chapter }: { chapter: ChapterData }) {
@@ -11,11 +12,12 @@ export function Inscription({ chapter }: { chapter: ChapterData }) {
   );
 }
 
-/** A caption inscribed on the scroll, positioned at its moment in the film. */
-export function Chapter({ chapter, top }: { chapter: ChapterData; top: string }) {
+/** One moment of the stay as shown beside the film: the caption, and the app screen that goes with it. */
+export function Chapter({ chapter }: { chapter: ChapterData }) {
   return (
-    <div className={`chapter chapter--story chapter--${chapter.side}`} style={{ top }}>
+    <>
       <Inscription chapter={chapter} />
-    </div>
+      <Moment kind={chapter.moment} />
+    </>
   );
 }

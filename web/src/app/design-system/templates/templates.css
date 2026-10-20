@@ -22,3 +22,15 @@
   box-shadow: var(--shadow);
 }
 .tpl-focus__aside { width: min(100%, 560px); text-align: center; }
+
+/* With a scene: on a wide screen it fills the page behind the card; on a phone it sits whole above it. */
+.tpl-focus--art { position: relative; min-height: 100vh; min-height: 100svh; isolation: isolate; }
+.tpl-focus__art { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
+.tpl-focus--art .tpl-focus__bar { position: relative; background: linear-gradient(color-mix(in srgb, var(--paper) 92%, transparent) 55%, transparent); }
+.tpl-focus--art .tpl-focus__card { box-shadow: 0 30px 70px -30px rgba(27, 26, 23, 0.55); }
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .tpl-focus--art { grid-template-rows: auto auto 1fr; }
+  .tpl-focus__art { position: static; z-index: 0; height: auto; grid-row: 2; }
+  .tpl-focus--art .tpl-focus__bar { grid-row: 1; }
+  .tpl-focus--art .tpl-focus__main { grid-row: 3; margin-top: -36px; position: relative; padding-top: 0; }
+}

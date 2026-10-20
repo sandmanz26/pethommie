@@ -1,19 +1,23 @@
 /**
- * Never enlarge a frame past this factor of its own pixels. Beyond it, the film looks soft,
- * so the frame stays at this size and the paper colour fills the rest (the film's ground is the
- * same colour, so the edge is invisible).
+ * Never show a frame larger than this many CSS pixels per frame pixel. Beyond it the film looks soft,
+ * so the frame stops growing and the paper colour fills the rest (the film's ground is the same colour,
+ * so the edge is invisible). Measured in CSS pixels, so a 2x screen shows the scene as large as a 1x one.
  */
-const MAX_UPSCALE = 1.25;
+const MAX_CSS_UPSCALE = 1.2;
 
 /** A region of the canvas, in canvas pixels, that the scene should sit in. */
 export type FrameBox = { x: number; y: number; w: number; h: number };
+/** The part of a frame that matters, in frame pixels. */
+export type Focus = { x: number; y: number; w: number; h: number };
 
 /**
- * Draws a film frame onto the canvas, centred in `box` (defaults to the whole canvas).
- * Landscape screens: cover-fit the canvas (capped). Portrait screens: a wider crop so the scene
- * still reads, kept from spilling far past the box; the paper colour fills the rest seamlessly.
+ * Draws a film frame onto the canvas so that its `focus` (default: the whole frame) sits centred in `box`
+ * (default: the whole canvas).
+ * - No focus: cover-fit the box, so a wide scene fills it edge to edge.
+ * - A focus: contain-fit the focus in the box, so a small scene is shown large and whole.
+ * Either way the frame may overhang the box: its edges are plain paper. `dpr` is the canvas's pixels per CSS pixel.
  */
-export function drawFrame(canvas: HTMLCanvasElement, img: HTMLImageElement, paper: string, box?: FrameBox) {
+export function drawFrame(canvas: HTMLCanvasElement, img: HTMLImageElement, paper: string, box?: FrameBox, focus?: Focus, dpr = 1) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const cw = canvas.width;
@@ -21,19 +25,15 @@ export function drawFrame(canvas: HTMLCanvasElement, img: HTMLImageElement, pape
   const b = box ?? { x: 0, y: 0, w: cw, h: ch };
   const iw = img.naturalWidth;
   const ih = img.naturalHeight;
-  const cover = Math.max(cw / iw, ch / ih);
-  // The frame's top and bottom edges are plain paper, so it may overhang the box a little.
-  const fit = cw < ch ? Math.min(cover, (b.w / iw) * 1.7, (b.h * 1.15) / ih) : cover;
-  const scale = Math.min(fit, MAX_UPSCALE);
-  const w = iw * scale;
-  const h = ih * scale;
+  const f = focus ?? { x: 0, y: 0, w: iw, h: ih };
+  const fit = focus ? Math.min(b.w / f.w, b.h / f.h) : Math.max(b.w / f.w, b.h / f.h);
+  const scale = Math.min(fit, MAX_CSS_UPSCALE * dpr);
 
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, cw, ch);
   ctx.imageSmoothingQuality = "high";
-  // When the frame is taller than the box, let it hang mostly downward: the top stays clear of the
-  // top bar, and the paper below the scene slides under the caption deck.
-  const spill = h - b.h;
-  const y = spill > 0 ? b.y - spill * 0.25 : b.y + (b.h - h) / 2;
-  ctx.drawImage(img, b.x + (b.w - w) / 2, y, w, h);
+  // The focus's centre goes to the box's centre.
+  const x = b.x + b.w / 2 - (f.x + f.w / 2) * scale;
+  const y = b.y + b.h / 2 - (f.y + f.h / 2) * scale;
+  ctx.drawImage(img, x, y, iw * scale, ih * scale);
 }

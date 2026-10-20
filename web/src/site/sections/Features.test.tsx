@@ -10,8 +10,8 @@ describe("Features", () => {
         <Features />
       </LocaleProvider>,
     );
-    const soon = screen.getAllByText("Coming soon");
+    const soon = screen.getAllByText("Soon");
     expect(soon).toHaveLength(1);
-    expect(within(soon[0].closest(".feature") as HTMLElement).getByRole("heading")).toHaveTextContent("Booking link with QRIS deposit");
+    expect(within(soon[0].closest(".feature") as HTMLElement).getByRole("heading")).toHaveTextContent("Booking link with deposit");
   });
 });

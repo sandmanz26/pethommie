@@ -3,10 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { Faq } from "./Faq";
-import { HowItWorks } from "./HowItWorks";
-import { Modes } from "./Modes";
+import { FinalCta } from "./FinalCta";
+import { Pricing } from "./Pricing";
 import { ProductTour } from "./ProductTour";
-import { Trust } from "./Trust";
 
 const wrap = (node: React.ReactNode) => render(<LocaleProvider>{node}</LocaleProvider>);
 
@@ -14,41 +13,51 @@ describe("landing sections", () => {
   it("answers the questions people ask first, one open at a time by choice", async () => {
     wrap(<Faq />);
     const faq = within(screen.getByRole("heading", { name: /what people ask first/i }).closest("section")!);
-    expect(faq.getAllByText(/\?$/)).toHaveLength(8);
+    expect(faq.getAllByText(/\?$/)).toHaveLength(7);
     const q = faq.getByText("How much does it cost?");
     await userEvent.click(q);
     expect(q.closest("details")).toHaveAttribute("open");
     expect(faq.getByText(/free for 30 days/i)).toBeVisible();
   });
 
-  it("shows real screens, in the visitor's language, each with a description and a size", () => {
+  it("shows real screens, one at a time behind tabs, in the visitor's language", async () => {
     wrap(<ProductTour />);
-    const imgs = screen.getAllByRole("img");
-    expect(imgs.map((i) => i.getAttribute("src"))).toEqual(["/screens/today-en.jpg", "/screens/booking-en.jpg", "/screens/calendar-en.jpg"]);
-    for (const i of imgs) {
-      expect(i.getAttribute("alt")).toMatch(/^Pethommie screen: /);
-      expect(i).toHaveAttribute("width");
-      expect(i).toHaveAttribute("height");
-    }
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((t) => t.querySelector("b")?.textContent)).toEqual(["Today", "One stay", "Calendar"]);
+    expect(screen.getByRole("tabpanel").querySelector("img")).toHaveAttribute("src", "/screens/today-en.jpg");
+
+    await userEvent.click(tabs[2]);
+    expect(tabs[2]).toHaveAttribute("aria-selected", "true");
+    const img = screen.getByRole("img", { name: "Pethommie screen: Calendar" });
+    expect(img).toHaveAttribute("src", "/screens/calendar-en.jpg");
+    expect(img).toHaveAttribute("width");
+    expect(img).toHaveAttribute("height");
+    expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
+
+    // arrow keys move between tabs
+    tabs[2].focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(tabs[0]).toHaveFocus();
     expect(screen.getByRole("link", { name: "Open the demo" })).toHaveAttribute("href", "/app/login");
   });
 
-  it("explains the two modes, and that switching loses nothing", () => {
-    wrap(<Modes />);
-    expect(screen.getByRole("heading", { name: "Simple" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Advanced" })).toBeInTheDocument();
-    expect(screen.getByText(/never your data/i)).toBeInTheDocument();
+  it("prices only what exists, and says plainly what is coming", () => {
+    wrap(<Pricing />);
+    const soon = screen.getByText("Coming soon");
+    expect(soon.closest("article")).toHaveTextContent("Lebaran package");
+    expect(screen.getAllByText("Coming soon")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Start free" })).toHaveAttribute("href", "/app/register");
   });
 
-  it("is honest about what it is: early, local, no money handling", () => {
-    wrap(<Trust />);
-    expect(screen.getByRole("heading", { name: "Still early" })).toBeInTheDocument();
-    expect(screen.getByText(/doesn't process payments/i)).toBeInTheDocument();
-    expect(screen.getByText(/stored on your own device/i)).toBeInTheDocument();
-  });
-
-  it("has three steps in order", () => {
-    wrap(<HowItWorks />);
-    expect(screen.getAllByRole("listitem").map((li) => li.querySelector("h3")?.textContent)).toEqual(["Add your cages", "Run the day", "Send the report"]);
+  it("ends with one ask to sign up, and a form for those who want help", async () => {
+    wrap(<FinalCta />);
+    expect(screen.getByRole("link", { name: "Try free for 30 days" })).toHaveAttribute("href", "/app/register");
+    const help = screen.getByText("Rather we set it up with you?").closest("details")!;
+    expect(help).not.toHaveAttribute("open");
+    await userEvent.click(screen.getByText("Rather we set it up with you?"));
+    expect(help).toHaveAttribute("open");
+    await userEvent.click(within(help).getByRole("button", { name: "Contact me on WhatsApp" }));
+    expect(within(help).getByRole("alert")).toHaveTextContent(/fill in your pet hotel name/i);
   });
 });
