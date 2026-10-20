@@ -146,7 +146,7 @@ describe("reports", () => {
   it("shows occupancy, money received and the stays of the period", async () => {
     await open("/app/reports");
     const main = within(await screen.findByRole("main"));
-    await main.findByText("Occupancy");
+    await main.findAllByText("Occupancy");
     expect(main.getByText("Money received").closest(".ds-stat")).toHaveTextContent(rp("125.000"));
     expect(main.getByText("Cancelled").closest(".ds-stat")).toHaveTextContent("0");
   });
@@ -154,12 +154,66 @@ describe("reports", () => {
   it("switches the period and draws a bar for every day", async () => {
     const user = await open("/app/reports");
     await user.click(await screen.findByRole("tab", { name: /last 30 days/i }));
-    expect(screen.getAllByRole("listitem").filter((li) => li.classList.contains("ds-chart__bar"))).toHaveLength(30);
+    const chart = screen.getByRole("figure", { name: /places in use/i });
+    expect(within(chart).getAllByRole("listitem")).toHaveLength(30);
+  });
+
+  it("narrows every number to one unit or one species, and clears", async () => {
+    const user = await open("/app/reports");
+    const main = within(await screen.findByRole("main"));
+    const received = () => main.getByText("Money received").closest(".ds-stat");
+    await user.selectOptions(main.getByLabelText("Unit"), "s2");
+    expect(received()).toHaveTextContent(rp("75.000"));
+    await user.selectOptions(main.getByLabelText("Unit"), "all");
+    await user.selectOptions(main.getByLabelText("Species"), "dog");
+    expect(received()).toHaveTextContent(rp("50.000"));
+    await user.click(main.getByRole("button", { name: /clear filters/i }));
+    expect(received()).toHaveTextContent(rp("125.000"));
+  });
+
+  it("breaks the money down by method and lists each unit", async () => {
+    await open("/app/reports");
+    const main = within(await screen.findByRole("main"));
+    const methods = within(await main.findByRole("region", { name: /money in, by method/i }));
+    expect(methods.getByText("Cash").closest("li")).toHaveTextContent(rp("125.000"));
+    const units = within(main.getByRole("table", { name: /each unit/i }));
+    expect(units.getAllByRole("row").slice(1).map((r) => (r as HTMLTableRowElement).cells[0].textContent)).toEqual(expect.arrayContaining(["S1", "S2"]));
+  });
+
+  it("takes a custom range", async () => {
+    const user = await open("/app/reports");
+    await user.click(await screen.findByRole("tab", { name: /custom/i }));
+    expect(screen.getByLabelText("From")).toHaveAttribute("type", "date");
+    expect(screen.getByLabelText("To")).toHaveValue(today);
   });
 
   it("asks for cages first when there are none", async () => {
     await open("/app/reports", aSmallHotel({ cages: [] }));
     expect(await screen.findByText(/add cages first/i)).toBeInTheDocument();
+  });
+});
+
+describe("dashboard", () => {
+  it("is in the sidebar in simple mode too, and shows tonight, money and what's owed", async () => {
+    await signedInAs({ data: hotel() });
+    localStorage.setItem(modeKeyFor("acct-test"), "simple");
+    const user = userEvent.setup();
+    renderApp("/app");
+    await user.click(within(await screen.findByRole("complementary")).getByRole("link", { name: "Dashboard" }));
+    const main = within(await screen.findByRole("main"));
+    expect(await main.findByRole("heading", { name: "Dashboard", level: 1 })).toBeInTheDocument();
+    expect(main.getByText("Full tonight").closest(".ds-stat")).toHaveTextContent("1 of 2 places");
+    expect(main.getByText("Still owed").closest(".ds-stat")).toHaveTextContent(rp("125.000"));
+    expect(main.getByText("Still owed").closest(".ds-stat")).toHaveTextContent(/1 already gone home/);
+  });
+
+  it("forecasts the next 14 nights and lists who to chase", async () => {
+    await open("/app/dashboard");
+    const main = within(await screen.findByRole("main"));
+    expect(within(await main.findByRole("figure", { name: /next 14 nights/i })).getAllByRole("listitem")).toHaveLength(14);
+    const chase = within(main.getByRole("region", { name: /to chase/i }));
+    expect(chase.getByRole("link", { name: "Mochi" })).toHaveAttribute("href", "/app/bookings/b1");
+    expect(chase.getByRole("link", { name: "Kopi" })).toBeInTheDocument();
   });
 });
 

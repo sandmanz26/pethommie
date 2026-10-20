@@ -1,7 +1,7 @@
 import { bookingTotal, nights } from "./logic";
 import { balanceDue, paidAmount } from "./payments";
 import { invoicePayment } from "./invoices";
-import type { HotelData, Invoice } from "./types";
+import type { Booking, HotelData, Invoice } from "./types";
 
 /** Cells that a spreadsheet would run as a formula get a leading quote, so a name like "=cmd()" stays text. */
 const safe = (cell: string) => (/^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell);
@@ -14,9 +14,9 @@ const escape = (cell: string) => {
 export const toCsv = (rows: string[][]): string => rows.map((r) => r.map(escape).join(",")).join("\r\n") + "\r\n";
 
 /** One row per stay, for a spreadsheet. Column names are the same in every language so the file can be reused. */
-export function staysCsv(data: HotelData): string {
-  const header = ["check_in", "check_out", "nights", "status", "pet", "owner", "whatsapp", "cage", "total", "paid", "balance", "notes"];
-  const rows = [...data.bookings]
+export function staysCsv(data: HotelData, bookings: Booking[] = data.bookings): string {
+  const header = ["check_in", "check_out", "nights", "status", "pet", "owner", "whatsapp", "cage", "total", "paid", "balance", "notes", "source"];
+  const rows = [...bookings]
     .sort((a, b) => a.checkIn.localeCompare(b.checkIn))
     .map((b) => {
       const pet = data.pets.find((p) => p.id === b.petId);
@@ -35,6 +35,7 @@ export function staysCsv(data: HotelData): string {
         String(paidAmount(b)),
         String(b.status === "cancelled" ? 0 : balanceDue(b, cage)),
         b.notes,
+        b.source,
       ];
     });
   return toCsv([header, ...rows]);

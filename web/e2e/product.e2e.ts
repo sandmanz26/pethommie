@@ -54,7 +54,9 @@ test('advanced mode adds customers, payments and reports', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Payments', level: 1 })).toBeVisible()
   await expect(page.getByRole('link', { name: /send reminder/i }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/62/)
   await page.getByRole('link', { name: 'Reports' }).click()
-  await expect(page.getByText('Occupancy')).toBeVisible()
+  await expect(page.getByRole('figure', { name: /places in use/i })).toBeVisible()
+  await page.getByRole('link', { name: 'Dashboard' }).click()
+  await expect(page.getByRole('figure', { name: /next 14 nights/i })).toBeVisible()
   await page.getByRole('link', { name: 'Customers' }).click()
   await expect(page.getByRole('link', { name: /Rina|Sari|Budi|Andi/ }).first()).toBeVisible()
 })
@@ -91,7 +93,7 @@ for (const [name, viewport, locale] of [
       const bookingHref = await page.locator('a[href*="#care"]').first().getAttribute('href')
       const paths = [
         '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings',
-        '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/help', bookingHref!.replace('#care', ''),
+        '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/dashboard', '/app/help', bookingHref!.replace('#care', ''),
       ]
       for (const path of paths) {
         await page.goto(path)

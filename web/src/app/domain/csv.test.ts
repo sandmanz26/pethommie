@@ -25,7 +25,7 @@ describe("staysCsv", () => {
   const lines = staysCsv(data).trim().split("\r\n");
 
   it("has a header and one row per stay, earliest first", () => {
-    expect(lines[0]).toBe("check_in,check_out,nights,status,pet,owner,whatsapp,cage,total,paid,balance,notes");
+    expect(lines[0]).toBe("check_in,check_out,nights,status,pet,owner,whatsapp,cage,total,paid,balance,notes,source");
     expect(lines).toHaveLength(3);
     expect(lines[1].startsWith("2026-10-10,2026-10-12,2,booked,")).toBe(true);
   });
@@ -33,11 +33,15 @@ describe("staysCsv", () => {
   it("carries money and neutralises the pet name", () => {
     expect(lines[1]).toContain("'=Mochi");
     expect(lines[1]).toContain(",100000,30000,70000,");
-    expect(lines[1].endsWith('"likes, toys"')).toBe(true);
+    expect(lines[1].endsWith('"likes, toys",other')).toBe(true);
+  });
+
+  it("lists only the stays it is given, when given some", () => {
+    expect(staysCsv(data, [data.bookings[0]]).trim().split("\r\n")).toHaveLength(2);
   });
 
   it("shows no balance for a cancelled stay", () => {
     expect(lines[2]).toContain(",cancelled,");
-    expect(lines[2].split(",").slice(-3, -1)).toEqual(["0", "0"]);
+    expect(lines[2].split(",").slice(-4, -2)).toEqual(["0", "0"]);
   });
 });

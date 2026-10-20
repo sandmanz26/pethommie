@@ -44,11 +44,11 @@ describe("simple and advanced mode", () => {
     expect(sidebar().getByRole("tab", { name: "Simple", selected: true })).toBeInTheDocument();
   });
 
-  it("offers the everyday pages in simple mode and adds customers, payments and reports in advanced", async () => {
+  it("offers the everyday pages, the dashboard and reports in simple mode and adds customers, payments, invoices and tax in advanced", async () => {
     const user = await open("/app");
     await screen.findByRole("heading", { name: "Today", level: 1 });
-    for (const hidden of ["Customers", "Payments", "Invoices", "Reports", "Tax"]) expect(sidebar().queryByRole("link", { name: hidden })).not.toBeInTheDocument();
-    for (const shown of ["Today", "Bookings", "Calendar", "Pets", "Cages", "Settings", "Help"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
+    for (const hidden of ["Customers", "Payments", "Invoices", "Tax"]) expect(sidebar().queryByRole("link", { name: hidden })).not.toBeInTheDocument();
+    for (const shown of ["Today", "Dashboard", "Bookings", "Calendar", "Reports", "Pets", "Cages", "Settings", "Help"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
 
     await user.click(sidebar().getByRole("tab", { name: "Advanced" }));
     for (const shown of ["Customers", "Payments", "Invoices", "Reports", "Tax"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
@@ -68,9 +68,9 @@ describe("simple and advanced mode", () => {
     expect(tabs.getAllByRole("link").map((l) => l.textContent)).toEqual(["Today", "Bookings", "Calendar", "Pets", "More"]);
     await user.click(tabs.getByRole("link", { name: "More" }));
     const more = within(await screen.findByRole("navigation", { name: "More" }));
-    expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Cages", "Settings", "Help", "Back to website"]);
+    expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Reports", "Cages", "Settings", "Help", "Back to website"]);
     await user.click(screen.getAllByRole("tab", { name: "Advanced" })[0]);
-    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Customers", "Payments", "Invoices", "Reports", "Tax", "Cages", "Settings", "Help", "Back to website"]);
+    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Invoices", "Reports", "Tax", "Cages", "Settings", "Help", "Back to website"]);
   });
 
   it("can be switched in Settings too, and says what each one is", async () => {
@@ -78,7 +78,7 @@ describe("simple and advanced mode", () => {
     const main = within(await screen.findByRole("main"));
     expect(main.getByText(/just what you need every day/i)).toBeInTheDocument();
     await user.click(main.getByRole("tab", { name: "Advanced" }));
-    expect(main.getByText(/customers, payments, reports and every option/i)).toBeInTheDocument();
+    expect(main.getByText(/customers, payments, invoices, tax and every option/i)).toBeInTheDocument();
   });
 });
 

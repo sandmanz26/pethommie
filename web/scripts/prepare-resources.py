@@ -50,6 +50,11 @@ NAV_ICONS = [
     "tax", "cages", "settings", "help",
     "more", "website", "logout", "new-booking",
 ]
+# A second, smaller sheet for pages added later: (file, columns, names in reading order).
+NAV_SHEETS = [
+    (NAV_SHEET, 4, NAV_ICONS),
+    ("icons/nav_sheet_2.png", 2, ["dashboard", "link", "transactions", "upgrade"]),
+]
 NAV_SIZE = 96  # shown at 24 to 28 CSS px
 
 # Corners cut from a background, shown at a fixed size instead of stretching the whole scene over a section:
@@ -222,12 +227,14 @@ def main() -> None:
         corner.putalpha(Image.fromarray((alpha * ramp).astype(np.uint8)))
         print(f"{name}:")
         save_webp(corner, ROOT / "public" / "backgrounds" / f"{name}.webp", 85)
-    sheet_path = ROOT / "resources" / NAV_SHEET
-    if sheet_path.exists() and (not only or "nav" in only):
+    for sheet_file, columns, names in NAV_SHEETS:
+        sheet_path = ROOT / "resources" / sheet_file
+        if not sheet_path.exists() or (only and "nav" not in only):
+            continue
         sheet = Image.open(sheet_path).convert("RGBA")
-        cell = sheet.width // 4
-        for i, name in enumerate(NAV_ICONS):
-            tile = sheet.crop(((i % 4) * cell, (i // 4) * cell, (i % 4 + 1) * cell, (i // 4 + 1) * cell))
+        cell = sheet.width // columns
+        for i, name in enumerate(names):
+            tile = sheet.crop(((i % columns) * cell, (i // columns) * cell, (i % columns + 1) * cell, (i // columns + 1) * cell))
             icon = trim(clean_cutout(tile), ICON_PAD)
             side = max(icon.size)
             square = Image.new("RGBA", (side, side), (0, 0, 0, 0))

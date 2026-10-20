@@ -20,8 +20,8 @@ import {
 } from "@/app/domain/types";
 
 /**
- * A busy, established hotel for the advanced mode demo: fourteen cages and two shared rooms, about thirty regulars,
- * four months of stays with deposits, balances, refunds, add-ons, invoices and a care log, and a month of bookings
+ * A busy, established hotel for the advanced mode demo: fourteen cages and two shared rooms, about sixty regulars,
+ * six months of stays with deposits, balances, refunds, add-ons, invoices and a care log, and a month of bookings
  * ahead. Generated from a fixed seed, so it is the same hotel every time (around today's date), and every stay obeys
  * the booking rules.
  */
@@ -100,12 +100,13 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
     return own;
   };
 
-  for (let d = -120; d <= 28; d++) {
+  for (let d = -175; d <= 28; d++) {
     const day = addDays(today, d);
     const weekend = [5, 6].includes(new Date(`${day}T12:00:00`).getDay());
-    const arrivals = between(0, weekend ? 3 : 2);
+    const arrivals = between(1, weekend ? 6 : 4);
     for (let a = 0; a < arrivals; a++) {
-      const owner = pick(owners);
+      // The last ten owners are new: their first stays are in the last six weeks.
+      const owner = pick(d < -42 ? owners.slice(0, -10) : owners);
       const own = petsOf(owner.id);
       const lead = pick(own);
       const siblings = own.filter((p) => p.id !== lead.id && p.species === lead.species);
@@ -161,8 +162,8 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
     }
     if (status === "checked_out") {
       const owed = total - paidAmount({ payments });
-      // Most pay in full at pickup; some leave part of it for later, a few still owe all of it.
-      const pay = chance(0.86) ? owed : chance(0.6) ? Math.round(owed / 2 / 5_000) * 5_000 : 0;
+      // Most pay in full at pickup; some leave part of it for later, a few still owe all of it. Old debts are mostly settled.
+      const pay = chance(b.checkOut < addDays(today, -30) ? 0.985 : 0.9) ? owed : chance(0.6) ? Math.round(owed / 2 / 5_000) * 5_000 : 0;
       if (pay > 0) payments.push({ id: newId(), at: at(b.checkOut, between(10, 17), between(0, 59)), amount: pay, method: method(), kind: "payment", reference: "", note: "" });
     }
     if (status === "cancelled" && payments.length && chance(0.6)) {
@@ -243,15 +244,23 @@ const OWNER_NAMES: [string, Owner["language"]][] = [
   ["Rizky Ramadhan", "id"], ["Lukas Meyer", "en"], ["Nadia Putri", "id"], ["Fajar Nugroho", "id"], ["Indah Permata", "id"],
   ["Yusuf Hakim", "id"], ["Citra Melati", "id"], ["Sophie Martin", "en"], ["Bayu Saputra", "id"], ["Ratna Sari", "id"],
   ["Dimas Aditya", "id"], ["Lina Marlina", "id"], ["Oscar Tan", "en"], ["Wulan Sari", "id"], ["Teguh Santosa", "id"],
-  ["Ayu Wandira", "id"], ["Kevin Halim", "id"], ["Mira Hasan", "id"],
+  ["Ayu Wandira", "id"], ["Kevin Halim", "id"], ["Mira Hasan", "id"], ["Galih Permana", "id"], ["Tika Rahayu", "id"],
+  ["Arief Budiman", "id"], ["Laras Ningrum", "id"], ["Daniel Wong", "en"], ["Siska Amelia", "id"], ["Reza Firmansyah", "id"],
+  ["Novi Handayani", "id"], ["Bagas Wicaksono", "id"], ["Eka Susanti", "id"], ["Johan Siregar", "id"], ["Fitri Ramadhani", "id"],
+  ["Hana Kim", "en"], ["Irfan Maulana", "id"], ["Vina Oktaviani", "id"], ["Rudi Hartono", "id"], ["Melinda Chandra", "id"],
+  ["Taufik Hidayat", "id"], ["Dian Sastro", "id"], ["Yoga Pratama", "id"], ["Anisa Rahma", "id"], ["Ben Carter", "en"],
+  ["Sinta Dewi", "id"], ["Wahyu Setiawan", "id"], ["Rani Puspita", "id"], ["Ilham Saputra", "id"], ["Gita Savitri", "id"],
+  ["Hadi Gunawan", "id"], ["Kirana Larasati", "id"],
 ];
 const CATS: [string, string, Cage["size"]][] = [
   ["Mochi", "Persian", "S"], ["Oyen", "Domestic", "S"], ["Luna", "British Shorthair", "S"], ["Milo", "Maine Coon", "M"], ["Kitty", "Domestic", "S"],
   ["Simba", "Bengal", "S"], ["Nala", "Ragdoll", "M"], ["Boba", "Domestic", "S"], ["Kopi", "Scottish Fold", "S"], ["Snow", "Persian", "S"],
+  ["Cimol", "Domestic", "S"], ["Garfield", "Exotic Shorthair", "S"], ["Molly", "Ragdoll", "M"], ["Ciko", "Munchkin", "S"], ["Tom", "Domestic", "S"],
 ];
 const DOGS: [string, string, Cage["size"]][] = [
   ["Bobi", "Golden Retriever", "L"], ["Coco", "Pomeranian", "S"], ["Max", "Siberian Husky", "L"], ["Choco", "Shih Tzu", "S"], ["Bruno", "Beagle", "M"],
   ["Lucky", "Corgi", "M"], ["Rocky", "Labrador", "L"], ["Momo", "Poodle", "S"], ["Doggo", "Kampung", "M"],
+  ["Buddy", "Golden Retriever", "L"], ["Kiki", "Chihuahua", "S"], ["Oreo", "Border Collie", "M"], ["Bella", "Maltese", "S"], ["Thor", "German Shepherd", "L"],
 ];
 const RABBITS: [string, string, Cage["size"]][] = [["Kelinci", "Holland Lop", "S"], ["Bunbun", "Netherland Dwarf", "S"]];
 const PET_NOTES = ["Makan sendiri, 2x sehari", "Takut suara petir", "Alergi ayam", "Suka digendong", "Perlu jalan pagi"];
