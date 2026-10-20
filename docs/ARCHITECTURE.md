@@ -9,7 +9,7 @@ One React 19 + TypeScript + Vite app with two surfaces and a shared layer:
 ```
 src/
   shared/   used by both surfaces; depends on neither
-  site/     marketing site: the scroll-film landing page          → /
+  site/     marketing site: the scroll-film landing page          → /  (and /book, /privacy, /terms)
   app/      the operator product                                  → /app/*
   App.tsx   routes. The only place (with main.tsx) that sees both surfaces.
 ```
@@ -40,8 +40,8 @@ Four layers, each allowed to know only about the ones below it:
 
 ### Where a rule lives
 
-A business rule (no double booking, a stay only moves forward, a cage with live stays can't be
-removed) lives in `domain/bookingRules.ts` and is **enforced in `store/actions.ts`**, so nothing
+A business rule (no double booking: no unit holds more than its places; a stay only moves forward; a cage with
+live stays can't be removed) lives in `domain/bookingRules.ts` and is **enforced in `store/actions.ts`**, so nothing
 can put the data in a bad state, whichever screen or future API calls it. Forms use the same
 rule functions only to explain problems early (`scheduleIssues` in `BookingForm`).
 
@@ -66,8 +66,12 @@ security**: anyone with access to the browser can read or change that data. To g
 API-backed `AuthService` (sessions in an HttpOnly cookie, the same rules in `validation.ts` run on the
 server, rate limiting, email verification, password reset) and change one line in `defaultService.ts`.
 
-Mock data is gated by `DEMO_MODE` (`VITE_DEMO_MODE`, on by default for now): two seeded accounts and a
-sign-up helper. Turn it off for a real launch and delete `demoAccounts.ts` with the mock service.
+Mock data is gated by `DEMO_MODE` (`VITE_DEMO_MODE`, on by default for now): three seeded accounts and a
+sign-up helper. `demo@pethommie.id` starts with `store/sampleData.ts` (a small hotel, Simple mode),
+`pro@pethommie.id` with `store/sampleAdvanced.ts` (a big hotel with cages and shared rooms and six months of history,
+generated from a fixed seed around today's date, every stay within the booking rules; Advanced mode), and
+`baru@pethommie.id` with nothing, so it goes to onboarding. Turn it off for a real launch and delete `demoAccounts.ts`
+with the mock service.
 
 ### State
 
@@ -80,7 +84,7 @@ the layout shows as a warning.
 ### Persistence
 
 `HotelRepository` (`store/storage.ts`) is the only thing that knows where data lives. Today:
-`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 3`.
+`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 4`.
 
 - Reads are validated (`parseStored`). Anything unreadable or from a newer app version comes
   back as empty data **and the original is copied to `<key>.backup` first**, because
@@ -90,6 +94,11 @@ the layout shows as a warning.
   untouched v1 document is kept once as `<key>.v1.backup`.
 - v2 → v3 adds hotel `settings` (business, invoice and tax), `charges` and `companionIds` on each booking,
   `language` on each owner, and `invoices`. Old data is kept as it was (`<key>.v2.backup`), nothing is dropped.
+- v3 → v4 adds `capacity` to each cage (1: a cage holds one stay; more: a shared room where each pet takes a place),
+  `unitTerm` to the settings (`cage`, `room` or `space`: what the screens call the hotel's places), `kind`
+  (`deposit` / `payment` / `refund`) and `reference` to each payment, and `source` to each booking (walk-in,
+  WhatsApp, Instagram, booking link, referral, other). Existing records become a cage of 1, a plain payment, source
+  `other` and the term `cage`, so nothing changes meaning (`<key>.v3.backup`).
 - When `HotelData` changes shape: bump `CURRENT_VERSION`, add a step that upgrades the previous
   version inside `parseStored`, add tests for old documents (see `storage.test.ts`).
 
@@ -101,17 +110,51 @@ An invoice is an immutable **snapshot** of a stay (lines, totals, seller and cus
 and their dates are constants in that file and in `docs/product/pajak.md`. Nothing there is a filing. When the rules
 change, change the constants, the copy (`taxPage`, `settingsTax`) and `TAX_RULES_AS_OF` together.
 
+### Numbers, receipts and lists (`domain/reports.ts`, `dashboard.ts`, `ledger.ts`, `words.ts`, `filters.ts`)
+
+All pure, so the pages and their tests share them.
+
+- `reports.ts`: a period (`this month`, `last month`, 30 or 90 days, this year, or typed dates, capped at two years)
+  and a filter (one unit, one species) give one `Report`: occupancy counted in places (a cage one, a pet in a shared
+  room one), money received less refunds by kind and method, stays, average rate, lead time, repeat stays,
+  cancellations, and breakdowns by source, species, unit and top customers. `previousPeriod` gives the comparison.
+- `dashboard.ts`: one call for the dashboard: tonight, this month to date against last month to the same day, six
+  months of money in, the next 14 nights, what is owed, arrivals this week, vaccine alerts, overdue invoices, this
+  month's tax estimate.
+- `ledger.ts`: every payment as a cash-book line with a receipt number `KW-YYYYMMDD-NN` (the day it was received and
+  its place among that day's payments), totals and a CSV; and where an invoice stands today (`paid`, `partial`,
+  `unpaid`, `overdue` once past its due date with money owed, `void`). `words.ts` writes an amount out in Indonesian
+  or English for the receipt.
+- `filters.ts`: the list filters (pets staying or arriving, bookings by payment, unit, source and species, customer
+  segments and sorting).
+
+### The booking link (`shared/lib/bookingLink.ts`, `domain/linkCard.ts`)
+
+A hotel's link carries everything its public page shows (name, WhatsApp, language, the word for its places, a price
+list or none, the pets it takes, a note) as base64url JSON after the `#` of `/book#…`, so it needs no server and the
+hotel's details are never sent to one. It lives in `shared/` because both surfaces use it: the app makes the link
+(`linkCard.ts` turns the hotel's data and the owner's choices into the card), the site's `/book` page reads it back
+(`decodeCard` rejects anything cut off or edited) and writes the owner's request as a WhatsApp message to the hotel.
+That message ends with a link to `/app/bookings/new` with the dates, the guest and source `link` filled in;
+`guest.ts` (`guestFromRequest`) matches it to the owner on record with that number, or prepares a new one. Nothing is
+booked, held or paid by the link: deposits and online payment need the backend (§3).
+
 ### A stay, end to end
 
-A `Booking` carries its own money and record: `payments[]` (cash / QRIS / transfer, entered by
-hand; nothing talks to a bank) and `arrival` (the check-in record). The daily `careLog` and the
-`reportsSent` marks sit at the top level, keyed by booking. Rules live in `domain/`:
+A `Booking` carries its own money and record: `payments[]` (cash / QRIS / transfer / e-wallet / card, each a
+deposit, a payment or a refund, with an optional bank or QRIS reference; entered by hand, nothing talks to a bank),
+`source` (where it came from) and `arrival` (the check-in record). The daily `careLog` and the
+`reportsSent` marks sit at the top level, keyed by booking. A cage holds one stay whatever its pets; a shared room
+(`capacity` > 1) holds pets up to its capacity, each taking a place and paying the nightly rate (`logic.ts`:
+`placesFor`, `cageIsFree`, `totalPlaces`). Rules live in `domain/`:
 `payments.ts` (paid, balance, status), `careLog.ts` (what may be logged, for whom),
 `calendar.ts` (where a stay sits on a cage's row), `bookingRules.ts` (`editIssues`: what may change
-once a stay exists) and `messages.ts` (the WhatsApp texts).
+once a stay exists), `guest.ts` (the owner and pets of a new booking: one on record or a new one, a WhatsApp number
+already on record offers that owner instead of a duplicate) and `messages.ts` (the WhatsApp texts).
 
-Messages to owners are always Indonesian whatever language the operator's screen uses, and the
-words come from the domain, not from the app's i18n. WhatsApp is reached with a click-to-chat link
+Messages to owners are written in the owner's language (Indonesian unless the owner is set to English) whatever
+language the operator's screen uses, and the words come from the domain, not from the app's i18n. WhatsApp is
+reached with a click-to-chat link
 (`https://wa.me/<number>?text=…`) from the operator's own number; there is no API and nothing is
 sent until the operator presses send in WhatsApp. No length limit for `?text=` is documented, so
 the text is also shown for copying.
@@ -130,7 +173,9 @@ The decision, the schema, the sync design and what is left are in [`docs/backend
 Supabase (Postgres + auth + storage), the app stays local-first and syncs changes. Already built and tested:
 
 - `backend/supabase/migrations/0001_init.sql`: tables, constraints (no double booking, same-hotel references), row
-  level security. Run on a real Postgres by `web/src/app/sync/schema.test.ts`.
+  level security; `0002_…` adds charges, shared cages and invoices; `0003_shared_rooms_payment_kinds_sources.sql`
+  adds unit capacity (a trigger, `keep_unit_within_capacity`, replaces the exclusion constraint), payment kinds,
+  references and the new methods, and booking sources. Run on a real Postgres by `web/src/app/sync/schema.test.ts`.
 - `web/src/app/sync/`: `rows.ts` (data ⇄ rows), `diff.ts` (what changed between two states, applying and
   merging changes), `gateway.ts` (what the app needs from a server, plus an in-memory one), `ids.ts` (UUIDs).
 
@@ -140,8 +185,8 @@ the UI. The seams:
 1. `HotelRepository` stays synchronous (it returns the local copy); changes from the server arrive by replacing the
    state, as Restore a backup already does.
 2. The rules in `domain/` have no React or browser dependencies: the same rules run on the server and the client's
-   checks are a convenience. The one that can't be left to the client, no double booking, is also a database
-   constraint.
+   checks are a convenience. The one that can't be left to the client, no double booking (no unit over its
+   capacity), is also enforced by the database, with a trigger.
 3. `site/lib/waitlist.ts` has a `WaitlistStore` interface. Entries are currently stored only in the visitor's own
    browser, so **the owner of the product cannot see sign-ups**. The `join_requests` table is the fix (phase 2).
 
@@ -166,9 +211,10 @@ English is the default; Indonesian is the other. `shared/i18n` owns *which* lang
 `app/i18n/{en,id}.ts`. `en` defines the shape and TypeScript fails the build if `id` is missing a
 key; a test also checks the shape and, for the site, that captions are timed identically.
 
-## 6. The scroll films (`site/components/ink`, `site/content/film.ts`)
+## 6. The scroll film (`site/components/ink`, `site/content/film.ts`)
 
-A video is pre-split into 12 fps WebP frames in `public/films/<id>/` and drawn to a sticky
+One film ships, the illustrated turntable (`public/films/turntable`); there is no switcher. A video is pre-split
+into 12 fps WebP frames in `public/films/<id>/` and drawn to a sticky
 `<canvas>` from the scroll position (no `<video>` seeking, so it scrubs smoothly both ways).
 `film.test.ts` checks the registry against the files on disk and that every caption and clock
 label sits inside the film, so replacing a film can't silently break the timings. How to make a
@@ -180,10 +226,12 @@ not deployed.
 `npm test` (Vitest, jsdom + Testing Library). What is covered, and why there:
 
 - Domain rules and store actions: the part where a bug costs a customer data.
-- Storage: corrupt, newer-version, full and blocked storage; the v1 → v2 upgrade.
+- Storage: corrupt, newer-version, full and blocked storage; the upgrades from v1 up to v4.
 - Real flows through the router: first visit → onboarding → saved data; booking with a new pet;
   only free cages offered; an existing hotel skips onboarding; check-in, payments, check-out
-  with a balance, the care log, the report link, editing a stay, the calendar (`stay.test.tsx`).
+  with a balance, the care log, the report link, editing a stay, the calendar (`stay.test.tsx`); shared rooms
+  (`cagefree.test.tsx`); picking the owner and pets of a booking (`booking-guest.test.tsx`); receipts, transactions
+  and invoice states (`money.test.tsx`); the booking link and `/book` (`link.test.tsx`, `BookPage.test.tsx`).
 - The rules above were checked by mutation: breaking each one makes a test fail.
 - Site integrity: film frames vs registry, caption timing, copy structure.
 - Error boundary, including the "old tab after a deploy" reload.
@@ -219,8 +267,10 @@ Honest list, roughly by importance:
 2. Sign-ups from the landing page aren't visible to the owner (see §3.4).
 3. One hotel per account; no staff roles or invitations. No password reset, email verification or
    rate limiting (all need a server).
-4. Binary assets (about 37 MB of frames and source videos) live in git. Fine now; consider
-   Git LFS or an asset bucket if they keep growing.
+4. Binary assets (about 75 MB of frames, source videos and the raw art in `web/resources`) live in git. Fine now;
+   consider Git LFS or an asset bucket if they keep growing.
 5. No screenshot tests in CI (§7). The landing page's tour images are captured by a script, not on every build.
 6. Offline works per phone: data is not synced, and nothing here has been tried on a real Android
    phone or Safari yet (see `docs/product/riset.md` §6).
+7. The booking link only sends requests on WhatsApp: no deposit, no online payment, and nothing is held for the owner
+   until the hotel confirms (all need a server, §3).

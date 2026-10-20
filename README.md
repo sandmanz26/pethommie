@@ -1,7 +1,8 @@
 # Pethommie
 
-Pet hotel management software for operators in Indonesia: bookings with QRIS deposits, a cage
-calendar, check-in, and daily reports to owners on WhatsApp.
+Pet hotel management software for operators in Indonesia: bookings and deposits recorded by hand
+(cash, QRIS, transfer), a calendar for cages or shared rooms, check-in, receipts and invoices, daily
+reports to owners on WhatsApp, a dashboard, and a booking link owners send requests from.
 
 This repo has a marketing site (scroll-driven landing page) and the operator app, in one React
 codebase. There is no backend yet; the app keeps data in the browser.

@@ -32,23 +32,30 @@ src/
   shared/    used by both surfaces; depends on neither
     i18n/      LocaleProvider (which language), locales list
     hooks/     useBodyTheme, useDocumentMeta
-    ui/        Hanko (seal mark), LanguageSwitch
+    ui/        Hanko (seal mark), LanguageSwitch, Loading, Select (our own dropdown, used instead of
+               the browser's <select> in the app and on the site)
+    lib/       phone.ts (WhatsApp numbers), bookingLink.ts (the booking link: packing a hotel into the
+               URL, reading it back, the WhatsApp request it sends)
+    testing/   select.ts (pick an option in a Select from a test)
     styles/    base.css: resets, type tokens, focus ring
   site/      the marketing site (landing page)
-    i18n/      en.ts (default) and id.ts: all copy, chapter timings, prices; useSiteT
-    content/   film registry: frame count, duration, paper colour per film
-    components/  ink (the scroll film), film-switcher, layout (TopBar, Footer), ui
-    sections/  Hero, ProductTour, Features, Pricing, Faq, FinalCta (with WaitlistForm)
-    hooks/ lib/ pages/ styles/
+    i18n/      en.ts (default) and id.ts: all copy, caption and clock timings, prices; useSiteT
+    content/   film registry: frame count, duration, paper colour, focus box (one film: the turntable)
+    components/  ink (the scroll film), layout (TopBar, Footer), ui
+    sections/  Hero, ProductTour, Features, Kinds, Insights, Compare, LinkSpot, Pricing, Faq,
+               FinalCta (with WaitlistForm)
+    pages/     LandingPage, BookPage (/book, a hotel's public booking page), LegalPage, NotFoundPage
+    hooks/ lib/ styles/
   app/       the operator product (see below)
   App.tsx    routes: site pages, and /app/* lazy-loaded
   main.tsx   entry; loads base + site CSS before any component CSS
 public/
-  films/ink/         V1: 181 WebP frames of the sumi-e ink film (15 s, 12 fps)
-  films/turntable/   V2: 213 WebP frames of the illustrated turntable (17.75 s, 12 fps, 1600 px)
+  films/turntable/   213 WebP frames of the illustrated turntable film (17.75 s, 12 fps, 1600 px)
+  screens/           app screens captured for the landing page (scripts/capture-*.mjs)
 media/             source videos from Higgsfield (kept out of public/, so not deployed)
 resources/         raw images and photos you drop in; scripts/prepare-resources.py makes the
-                   web versions in public/illustrations, public/icons/ui and public/photos (see resources/README.md)
+                   web versions in public/illustrations, public/icons/nav, public/icons/ui, public/backgrounds
+                   and public/photos (see resources/README.md)
 ```
 
 Import rules: `./x` only for files in the same folder; everything else through the `@/` alias
@@ -62,15 +69,18 @@ forwards and backwards on every browser, which seeking a `<video>` does not.
 
 - Frames load coarse-to-fine (every 30th, 10th, 3rd, then all) so a fast scroll shows the whole story early.
 - Scroll handling runs once per animation frame and never re-renders React.
-- Captions come from `chapters.<film>[]` in each `site/i18n/*.ts` file: `at` is the second of the film they belong
-  to, `moment` the small app screen drawn beside them (`components/ink/Moment.tsx`, sample data from `film.moments`).
+- One film ships: the turntable (`public/films/turntable`). There is no film switcher.
+- Captions come from `chapters[]` in each `site/i18n/*.ts` file: `at` is the second of the film they belong
+  to, `moment` picks the caption's illustrated icon (from `public/icons/nav`) and the small app screen drawn beside
+  it (`components/ink/Moment.tsx`, sample data from `film.moments`). A caption is that icon, a title and one line
+  (`components/ink/Chapter.tsx`); there is no day-and-time eyebrow.
+- The clock under the film (`film.clock`) names the stage of the stay (Booking in, Arrival, Check-in … Pickup),
+  not the hour.
 - Wide screens: a deck on the left shows the opening (the hero), then one caption and its app screen at a time; the
-  scene fills the rest. A film whose scene is small in its frame gives a `focus` box (`content/film.ts`) and is
-  fitted into the area beside the deck; the turntable does.
-- Two films ship today. The floating switcher picks one; `<html data-film>` swaps the page palette to match.
+  scene fills the rest. The turntable is a small diorama in a wide frame, so it gives a `focus` box
+  (`content/film.ts`) and is fitted into the area beside the deck.
 - Phones and portrait tablets (≤720 px, or portrait up to 1100 px): the scene sits above the same
-  deck, so captions never cover the illustration. Screen readers get the captions as a list. The V1/V2 switcher compacts to one row there and
-  fades out once the film has scrolled past.
+  deck, so captions never cover the illustration. Screen readers get the captions as a list.
 
 To replace the film with a new video:
 
@@ -79,7 +89,7 @@ ffmpeg -i new.mp4 -vf "fps=12,scale=1280:-1" -c:v libwebp -quality 72 public/fil
 ```
 
 Then register it in `site/content/film.ts` and add its chapter/clock timings in `site/i18n/en.ts` and `site/i18n/id.ts`.
-V2 is built from 10 HD keyframes: 9 Wan 3.0 clips (1080p, 2 s, start frame → end frame),
+The turntable is built from 10 HD keyframes: 9 Wan 3.0 clips (1080p, 2 s, start frame → end frame),
 joined with the duplicate first frame of each later clip dropped, then cut at 1600 px
 (`media/pethommie-turntable-hd.mp4` is the joined source). Each scene holds about 1.5 s, so
 scene *k* sits at roughly 2k−1 to 2k+0.5 s; chapter and clock timings follow that.
@@ -103,18 +113,31 @@ note. When an API exists, add a store that calls it and export it as
 
 ## Website
 
-Sections of the landing page (`src/site/sections`): the film (the story of one stay,
+Sections of the landing page (`src/site/sections`, in order): the film (the story of one stay,
 with the hero as its opening), Product tour (real screens behind tabs, laptop and phone), Features (an
-illustration in the film's style and the real app screen for each, one line of words), Pricing, FAQ (with a puzzled
-dog and cat in the corners), and a last call to action with an optional "help me set up" form.
-Screens are captured from the running app with `scripts/capture-screens.mjs` and `scripts/capture-features.mjs`
-(then `python3 scripts/prepare-resources.py --screens`); run them again when the app's look changes. Kept short on purpose; plus `/privacy` and `/terms`
+illustration in the film's style and the real app screen for each, one line of words), Kinds (who it's for: cages,
+cage-free and daycare, home boarding, cattery, each with an illustration and how Pethommie counts it), Insights (the
+real dashboard of the advanced sample hotel, and three points), Compare (before and after: five everyday questions,
+from notebook and chats to one screen; a real table for screen readers), LinkSpot (the booking link in three steps,
+saying plainly that nothing is paid on the page), Pricing, FAQ (with a puzzled dog and cat in the corners), and a last
+call to action with an optional "help me set up" form. Kept short on purpose; plus `/privacy` and `/terms`
 (`site/pages/LegalPage.tsx`, words in the site copy, written to describe what the product does today). Nothing on it
 is invented: there are no testimonials or customer numbers, and what isn't built is marked **Coming soon**.
 
-The tour images are captured from the running app: `npm run build && npx vite preview --port 4173`, then
-`node scripts/capture-screens.mjs` (set `PW_CHROMIUM` if needed), and commit `public/screens/`. Run it again when the
-app's look changes.
+`/book#<code>` (`site/pages/BookPage.tsx`) is a hotel's public booking page, opened from the link the hotel makes
+in the app. Everything about the hotel (name, WhatsApp, prices, the pets it takes, a note, its language) is carried
+in the part of the link after `#` (`shared/lib/bookingLink.ts`), so no server is involved and nothing is stored. The
+owner fills in a short form, which opens WhatsApp to the hotel with the request written out in the hotel's
+language; it ends with a link that opens a new booking in the app with the dates, the guest and the source "Booking
+link" filled in. Nothing is booked or paid on the page.
+
+Screens are captured from the running app: `npm run build && npx vite preview --port 4173`, then
+`node scripts/capture-screens.mjs` (the tour's laptop JPEGs), `node scripts/capture-features.mjs` (the feature
+cards and the tour's phone views) and
+`node scripts/capture-dashboard.mjs` (the dashboard of `pro@pethommie.id`, in both languages, as
+`wide-dashboard-<locale>`); set `PW_CHROMIUM` if needed. Then `python3 scripts/prepare-resources.py --screens` turns
+the PNGs into WebP (phone shots up to 520 px wide, `wide-` shots up to 1200 px, the rest 640 px); commit
+`public/screens/`. Run them again when the app's look changes.
 
 Company name, contact email and WhatsApp for the footer, legal pages and Help come from environment variables
 (`web/.env.example`); anything unset is not shown.
@@ -122,11 +145,11 @@ Company name, contact email and WhatsApp for the footer, legal pages and Help co
 ## Operator app (`/app`, no backend yet)
 
 The SaaS lives under `/app` as its own lazily-loaded bundle. A first visit goes to
-`/app/onboarding`: a welcome screen, then hotel name and WhatsApp → cages (one-tap
-Home / Small / Large presets, then counts and nightly prices per size) → a done screen with
-the first task to pick. "Explore
-with sample data" skips it and fills every screen. Once a hotel exists, `/app/onboarding`
-redirects to `/app`; Settings → Delete all data brings the onboarding back.
+`/app/onboarding`: a welcome screen, then hotel name and WhatsApp → where pets stay: cages (one-tap
+Home / Small / Large presets, then counts and nightly prices per size) or shared rooms for a cage-free hotel (how
+many pets each takes, the price per pet per night) → a done screen with the first task to pick. "Explore
+with sample data" skips it and fills every screen (a small hotel in Simple mode, a big one in Advanced). Once a
+hotel exists, `/app/onboarding` redirects to `/app`; Settings → Delete all data brings the onboarding back.
 
 Sign in and sign up: `/app/login` and `/app/register` (also reachable as `/login` and `/register`).
 Everything else under `/app` needs an account, and each account has its own hotel data.
@@ -135,45 +158,70 @@ backend replaces one file.
 
 Two modes, switched in the sidebar, on the More page or in Settings (kept per account, and only changing what is
 shown): **Simple** is the everyday core with fewer fields (quick check-in, one-tap "paid in full", a care log you fill
-in with taps); **Advanced** adds Customers, Payments, Reports and every option. On a phone the tab bar has the four
-everyday pages plus More.
+in with taps); **Advanced** adds Customers, Payments, Transactions, Invoices, Tax and every option. On Simple,
+Settings opens with a card of what Advanced adds and one button that switches (the data stays as it is). On a phone
+the tab bar has the four everyday pages plus More.
 
 Pages: Today (arrivals, departures, who is staying and whether their report went out,
-vaccine alerts, a "getting started" list for new hotels), Bookings (upcoming / staying /
-past), the booking page (check-in record, payments, daily care log, the report for the owner,
-ready-made WhatsApp messages, change dates or cage, cancel), Calendar (14 days by cage; tap a
-free day to book it), New booking (only free cages are offered, so a cage can't be double-booked;
-a new pet + owner can be added inline), Pets (search, vaccine status), Cages (tonight's status,
-add/edit), Customers and a customer's page (advanced), Payments: what is owed, grouped by urgency, with a WhatsApp
-reminder ready (advanced), Reports: occupancy, money received, returning guests, CSV export (advanced), Help, and Settings
-(hotel profile, mode, language, download and restore a JSON backup, reset).
+vaccine alerts, a "getting started" list for new hotels), Dashboard (`/app/dashboard`: tonight's places, this month
+against last, money per month, the next 14 nights, what is owed, arrivals this week, vaccine alerts, overdue invoices,
+this month's tax estimate), Bookings (upcoming / staying / past, with filters by payment, unit, source and species),
+the booking page (check-in record, payments, daily care log, the report for the owner,
+ready-made WhatsApp messages, change dates or cage, cancel), Calendar (14 days by cage or room; tap a
+free day to book it), New booking (starts with the owner: search by name, WhatsApp or a pet's name, pick them and
+tick which of their pets are staying, or add a new owner and pet; only free places are offered, so a unit can't be
+overbooked), Pets (who is staying or arriving, filters by stay, species and vaccine), Cages (tonight's status, cages
+and shared rooms, add/edit; called cages, rooms or spaces, as the hotel chooses in Settings), Customers and a
+customer's page (advanced; segments: owes, regular, new, inactive), Payments: what is owed, grouped by urgency, with a
+WhatsApp reminder ready (advanced), Transactions (`/app/transactions`, advanced: every payment and refund in a period
+as a cash book, filtered by method and kind, totals per method, CSV), Receipts
+(`/app/receipts/:bookingId/:paymentId`: one per payment, numbered `KW-YYYYMMDD-NN`, the amount in words, to print,
+save as PDF or send on WhatsApp), Invoices (advanced: the register by month or all, each one paid / partly paid /
+unpaid / overdue / void, CSV) and an invoice's page (a WhatsApp reminder once it is overdue), Tax (advanced, an
+estimate), Reports (periods: this month, last month, 30 or 90 days, this year or your own dates; filters by unit and
+species; occupancy by places, money in, average rate, lead time, repeat stays and cancellations against the previous
+period; busy weekdays; breakdowns by source, method, species, unit and top customers; CSV export), Booking link
+(`/app/link`: language, price list on or off, the pets taken, a note; a live preview, copy, share on WhatsApp, open;
+see `/book` above), Help, and Settings (hotel profile, what the hotel calls its places, mode, language, download and
+restore a JSON backup, reset).
 
 Check-out asks first when money is still owed. Payments are recorded by hand (cash, QRIS,
-transfer); nothing here talks to a bank. WhatsApp messages open the operator's own WhatsApp with
-the text filled in (a `wa.me` link); nothing is sent until they press send, and they are always in
-Indonesian. The app works offline after the first visit (service worker scoped to `/app`).
+transfer, e-wallet, card; as a deposit, a payment or a refund, with an optional bank or QRIS reference); nothing here
+talks to a bank. WhatsApp messages open the operator's own WhatsApp with
+the text filled in (a `wa.me` link); nothing is sent until they press send, and they are written in the owner's
+language (Indonesian unless the owner is set to English). Every dropdown is our own `Select` (`shared/ui/Select.tsx`),
+not the browser's: same `<option>` children and `onChange`, keyboard like a native select. The app works offline after
+the first visit (service worker scoped to `/app`).
 
 More in [`docs/product`](../docs/product/README.md): audit, research, roadmap, metrics.
 
 ```
 src/app/
-  domain/          types.ts (Hotel, Cage, Owner, Pet, Booking with payments and arrival,
-                   care log), logic.ts (pure: dates, availability, totals, vaccine state),
-                   bookingRules.ts (what makes a booking valid, how a stay moves, what may
-                   change), payments.ts, careLog.ts, calendar.ts, messages.ts. No React.
+  domain/          types.ts (Hotel, Cage with capacity, Owner, Pet, Booking with payments,
+                   source and arrival, care log), logic.ts (pure: dates, availability, totals,
+                   vaccine state), bookingRules.ts (what makes a booking valid, how a stay
+                   moves, what may change), payments.ts, careLog.ts, calendar.ts, messages.ts,
+                   charges.ts, invoices.ts, tax.ts, customers.ts, csv.ts, reports.ts (periods,
+                   filters, breakdowns), dashboard.ts, ledger.ts (transactions, receipt numbers,
+                   invoice states), words.ts (amounts in words), filters.ts (list filters),
+                   guest.ts (owner and pets of a booking), linkCard.ts (what the booking link
+                   carries). No React.
   store/           actions.ts (pure state changes that enforce the rules), AppStore.tsx
                    (React wiring, autosave), storage.ts (HotelRepository: validated
-                   localStorage with a backup; swap for an API later), sampleData.ts
+                   localStorage with a backup; swap for an API later), sampleData.ts (small
+                   hotel) and sampleAdvanced.ts (big hotel, from a fixed seed)
   testing/         test fixtures
   i18n/            en.ts (default) / id.ts app copy; follows the site's EN/ID switch
   design-system/   Atomic design
-    atoms/         Button, Icon, Input/Select/Textarea, Badge, Avatar, Heading/Muted
-    molecules/     Field, Stepper, StatCard, EmptyState, Segmented, SearchField,
+    atoms/         Button, Icon, Input/Select/Textarea (Select is shared/ui/Select), Badge,
+                   Avatar, Heading/Muted
+    molecules/     Field, Stepper, StatCard, EmptyState, Segmented, SearchField, FilterBar,
                    Alert, ConfirmDialog, ProgressSteps
     organisms/     AppNav, PageHeader, BookingCard, PetRow, CageTile, BookingForm, PetForm,
                    CageForm, CheckInForm, ArrivalSummary, PaymentsPanel, CareLogPanel,
                    ReportPanel, MessagesPanel, BookingEditForm, CalendarGrid, StayingRow,
-                   FirstSteps
+                   FirstSteps, GuestPicker, ReceiptDocument, InvoiceDocument, BarList,
+                   ColumnChart, UpgradeCard
     templates/     AppLayout (sidebar / phone tab bar), FocusLayout (sign in, sign up, setup)
     tokens.css     app tokens incl. semantic status colours
   pages/           one file per route + AppRoutes.tsx
@@ -185,8 +233,9 @@ While there is no backend, demo mode is on (`src/app/config.ts`):
 
 | Email | Password | What it is |
 |---|---|---|
-| `demo@pethommie.id` | `Demo1234` | A pet hotel with sample bookings |
+| `demo@pethommie.id` | `Demo1234` | A small pet hotel with sample bookings, Simple mode |
 | `baru@pethommie.id` | `Demo1234` | A brand-new owner: goes straight to setup |
+| `pro@pethommie.id` | `Demo1234` | A big hotel with cages and shared rooms and six months of history, Advanced mode |
 
 The login page lists them with a one-tap "Use". The sign-up page has "Fill with sample data", which
 fills a different made-up person each time (emails are `…@example.com` with a random number, so

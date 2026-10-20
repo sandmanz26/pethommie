@@ -20,7 +20,13 @@ Dua pertanyaan: (1) apakah operator bisa menjalankan satu hari kerja di aplikasi
 | H5 | Persiapan backend: skema, pemetaan, sinkron, server tiruan, rencana | Tinggi | Sedang | Tidak | ✅ (belum tersambung) |
 | H6 | Invoice dua bahasa, daftar invoice bulanan, laporan pajak (perkiraan), biaya tambahan, hewan satu kandang, bahasa per pemilik | Tinggi | Tinggi | Tidak | ✅ ([pajak.md](pajak.md), [fleksibilitas.md](fleksibilitas.md)) |
 | H7 | Rencana email dan notifikasi browser | Sedang | Rendah | Tidak (rencana) | ✅ rencana: [notifications.md](../backend/notifications.md) |
-| I | Link booking publik dengan DP | Tinggi (janji utama landing) | Tinggi | **Ya** | Berikutnya |
+| H8 | Dashboard; laporan lebih dalam (periode, filter unit dan jenis hewan, tren, rincian per sumber, metode, unit, pelanggan); daftar dengan filter | Tinggi | Sedang | Tidak | ✅ |
+| H9 | Kuitansi untuk setiap pembayaran, buku transaksi, jenis pembayaran (DP, pembayaran, refund) dengan referensi, status invoice termasuk lewat jatuh tempo, pengingat penagihan | Tinggi | Sedang | Tidak | ✅ |
+| H10 | Hotel tanpa kandang: ruang bersama dengan kapasitas, sebutan tempat (kandang, kamar, tempat) | Tinggi | Sedang | Tidak | ✅ |
+| H11 | Setiap booking menyebut pemiliknya: cari atau tambah pemilik, centang anabul yang menginap | Sedang | Rendah | Tidak | ✅ |
+| H12 | Kartu naik ke mode Lengkap di Pengaturan (mode Sederhana) | Sedang | Rendah | Tidak | ✅ |
+| I0 | Link booking tanpa DP: halaman publik, permintaan ke WhatsApp hotel, satu ketukan menjadi booking | Tinggi (janji utama landing) | Sedang | Tidak (semua ada di dalam link) | ✅ |
+| I | DP atau pembayaran lewat link booking | Tinggi | Tinggi | **Ya** | Berikutnya |
 | J | Foto di rapor dan kartu vaksin | Tinggi | Sedang | **Ya** (penyimpanan file) | Setelah I |
 | K | Akun asli, banyak perangkat, staf | Tinggi | Tinggi | **Ya** | Bersama I |
 | L | Pembayaran online (Xendit/DOKU) | Sedang | Tinggi | **Ya** | Setelah K |
@@ -28,7 +34,7 @@ Dua pertanyaan: (1) apakah operator bisa menjalankan satu hari kerja di aplikasi
 
 ### Mengapa I, J, K ditunda
 
-Semuanya butuh server: halaman publik yang dibuka pemilik hewan, penyimpanan foto, dan akun. Mengerjakannya setengah-setengah di browser akan menghasilkan fitur yang terlihat bekerja tetapi tidak bisa dipercaya (mis. link booking yang hanya hidup di satu HP). Keputusan arsitektur ada di `docs/ARCHITECTURE.md` bagian 3. Sampai saat itu, landing menandai link booking sebagai **Segera hadir**.
+Semuanya butuh server: halaman publik yang dibuka pemilik hewan, penyimpanan foto, dan akun. Mengerjakannya setengah-setengah di browser akan menghasilkan fitur yang terlihat bekerja tetapi tidak bisa dipercaya (mis. link booking yang hanya hidup di satu HP). Keputusan arsitektur ada di `docs/ARCHITECTURE.md` bagian 3. Link booking tanpa DP (I0) tidak butuh server: data hotel ada di dalam link itu sendiri, permintaan pemilik hewan dikirim lewat WhatsApp, dan tidak ada yang dipesan atau dibayar di halaman itu (landing mengatakannya terus terang). DP dan pembayaran lewat link (I) tetap menunggu server.
 
 ### Mengapa pembayaran online (L) tidak dulu
 
@@ -76,13 +82,15 @@ Dua kebiasaan hidup berdampingan di operator: yang sibuk dan ingin sesedikit mun
 
 | | Sederhana | Lengkap |
 |---|---|---|
-| Menu | Hari ini, Booking, Kalender, Anabul, Kandang, Pengaturan, Bantuan | + Pelanggan, Tagihan, Laporan |
+| Menu | Hari ini, Dashboard, Booking, Kalender, Laporan, Anabul, Kandang, Link booking, Pengaturan, Bantuan | + Pelanggan, Tagihan, Transaksi, Invoice, Pajak |
 | Check-in | dua centang dan berat | catatan lengkap: bawaan, makanan, catatan, atau lewati |
-| Pembayaran | satu ketukan "Tandai lunas" | jumlah sebagian, catatan |
+| Pembayaran | satu ketukan "Tandai lunas" | jumlah sebagian, jenis (DP, pembayaran, refund), referensi, catatan |
 | Log harian | ketukan saja; kata-kata hanya untuk catatan/obat/kejadian | + jam bisa diubah, keterangan |
 | Pesan WhatsApp | hanya rapor | + konfirmasi, kedatangan, penjemputan, vaksin |
 | Booking baru | tanpa filter ukuran | dengan filter ukuran |
 
 Kriteria penerimaan (diuji): mode awal Sederhana; menu sesuai mode; pilihan tersimpan per akun; bilah tab HP berisi empat halaman harian + Lainnya; check-in sederhana tetap menyimpan catatan yang diminta; "Tandai lunas" mencatat seluruh sisa; log harian sederhana tidak menampilkan jam/keterangan kecuali perlu; rapor tetap ada. *(modes.test.tsx, e2e)*
+
+Di mode Sederhana, Pengaturan dibuka dengan kartu yang menunjukkan apa yang ditambahkan mode Lengkap dan satu tombol untuk pindah; datanya tetap. *(modes.test.tsx)*
 
 Yang belum diketahui: berapa banyak operator yang akan pindah ke mode Lengkap, dan fitur mana yang memicunya. Ini masuk eksperimen pertama di `metrik.md`.
