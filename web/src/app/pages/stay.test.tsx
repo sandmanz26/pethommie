@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { addDays, todayISO } from "@/app/domain/logic";
 import type { Booking, HotelData } from "@/app/domain/types";
+import { modeKeyFor, type Mode } from "@/app/mode/mode";
 import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCareEntry, aSmallHotel } from "@/app/testing/fixtures";
@@ -28,8 +29,9 @@ const today = todayISO();
 const stay = (over: Partial<Booking> = {}) => aBooking("b1", { petId: "p1", cageId: "s1", checkIn: today, checkOut: addDays(today, 3), ...over });
 const rp = (n: string) => new RegExp(`Rp\\s?${n.replace(/\./g, "\\.")}`);
 
-async function open(booking: Booking, extra: Partial<HotelData> = {}, path = "/app/bookings/b1") {
+async function open(booking: Booking, extra: Partial<HotelData> = {}, path = "/app/bookings/b1", mode: Mode = "advanced") {
   await signedInAs({ data: aSmallHotel({ bookings: [booking], ...extra }) });
+  localStorage.setItem(modeKeyFor("acct-test"), mode);
   const user = userEvent.setup();
   renderApp(path);
   return user;
@@ -314,6 +316,7 @@ describe("messages to the owner", () => {
 
   it("warns that there is no number to send to, and still lets the operator pick the contact", async () => {
     await signedInAs({ data: aSmallHotel({ owners: [{ id: "o1", name: "Owner o1", whatsapp: "" }], bookings: [stay()] }) });
+    localStorage.setItem(modeKeyFor("acct-test"), "advanced");
     renderApp("/app/bookings/b1");
     const panel = await screen.findByRole("region", { name: /messages to the owner/i });
     expect(within(panel).getByText(/no whatsapp number saved/i)).toBeInTheDocument();

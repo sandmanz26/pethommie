@@ -19,12 +19,15 @@ export function PaymentsPanel({
   cage,
   onAdd,
   onRemove,
+  simple,
 }: {
   booking: Booking;
   cage: Cage | undefined;
   /** Returns what was wrong, if anything. Omit for a stay that can't take payments. */
   onAdd?: (payment: Omit<Payment, "id">) => PaymentIssue[];
   onRemove?: (paymentId: string) => void;
+  /** Simple mode: no note, and one tap records the whole balance. */
+  simple?: boolean;
 }) {
   const { t, locale } = useAppT();
   const p = t.payments;
@@ -37,6 +40,10 @@ export function PaymentsPanel({
   const [method, setMethod] = useState<PaymentMethod>("transfer");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | undefined>();
+
+  function payInFull() {
+    onAdd?.({ at: new Date().toISOString(), amount: balance, method, note: "" });
+  }
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -109,19 +116,26 @@ export function PaymentsPanel({
               </Select>
             </Field>
           </div>
-          <Field label={p.note} optional={t.common.optional}>
-            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={p.notePh} />
-          </Field>
+          {!simple && (
+            <Field label={p.note} optional={t.common.optional}>
+              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={p.notePh} />
+            </Field>
+          )}
           <Muted>{p.hint}</Muted>
           <div className="ds-form__actions">
             <Button type="submit" icon="check">
               {p.save}
             </Button>
-            {balance > 0 && (
-              <Button variant="secondary" onClick={() => setAmount(String(balance))}>
-                {p.payBalance}
-              </Button>
-            )}
+            {balance > 0 &&
+              (simple ? (
+                <Button variant="secondary" onClick={payInFull}>
+                  {p.paidInFull}
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={() => setAmount(String(balance))}>
+                  {p.payBalance}
+                </Button>
+              ))}
           </div>
         </form>
       )}

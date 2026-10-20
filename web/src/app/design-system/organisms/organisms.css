@@ -31,7 +31,7 @@
   .ds-sidenav { display: none; }
   .ds-tabbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-    display: grid; grid-template-columns: repeat(6, 1fr);
+    display: grid; grid-template-columns: repeat(5, 1fr);
     padding: 6px 2px calc(env(safe-area-inset-bottom, 0px) + 6px);
     background: var(--surface); border-top: 1px solid var(--line);
   }
@@ -245,3 +245,18 @@
   .ds-money { grid-template-columns: 1fr; gap: 6px; }
   .ds-money div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 }
+
+.ds-sidenav__foot .ds-segmented { width: 100%; }
+.ds-sidenav__foot .ds-segmented__item { flex: 1; justify-content: center; }
+.ds-modeswitch { display: grid; gap: 8px; }
+.ds-modeswitch .ds-segmented { justify-self: start; }
+
+/* ---------- Customers, receivables, reports ---------- */
+.ds-customer { grid-template-columns: auto 1fr auto auto; }
+.ds-receivable__due { color: var(--danger); }
+.ds-chart { margin: 0; display: grid; gap: 8px; padding: 18px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); }
+.ds-chart figcaption { font-weight: 700; }
+.ds-chart__bars { display: flex; align-items: flex-end; gap: 3px; height: 140px; padding: 0; }
+.ds-chart__bar { flex: 1; min-width: 4px; height: 100%; display: flex; align-items: flex-end; border-radius: 3px 3px 0 0; background: var(--paper); }
+.ds-chart__bar i { display: block; width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--ok); }
+.ds-chart__axis { display: flex; justify-content: space-between; font-size: 0.8em; color: var(--ink-soft); }

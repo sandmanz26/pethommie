@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { dayOf, formatDate, nights, todayISO } from "@/app/domain/logic";
 import { entriesOn, reportWasSent } from "@/app/domain/careLog";
+import { useMode } from "@/app/mode/ModeProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
@@ -30,6 +31,7 @@ export function BookingDetailPage() {
   const store = useStore();
   const { data } = store;
   const { t, locale } = useAppT();
+  const { advanced } = useMode();
   const [today] = useState(todayISO);
   const [editing, setEditing] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -106,22 +108,24 @@ export function BookingDetailPage() {
         <div className="pg-section">
           {booking.status === "booked" && (
             <div id="checkin">
-              <CheckInForm onSubmit={(arrival) => store.checkIn(booking.id, arrival)} />
+              <CheckInForm compact={!advanced} onSubmit={(arrival) => store.checkIn(booking.id, arrival)} />
             </div>
           )}
           {(staying || booking.status === "checked_out") && <ArrivalSummary arrival={booking.arrival} />}
           <PaymentsPanel
+            simple={!advanced}
             booking={booking}
             cage={cage}
             onAdd={booking.status === "cancelled" ? undefined : (payment) => store.recordPayment(booking.id, payment)}
             onRemove={booking.status === "cancelled" ? undefined : (paymentId) => store.removePayment(booking.id, paymentId)}
           />
-          {pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} owner={owner} cage={cage} />}
+          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} owner={owner} cage={cage} />}
         </div>
 
         {(staying || booking.status === "checked_out") && (
           <div className="pg-section" id="care">
             <CareLogPanel
+              simple={!advanced}
               today={today}
               checkIn={booking.checkIn}
               active={staying}

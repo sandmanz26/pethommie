@@ -36,6 +36,29 @@ test('a day at the hotel: check in, get paid, log care, send the report', async 
   await expect(page.getByRole('region', { name: /daily care log/i })).toContainText('All eaten')
 })
 
+test('simple mode: a day with fewer fields', async ({ page }) => {
+  await signInWithSampleData(page, 'en', 'simple')
+  await expect(page.getByRole('link', { name: 'Customers' })).toHaveCount(0)
+  await page.getByRole('link', { name: 'Check in' }).first().click()
+  await page.getByRole('button', { name: /^check in$/i }).click()
+  const payments = page.getByRole('region', { name: /payments/i })
+  await payments.getByRole('button', { name: /mark as paid in full/i }).click()
+  await expect(payments.getByText('Paid in full')).toBeVisible()
+  await page.getByRole('region', { name: /daily care log/i }).getByRole('button', { name: 'All eaten' }).click()
+  await expect(page.getByRole('region', { name: /report for the owner/i }).getByRole('textbox')).toHaveValue(/Makan: habis/)
+})
+
+test('advanced mode adds customers, payments and reports', async ({ page }) => {
+  await signInWithSampleData(page)
+  await page.getByRole('link', { name: 'Payments' }).click()
+  await expect(page.getByRole('heading', { name: 'Payments', level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: /send reminder/i }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/62/)
+  await page.getByRole('link', { name: 'Reports' }).click()
+  await expect(page.getByText('Occupancy')).toBeVisible()
+  await page.getByRole('link', { name: 'Customers' }).click()
+  await expect(page.getByRole('link', { name: /Rina|Sari|Budi|Andi/ }).first()).toBeVisible()
+})
+
 test('the calendar books an empty day', async ({ page }) => {
   await signInWithSampleData(page)
   await page.goto('/app/calendar')
@@ -55,7 +78,10 @@ for (const [name, viewport, locale] of [
       await signInWithSampleData(page, locale)
       await page.goto('/app')
       const bookingHref = await page.locator('a[href*="#care"]').first().getAttribute('href')
-      const paths = ['/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings', bookingHref!.replace('#care', '')]
+      const paths = [
+        '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings',
+        '/app/more', '/app/customers', '/app/payments', '/app/reports', '/app/help', bookingHref!.replace('#care', ''),
+      ]
       for (const path of paths) {
         await page.goto(path)
         await page.getByRole('heading', { level: 1 }).first().waitFor()

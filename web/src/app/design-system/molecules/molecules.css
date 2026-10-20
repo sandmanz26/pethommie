@@ -116,3 +116,4 @@
 .ds-wa { display: grid; gap: 8px; }
 .ds-wa textarea { font-size: 0.95em; line-height: 1.5; }
 .ds-wa__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ds-stat__note { font-size: 0.78em; color: var(--ink-faint); }

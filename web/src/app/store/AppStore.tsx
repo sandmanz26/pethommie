@@ -57,6 +57,8 @@ function useStoreValue(repo: HotelRepository) {
       removeCare: (id: string) => commit(actions.removeCare(latest.current, id)),
       markReportSent: (bookingId: string, date: ISODate, at: string) => commit(actions.markReportSent(latest.current, bookingId, date, at)),
       loadSample: () => commit(sampleData()),
+      /** Replaces everything with a restored backup. The caller has already checked it with `parseStored`. */
+      importData: (next: HotelData) => commit(next),
       reset: () => {
         repo.clear();
         commit(emptyData());

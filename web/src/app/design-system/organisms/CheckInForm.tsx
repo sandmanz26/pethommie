@@ -21,7 +21,7 @@ function parseWeight(text: string): number | null {
  * The check-in record: a short checklist of how the pet arrived. It can be skipped (the pet still checks in),
  * but the form makes the careful path the easy one.
  */
-export function CheckInForm({ onSubmit }: { onSubmit: (arrival: Arrival | null) => void }) {
+export function CheckInForm({ onSubmit, compact }: { onSubmit: (arrival: Arrival | null) => void; /** Only the two checks and the weight: the simple mode. */ compact?: boolean }) {
   const { t } = useAppT();
   const a = t.arrival;
   const [healthy, setHealthy] = useState(true);
@@ -66,23 +66,31 @@ export function CheckInForm({ onSubmit }: { onSubmit: (arrival: Arrival | null) 
         <Field label={a.weight} error={error} optional={t.common.optional}>
           <Input value={weight} onChange={(e) => (setWeight(e.target.value), setError(undefined))} inputMode="decimal" placeholder="4.2" />
         </Field>
-        <Field label={a.belongings} optional={t.common.optional}>
-          <Input value={belongings} onChange={(e) => setBelongings(e.target.value)} placeholder={a.belongingsPh} />
-        </Field>
+        {!compact && (
+          <Field label={a.belongings} optional={t.common.optional}>
+            <Input value={belongings} onChange={(e) => setBelongings(e.target.value)} placeholder={a.belongingsPh} />
+          </Field>
+        )}
       </div>
-      <Field label={a.food} optional={t.common.optional}>
-        <Input value={food} onChange={(e) => setFood(e.target.value)} placeholder={a.foodPh} />
-      </Field>
-      <Field label={a.notes} optional={t.common.optional}>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={a.notesPh} />
-      </Field>
+      {!compact && (
+        <>
+          <Field label={a.food} optional={t.common.optional}>
+            <Input value={food} onChange={(e) => setFood(e.target.value)} placeholder={a.foodPh} />
+          </Field>
+          <Field label={a.notes} optional={t.common.optional}>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={a.notesPh} />
+          </Field>
+        </>
+      )}
       <div className="ds-form__actions">
         <Button type="submit" icon="login">
           {a.save}
         </Button>
-        <Button variant="ghost" onClick={() => onSubmit(null)}>
-          {a.skip}
-        </Button>
+        {!compact && (
+          <Button variant="ghost" onClick={() => onSubmit(null)}>
+            {a.skip}
+          </Button>
+        )}
       </div>
     </form>
   );

@@ -34,6 +34,7 @@ export function CareLogPanel({
   active,
   onAdd,
   onRemove,
+  simple,
 }: {
   today: ISODate;
   /** Today's entries, earliest first. */
@@ -45,6 +46,8 @@ export function CareLogPanel({
   active: boolean;
   onAdd: (entry: Pick<CareEntry, "kind" | "preset" | "note" | "at">) => CareIssue[];
   onRemove: (id: string) => void;
+  /** Simple mode: entries are stamped now, and words are asked for only where they are needed. */
+  simple?: boolean;
 }) {
   const { t, locale } = useAppT();
   const c = t.care;
@@ -84,14 +87,18 @@ export function CareLogPanel({
               </button>
             ))}
           </div>
-          <div className="ds-care__entry">
-            <Field label={c.time}>
-              <Input type="time" value={time ?? clock()} onChange={(e) => setTime(e.target.value)} />
-            </Field>
-            <Field label={c.details} error={error} optional={needsNote ? undefined : t.common.optional}>
-              <Input value={note} onChange={(e) => (setNote(e.target.value), setError(undefined))} placeholder={c.detailsPh} />
-            </Field>
-          </div>
+          {(!simple || needsNote) && (
+            <div className={simple ? "" : "ds-care__entry"}>
+              {!simple && (
+                <Field label={c.time}>
+                  <Input type="time" value={time ?? clock()} onChange={(e) => setTime(e.target.value)} />
+                </Field>
+              )}
+              <Field label={c.details} error={error} optional={needsNote ? undefined : t.common.optional}>
+                <Input value={note} onChange={(e) => (setNote(e.target.value), setError(undefined))} placeholder={c.detailsPh} />
+              </Field>
+            </div>
+          )}
           {presets.length > 0 ? (
             <div className="ds-chips" role="group" aria-label={c.kinds[kind]}>
               {presets.map((p) => (

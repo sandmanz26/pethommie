@@ -1,22 +1,17 @@
 import { NavLink } from "react-router-dom";
 import { Hanko } from "@/shared/ui/Hanko";
-import { Icon, type IconName } from "@/app/design-system/atoms/Icon";
+import { Icon } from "@/app/design-system/atoms/Icon";
 import { Button } from "@/app/design-system/atoms/Button";
+import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
+import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
+import { sideItems, tabItems } from "./navItems";
 import "./organisms.css";
-
-const items: { to: string; key: "today" | "bookings" | "calendar" | "pets" | "cages" | "settings"; icon: IconName; end?: boolean }[] = [
-  { to: "/app", key: "today", icon: "today", end: true },
-  { to: "/app/bookings", key: "bookings", icon: "bookings" },
-  { to: "/app/calendar", key: "calendar", icon: "calendar" },
-  { to: "/app/pets", key: "pets", icon: "pets" },
-  { to: "/app/cages", key: "cages", icon: "cages" },
-  { to: "/app/settings", key: "settings", icon: "settings" },
-];
 
 /** Sidebar on wide screens, bottom tab bar on phones. */
 export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: () => void }) {
   const { t } = useAppT();
+  const { advanced } = useMode();
   return (
     <>
       <aside className="ds-sidenav">
@@ -31,7 +26,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
           {t.nav.newBooking}
         </Button>
         <nav className="ds-sidenav__links" aria-label="App">
-          {items.map((i) => (
+          {sideItems(advanced).map((i) => (
             <NavLink key={i.to} to={i.to} end={i.end} className="ds-sidenav__link">
               <Icon name={i.icon} />
               {t.nav[i.key]}
@@ -39,6 +34,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
           ))}
         </nav>
         <div className="ds-sidenav__foot">
+          <ModeSwitch />
           <NavLink to="/" className="ds-sidenav__link">
             <Icon name="home" />
             {t.nav.backToSite}
@@ -51,7 +47,7 @@ export function AppNav({ hotelName, onLogout }: { hotelName: string; onLogout: (
       </aside>
 
       <nav className="ds-tabbar" aria-label="App">
-        {items.map((i) => (
+        {tabItems.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className="ds-tabbar__link">
             <Icon name={i.icon} size={22} />
             <span>{t.nav[i.key]}</span>

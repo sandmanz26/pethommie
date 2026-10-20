@@ -156,3 +156,14 @@ export function vaccineReminder(p: {
     "Mohon kirimkan foto kartu vaksin terbaru sebelum check-in ya. Terima kasih!",
   ].join("\n");
 }
+
+export function paymentReminder(p: { hotelName: string; ownerName: string; petName: string; checkOut: ISODate; balance: number; left: boolean }): string {
+  return [
+    greeting(p.ownerName),
+    p.left
+      ? `Dari ${p.hotelName}: masih ada sisa pembayaran untuk penitipan ${p.petName} (${date(p.checkOut)}) sebesar ${rp(p.balance)}.`
+      : `Dari ${p.hotelName}: sisa pembayaran penitipan ${p.petName} sebesar ${rp(p.balance)}.`,
+    "",
+    "Bisa dibayar lewat QRIS, transfer, atau tunai. Kabari kami kalau sudah ya. Terima kasih!",
+  ].join("\n");
+}

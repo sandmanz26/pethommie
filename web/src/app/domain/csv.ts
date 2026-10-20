@@ -1,0 +1,40 @@
+import { bookingTotal, nights } from "./logic";
+import { balanceDue, paidAmount } from "./payments";
+import type { HotelData } from "./types";
+
+/** Cells that a spreadsheet would run as a formula get a leading quote, so a name like "=cmd()" stays text. */
+const safe = (cell: string) => (/^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell);
+
+const escape = (cell: string) => {
+  const s = safe(cell);
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+export const toCsv = (rows: string[][]): string => rows.map((r) => r.map(escape).join(",")).join("\r\n") + "\r\n";
+
+/** One row per stay, for a spreadsheet. Column names are the same in every language so the file can be reused. */
+export function staysCsv(data: HotelData): string {
+  const header = ["check_in", "check_out", "nights", "status", "pet", "owner", "whatsapp", "cage", "total", "paid", "balance", "notes"];
+  const rows = [...data.bookings]
+    .sort((a, b) => a.checkIn.localeCompare(b.checkIn))
+    .map((b) => {
+      const pet = data.pets.find((p) => p.id === b.petId);
+      const owner = data.owners.find((o) => o.id === pet?.ownerId);
+      const cage = data.cages.find((c) => c.id === b.cageId);
+      return [
+        b.checkIn,
+        b.checkOut,
+        String(nights(b.checkIn, b.checkOut)),
+        b.status,
+        pet?.name ?? "",
+        owner?.name ?? "",
+        owner?.whatsapp ?? "",
+        cage?.name ?? "",
+        String(bookingTotal(b, cage)),
+        String(paidAmount(b)),
+        String(b.status === "cancelled" ? 0 : balanceDue(b, cage)),
+        b.notes,
+      ];
+    });
+  return toCsv([header, ...rows]);
+}

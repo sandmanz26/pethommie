@@ -33,6 +33,7 @@ export function BookingForm({
   initialCageId,
   initialCheckIn,
   initialCheckOut,
+  simple,
   onSubmit,
   onCancel,
 }: {
@@ -42,6 +43,8 @@ export function BookingForm({
   initialCageId?: string;
   initialCheckIn?: string;
   initialCheckOut?: string;
+  /** Simple mode: no cage-size filter, so the cage list is just the free ones. */
+  simple?: boolean;
   onSubmit: (booking: Booking, newPet?: NewPetQuick) => void;
   onCancel: () => void;
 }) {
@@ -170,16 +173,18 @@ export function BookingForm({
           </Field>
         </div>
         <div className="ds-form__row">
-          <Field label={f.size}>
-            <Select value={size} onChange={(e) => setSize(e.target.value as CageSize | "")}>
-              <option value="">{f.anySize}</option>
-              {SIZE_ORDER.map((s) => (
-                <option key={s} value={s}>
-                  {t.common.sizes[s]}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          {!simple && (
+            <Field label={f.size}>
+              <Select value={size} onChange={(e) => setSize(e.target.value as CageSize | "")}>
+                <option value="">{f.anySize}</option>
+                {SIZE_ORDER.map((s) => (
+                  <option key={s} value={s}>
+                    {t.common.sizes[s]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Field label={`${f.cage}${validDates ? ` · ${f.free(options.length)}` : ""}`} error={errors.cage}>
             <Select value={selectedCageId} onChange={(e) => setCageId(e.target.value)} disabled={!options.length}>
               <option value="">{options.length ? f.cagePh : "—"}</option>

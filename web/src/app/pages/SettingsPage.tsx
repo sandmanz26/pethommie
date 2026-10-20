@@ -1,21 +1,23 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
+import { parseStored } from "@/app/store/storage";
 import { useAppT } from "@/app/i18n/useAppT";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
+import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { Field } from "@/app/design-system/molecules/Field";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import "./pages.css";
 
 export function SettingsPage() {
-  const { data, setHotel, loadSample, reset } = useStore();
+  const { data, setHotel, loadSample, reset, importData } = useStore();
   const { t } = useAppT();
   const navigate = useNavigate();
   const account = useAccount();
@@ -27,6 +29,19 @@ export function SettingsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   const [confirm, setConfirm] = useState<"reset" | "sample" | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [restore, setRestore] = useState<{ status: "idle" | "bad" | "newer" | "done" } | { status: "ask"; data: typeof data }>({ status: "idle" });
+
+  /** Reads a backup file and, if it is a good one, asks before it replaces what is here. */
+  async function pickBackup(file: File | undefined) {
+    if (!file) return;
+    const text = await file.text().catch(() => "");
+    const { data: restored, problem } = parseStored(text);
+    if (problem === "newer") setRestore({ status: "newer" });
+    else if (problem || !restored.hotel) setRestore({ status: "bad" });
+    else setRestore({ status: "ask", data: restored });
+    if (fileInput.current) fileInput.current.value = "";
+  }
 
   function save(e: FormEvent) {
     e.preventDefault();
@@ -95,6 +110,12 @@ export function SettingsPage() {
       </section>
 
       <section className="ds-form__section pg-settings">
+        <Heading level={2} size="md">{t.mode.label}</Heading>
+        <ModeSwitch lead />
+        <Muted>{t.mode.note}</Muted>
+      </section>
+
+      <section className="ds-form__section pg-settings">
         <Heading level={2} size="md">{t.settings.language}</Heading>
         <div>
           <LanguageSwitch label={t.settings.language} />
@@ -108,6 +129,10 @@ export function SettingsPage() {
           <Button variant="secondary" icon="download" onClick={exportJson}>
             {t.settings.export}
           </Button>
+          <Button variant="secondary" icon="upload" onClick={() => fileInput.current?.click()}>
+            {t.settings.import}
+          </Button>
+          <input ref={fileInput} type="file" accept="application/json,.json" hidden aria-label={t.settings.import} onChange={(e) => void pickBackup(e.target.files?.[0])} />
           <Button variant="secondary" onClick={() => setConfirm("sample")}>
             {t.settings.loadSample}
           </Button>
@@ -115,7 +140,23 @@ export function SettingsPage() {
             {t.settings.reset}
           </Button>
         </div>
+        {restore.status === "bad" && <Alert tone="danger">{t.settings.importBad}</Alert>}
+        {restore.status === "newer" && <Alert tone="danger">{t.settings.importNewer}</Alert>}
+        {restore.status === "done" && <Alert tone="ok">{t.settings.importDone}</Alert>}
       </section>
+
+      <ConfirmDialog
+        open={restore.status === "ask"}
+        message={t.settings.importConfirm}
+        confirmLabel={t.settings.import}
+        cancelLabel={t.confirm.no}
+        danger
+        onCancel={() => setRestore({ status: "idle" })}
+        onConfirm={() => {
+          if (restore.status === "ask") importData(restore.data);
+          setRestore({ status: "done" });
+        }}
+      />
 
       <ConfirmDialog
         open={confirm !== null}

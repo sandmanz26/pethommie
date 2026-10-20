@@ -19,6 +19,12 @@ import { BookingsPage } from "./BookingsPage";
 import { BookingNewPage } from "./BookingNewPage";
 import { BookingDetailPage } from "./BookingDetailPage";
 import { CalendarPage } from "./CalendarPage";
+import { MorePage } from "./MorePage";
+import { CustomersPage } from "./CustomersPage";
+import { CustomerDetailPage } from "./CustomerDetailPage";
+import { PaymentsPage } from "./PaymentsPage";
+import { ReportsPage } from "./ReportsPage";
+import { HelpPage } from "./HelpPage";
 import { PetsPage } from "./PetsPage";
 import { PetEditPage } from "./PetEditPage";
 import { CagesPage } from "./CagesPage";
@@ -86,6 +92,12 @@ export default function AppRoutes() {
               <Route path="bookings/new" element={<BookingNewPage />} />
               <Route path="bookings/:id" element={<BookingDetailPage />} />
               <Route path="calendar" element={<CalendarPage />} />
+              <Route path="more" element={<MorePage />} />
+              <Route path="customers" element={<CustomersPage />} />
+              <Route path="customers/:id" element={<CustomerDetailPage />} />
+              <Route path="payments" element={<PaymentsPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="help" element={<HelpPage />} />
               <Route path="pets" element={<PetsPage />} />
               <Route path="pets/new" element={<PetEditPage />} />
               <Route path="pets/:id" element={<PetEditPage />} />

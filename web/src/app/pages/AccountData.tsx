@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useAccount } from "@/app/auth/AuthProvider";
 import { emptyData } from "@/app/domain/types";
 import { sampleData } from "@/app/store/sampleData";
+import { ModeProvider } from "@/app/mode/ModeProvider";
 import { AppStoreProvider } from "@/app/store/AppStore";
 import { createLocalRepository, dataKeyFor } from "@/app/store/storage";
 
@@ -17,8 +18,10 @@ export function AccountData() {
     [account.id, account.startsWithSampleData],
   );
   return (
-    <AppStoreProvider key={account.id} repo={repo}>
-      <Outlet />
-    </AppStoreProvider>
+    <ModeProvider key={account.id} accountId={account.id}>
+      <AppStoreProvider repo={repo}>
+        <Outlet />
+      </AppStoreProvider>
+    </ModeProvider>
   );
 }

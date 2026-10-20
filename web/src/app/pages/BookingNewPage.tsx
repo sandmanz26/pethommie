@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { newId } from "@/app/domain/logic";
+import { useMode } from "@/app/mode/ModeProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { BookingForm } from "@/app/design-system/organisms/BookingForm";
@@ -8,6 +9,7 @@ import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 export function BookingNewPage() {
   const { data, saveBooking, saveOwner, savePet } = useStore();
   const { t } = useAppT();
+  const { advanced } = useMode();
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
@@ -16,6 +18,7 @@ export function BookingNewPage() {
       <PageHeader title={t.bookingForm.title} back={{ to: "/app/bookings", label: t.common.back }} />
       <BookingForm
         data={data}
+        simple={!advanced}
         initialPetId={params.get("pet") ?? undefined}
         initialCageId={params.get("cage") ?? undefined}
         initialCheckIn={params.get("in") ?? undefined}
