@@ -94,6 +94,41 @@ for (const [name, viewport, locale] of [
   })
 }
 
+for (const [name, viewport] of [
+  ['desktop', { width: 1280, height: 800 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test.describe(`website · ${name}`, () => {
+    test.use({ viewport })
+
+    for (const locale of ['en', 'id'] as const) {
+      test(`landing and legal pages in ${locale}: no accessibility violations, no sideways scrolling`, async ({ page }) => {
+        await page.addInitScript((l) => localStorage.setItem('pethommie.locale', l), locale)
+        for (const path of ['/', '/privacy', '/terms', '/does-not-exist']) {
+          await page.goto(path)
+          await page.getByRole('heading', { level: 1 }).first().waitFor()
+          const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze()
+          expect(violations.map((v) => `${v.id}: ${v.nodes[0]?.target.join(' ')}`), path).toEqual([])
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+          expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0)
+        }
+      })
+    }
+  })
+}
+
+test('the landing page shows the tour images and they load', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('#tour').scrollIntoViewIfNeeded()
+  const images = page.locator('#tour img')
+  await expect(images).toHaveCount(3)
+  for (const img of await images.all()) {
+    await img.scrollIntoViewIfNeeded()
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
+  }
+  await expect(page.getByRole('contentinfo')).toContainText('All rights reserved')
+})
+
 test('the app opens without a connection after the first visit, and the website is not touched', async ({ page, context }) => {
   await signInWithSampleData(page)
   await page.evaluate(() => navigator.serviceWorker.ready) // installed and active: the app is cached

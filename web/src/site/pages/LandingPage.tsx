@@ -10,6 +10,11 @@ import { Hero } from "@/site/sections/Hero";
 import { Features } from "@/site/sections/Features";
 import { RaporPreview } from "@/site/sections/RaporPreview";
 import { LebaranPackage } from "@/site/sections/LebaranPackage";
+import { ProductTour } from "@/site/sections/ProductTour";
+import { HowItWorks } from "@/site/sections/HowItWorks";
+import { Modes } from "@/site/sections/Modes";
+import { Trust } from "@/site/sections/Trust";
+import { Faq } from "@/site/sections/Faq";
 import { WaitlistForm } from "@/site/sections/WaitlistForm";
 
 export function LandingPage() {
@@ -22,9 +27,14 @@ export function LandingPage() {
       <main id="top">
         {/* Keyed by film so switching remounts and preloads the new frames. */}
         <InkFilm key={filmId} film={films[filmId]} intro={<Hero />} />
+        <HowItWorks />
+        <ProductTour />
         <Features />
+        <Modes />
         <RaporPreview />
+        <Trust />
         <LebaranPackage />
+        <Faq />
         <WaitlistForm />
       </main>
       <Footer />

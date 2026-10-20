@@ -1,0 +1,10 @@
+.legal { padding-block: clamp(96px, 12vw, 140px) clamp(48px, 8vw, 96px); }
+.legal__inner { max-width: 46rem; display: grid; gap: 14px; }
+.legal__back { color: var(--ink-soft); text-decoration: none; font-size: var(--step--1); font-weight: 700; justify-self: start; }
+.legal__back:hover { color: var(--ink); text-decoration: underline; }
+.legal h1 { font-size: var(--step-3); line-height: 1.05; }
+.legal__updated { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
+.legal__intro { font-size: var(--step-1); color: var(--ink-soft); margin: 6px 0 14px; }
+.legal section { display: grid; gap: 8px; margin-top: 18px; }
+.legal h2 { font-size: var(--step-1); }
+.legal section p { margin: 0; }

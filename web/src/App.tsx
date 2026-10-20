@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/shared/errors/ErrorBoundary";
 import { LocaleProvider, useLocale } from "@/shared/i18n/LocaleProvider";
 import { Loading } from "@/shared/ui/Loading";
 import { LandingPage } from "@/site/pages/LandingPage";
+import { LegalPage } from "@/site/pages/LegalPage";
 import { NotFoundPage } from "@/site/pages/NotFoundPage";
 import { SiteShell } from "@/site/SiteShell";
 
@@ -23,6 +24,8 @@ export default function App() {
           <Routes>
             <Route element={<SiteShell />}>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/privacy" element={<LegalPage kind="privacy" />} />
+              <Route path="/terms" element={<LegalPage kind="terms" />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             {/* Short links people type or remember. */}

@@ -4,17 +4,18 @@ import { Hanko } from "@/shared/ui/Hanko";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
 import "./layout.css";
 
-export function TopBar() {
+/** On the landing page the links jump within it; on other pages they lead back to it. */
+export function TopBar({ onLanding = true }: { onLanding?: boolean }) {
   const { t } = useSiteT();
   return (
     <header className="topbar">
-      <a className="topbar__brand" href="#top">
+      <a className="topbar__brand" href={onLanding ? "#top" : "/"}>
         <Hanko />
         <span className="topbar__name">{t.brand.name}</span>
       </a>
       <nav className="topbar__nav" aria-label={t.nav.ariaLabel}>
         {t.nav.links.map((item) => (
-          <a key={item.href} href={item.href}>
+          <a key={item.href} href={onLanding ? item.href : `/${item.href}`}>
             {item.label}
           </a>
         ))}
