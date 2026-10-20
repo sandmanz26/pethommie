@@ -14,6 +14,7 @@ import { Checkbox } from "@/app/design-system/atoms/Checkbox";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
+import { UpgradeCard } from "@/app/design-system/organisms/UpgradeCard";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { Field } from "@/app/design-system/molecules/Field";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
@@ -21,7 +22,7 @@ import "./pages.css";
 
 export function SettingsPage() {
   const { data, setHotel, saveSettings, loadSample, reset, importData } = useStore();
-  const { mode } = useMode();
+  const { mode, setMode } = useMode();
   const { t } = useAppT();
   const navigate = useNavigate();
   const account = useAccount();
@@ -88,6 +89,15 @@ export function SettingsPage() {
   return (
     <>
       <PageHeader art="app-hotel" title={t.settings.title} />
+
+      {mode === "simple" && (
+        <UpgradeCard
+          onUpgrade={() => {
+            setMode("advanced");
+            navigate("/app/dashboard");
+          }}
+        />
+      )}
 
       <form className="ds-form__section pg-settings" onSubmit={save} noValidate>
         <Heading level={2} size="md">{t.settings.hotel}</Heading>

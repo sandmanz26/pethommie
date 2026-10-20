@@ -465,6 +465,18 @@ export const appId: AppMessages = {
     advancedLead: "Semuanya: pelanggan, tagihan, invoice, pajak, dan semua opsi.",
     note: "Hanya mengubah tampilan. Data dan aturan tetap sama, jadi boleh ganti kapan saja.",
   },
+  upgrade: {
+    title: "Siap untuk lebih? Pindah ke mode Lengkap",
+    lead: "Sederhana membuat hari tetap ringan. Saat hotel tumbuh, Lengkap menambahkan urusan kantor belakang, dengan data yang sama.",
+    items: [
+      { title: "Pelanggan", body: "Semua pemilik, total belanja, tagihan, dan siapa yang belum kembali." },
+      { title: "Pembayaran dan kuitansi", body: "Tagihan yang perlu dikejar, buku kas, kuitansi untuk setiap pembayaran." },
+      { title: "Invoice", body: "Invoice bernomor, pengingat jatuh tempo, register untuk akuntan." },
+      { title: "Pajak", body: "Perkiraan PPh final dan PPN per bulan, lengkap dengan jatuh temponya." },
+    ],
+    cta: "Pindah ke Lengkap",
+    note: "Datamu tetap seperti sekarang. Bisa kembali kapan saja.",
+  },
   more: {
     title: "Lainnya",
     lead: "Semua yang lain di Pethommie.",

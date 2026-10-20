@@ -465,6 +465,18 @@ export const appEn = {
     advancedLead: "Everything: customers, payments, invoices, tax and every option.",
     note: "Only changes what you see. Your data and the rules stay the same, so you can switch any time.",
   },
+  upgrade: {
+    title: "Ready for more? Switch to Advanced",
+    lead: "Simple keeps the day light. When the hotel grows, Advanced adds the back office, on the same data.",
+    items: [
+      { title: "Customers", body: "Every owner, what they spent, what they owe, who hasn't been back." },
+      { title: "Payments and receipts", body: "Debts to chase, a cash book, a receipt for every payment." },
+      { title: "Invoices", body: "Numbered invoices, past-due reminders, a register for the accountant." },
+      { title: "Tax", body: "A monthly estimate of PPh final and PPN, with due dates." },
+    ],
+    cta: "Switch to Advanced",
+    note: "Your data stays as it is. Switch back any time.",
+  },
   more: {
     title: "More",
     lead: "Everything else in Pethommie.",

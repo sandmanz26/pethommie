@@ -73,6 +73,18 @@ describe("simple and advanced mode", () => {
     expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Invoices", "Reports", "Tax", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
   });
 
+  it("offers the upgrade in Settings on Simple, and takes you to the dashboard on Advanced", async () => {
+    const user = await open("/app/settings");
+    const card = within(await screen.findByRole("region", { name: /switch to advanced/i }));
+    expect(card.getByText("Invoices")).toBeInTheDocument();
+    await user.click(card.getByRole("button", { name: "Switch to Advanced" }));
+    expect(localStorage.getItem(modeKeyFor("acct-test"))).toBe("advanced");
+    expect(await screen.findByRole("heading", { name: "Dashboard", level: 1 })).toBeInTheDocument();
+    await user.click(within(screen.getByRole("complementary")).getByRole("link", { name: "Settings" }));
+    await screen.findByRole("heading", { name: "Settings", level: 1 });
+    expect(screen.queryByRole("region", { name: /switch to advanced/i })).not.toBeInTheDocument();
+  });
+
   it("can be switched in Settings too, and says what each one is", async () => {
     const user = await open("/app/settings");
     const main = within(await screen.findByRole("main"));
