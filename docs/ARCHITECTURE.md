@@ -80,7 +80,7 @@ the layout shows as a warning.
 ### Persistence
 
 `HotelRepository` (`store/storage.ts`) is the only thing that knows where data lives. Today:
-`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 2`.
+`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 3`.
 
 - Reads are validated (`parseStored`). Anything unreadable or from a newer app version comes
   back as empty data **and the original is copied to `<key>.backup` first**, because
@@ -88,8 +88,18 @@ the layout shows as a warning.
 - Older documents are upgraded on read. v1 → v2 turns each booking's single `deposit` into a
   `payments` list (so no money is lost) and adds `arrival`, `careLog` and `reportsSent`. The
   untouched v1 document is kept once as `<key>.v1.backup`.
+- v2 → v3 adds hotel `settings` (business, invoice and tax), `charges` and `companionIds` on each booking,
+  `language` on each owner, and `invoices`. Old data is kept as it was (`<key>.v2.backup`), nothing is dropped.
 - When `HotelData` changes shape: bump `CURRENT_VERSION`, add a step that upgrades the previous
   version inside `parseStored`, add tests for old documents (see `storage.test.ts`).
+
+### Invoices and tax (`domain/invoices.ts`, `domain/tax.ts`)
+
+An invoice is an immutable **snapshot** of a stay (lines, totals, seller and customer as they were). Numbers are
+`PREFIX-YYYY-0001`, per year, never reused: a mistake is fixed by voiding (the number stays used) and issuing again.
+`tax.ts` turns payments, finished stays and invoices into monthly turnover and an **estimate** of PPh final; the rules
+and their dates are constants in that file and in `docs/product/pajak.md`. Nothing there is a filing. When the rules
+change, change the constants, the copy (`taxPage`, `settingsTax`) and `TAX_RULES_AS_OF` together.
 
 ### A stay, end to end
 

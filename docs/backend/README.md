@@ -29,6 +29,7 @@ requirement rules it out (see §6).
 | Piece | Where | Proven by |
 |---|---|---|
 | Schema, constraints, row level security | `backend/supabase/migrations/0001_init.sql` | `web/src/app/sync/schema.test.ts` runs it on a real Postgres (PGlite) |
+| Charges, shared cages, invoices (tables `charges`, `booking_pets`, `invoices`; an issued invoice can only be voided) | `backend/supabase/migrations/0002_charges_companions_invoices.sql` | same PGlite tests, incl. the invoice protection trigger |
 | Data ⇄ rows | `web/src/app/sync/rows.ts` | round-trips the whole sample hotel through the database |
 | Stable UUIDs for old ids | `web/src/app/sync/ids.ts` | unit tests; `newId()` now always makes a UUID |
 | Diff / apply / merge of changes | `web/src/app/sync/diff.ts` | replays a day's actions: each step's diff rebuilds the next state |
@@ -41,6 +42,8 @@ count); check-out must be after check-in; payments are whole rupiah above zero; 
 hotel's record; a hotel's members see only their hotel, strangers see nothing, staff can work but not manage
 members; the sign-up list takes entries from anyone and can be read by no one through the API. Each of these was
 checked by breaking the rule and seeing the test fail.
+
+Email and browser notifications are planned in [notifications.md](notifications.md) (not built).
 
 ## 3. Shape
 

@@ -18,6 +18,8 @@ Dua pertanyaan: (1) apakah operator bisa menjalankan satu hari kerja di aplikasi
 | H3 | Halaman Pelanggan, Tagihan, Laporan, Bantuan; pulihkan cadangan | Tinggi | Sedang | Tidak | ✅ |
 | H4 | Landing lebih meyakinkan: tur produk dengan layar asli, FAQ, legal, footer | Tinggi | Sedang | Tidak | ✅ |
 | H5 | Persiapan backend: skema, pemetaan, sinkron, server tiruan, rencana | Tinggi | Sedang | Tidak | ✅ (belum tersambung) |
+| H6 | Invoice dua bahasa, daftar invoice bulanan, laporan pajak (perkiraan), biaya tambahan, hewan satu kandang, bahasa per pemilik | Tinggi | Tinggi | Tidak | ✅ ([pajak.md](pajak.md), [fleksibilitas.md](fleksibilitas.md)) |
+| H7 | Rencana email dan notifikasi browser | Sedang | Rendah | Tidak (rencana) | ✅ rencana: [notifications.md](../backend/notifications.md) |
 | I | Link booking publik dengan DP | Tinggi (janji utama landing) | Tinggi | **Ya** | Berikutnya |
 | J | Foto di rapor dan kartu vaksin | Tinggi | Sedang | **Ya** (penyimpanan file) | Setelah I |
 | K | Akun asli, banyak perangkat, staf | Tinggi | Tinggi | **Ya** | Bersama I |
