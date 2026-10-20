@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { newId } from "@/app/domain/logic";
 import { normaliseWhatsapp } from "@/shared/lib/phone";
+import { guestFromRequest } from "@/app/domain/guest";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -24,6 +25,8 @@ export function BookingNewPage() {
         initialCageId={params.get("cage") ?? undefined}
         initialCheckIn={params.get("in") ?? undefined}
         initialCheckOut={params.get("out") ?? undefined}
+        initialSource={params.get("source") === "link" ? "link" : undefined}
+        initialGuest={params.has("wa") || params.has("owner") ? guestFromRequest(data, { owner: params.get("owner") ?? "", wa: params.get("wa") ?? "", petName: params.get("petName") ?? "", species: params.get("species") ?? "" }) : undefined}
         onCancel={() => navigate(-1)}
         onSubmit={(booking, guest) => {
           // A new owner and a new pet are saved first, so the stay can point at them.

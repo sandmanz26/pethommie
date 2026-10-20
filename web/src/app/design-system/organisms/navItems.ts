@@ -1,6 +1,6 @@
 import type { NavArt } from "@/app/design-system/atoms/art";
 
-export type NavKey = "today" | "dashboard" | "transactions" | "bookings" | "calendar" | "customers" | "payments" | "invoices" | "tax" | "reports" | "pets" | "cages" | "settings" | "help" | "more";
+export type NavKey = "today" | "dashboard" | "link" | "transactions" | "bookings" | "calendar" | "customers" | "payments" | "invoices" | "tax" | "reports" | "pets" | "cages" | "settings" | "help" | "more";
 export type NavItem = { to: string; key: NavKey; art: NavArt; end?: boolean; advanced?: boolean };
 
 const today: NavItem = { to: "/app", key: "today", art: "today", end: true };
@@ -15,12 +15,13 @@ const invoices: NavItem = { to: "/app/invoices", key: "invoices", art: "invoices
 const tax: NavItem = { to: "/app/tax", key: "tax", art: "tax", advanced: true };
 const reports: NavItem = { to: "/app/reports", key: "reports", art: "reports" };
 const cages: NavItem = { to: "/app/cages", key: "cages", art: "cages" };
+const link: NavItem = { to: "/app/link", key: "link", art: "link" };
 const settings: NavItem = { to: "/app/settings", key: "settings", art: "settings" };
 const help: NavItem = { to: "/app/help", key: "help", art: "help" };
 
 /** Every page, in sidebar order. Advanced-only pages are left out in simple mode. */
 export const sideItems = (advanced: boolean): NavItem[] =>
-  [today, dashboard, bookings, calendar, customers, payments, transactions, invoices, reports, tax, pets, cages, settings, help].filter((i) => advanced || !i.advanced);
+  [today, dashboard, bookings, calendar, customers, payments, transactions, invoices, reports, tax, pets, cages, link, settings, help].filter((i) => advanced || !i.advanced);
 
 /** The four things used all day sit on the phone's tab bar; the rest are one tap away under "More". */
 export const tabItems: NavItem[] = [today, bookings, calendar, pets, { to: "/app/more", key: "more", art: "more" }];

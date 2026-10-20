@@ -1,0 +1,30 @@
+/* A pet hotel's public booking page: the hotel first, then a short request form. */
+.book { min-height: 100vh; padding-block: clamp(24px, 6vw, 56px); }
+.book__inner { max-width: 40rem; display: grid; gap: 18px; padding-inline: var(--gutter); }
+.book--bad .book__inner { min-height: 70vh; align-content: center; justify-items: start; }
+.book--bad h1 { font-size: var(--step-2); }
+.book--bad p { color: var(--ink-soft); }
+.book__top { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
+.book__top h1 { font-size: var(--step-2); line-height: 1.1; }
+.book__top p { margin: 2px 0 0; color: var(--ink-soft); }
+.book__avatar { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; background: var(--seal); color: #fff; font: 700 1.6rem var(--font-display); }
+.book__card, .book__form { padding: clamp(16px, 4vw, 24px); border-radius: 20px; background: color-mix(in srgb, #fff 70%, var(--paper)); border: 1px solid var(--wash); }
+.book__card { display: grid; gap: 10px; }
+.book__card h2, .book__form h2 { font-size: var(--step-1); }
+.book__prices { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.book__prices li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--paper); font-variant-numeric: tabular-nums; }
+.book__prices small { font-weight: 400; color: var(--ink-soft); }
+.book__takes { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
+.book__note { margin: 0; padding: 10px 12px; border-left: 3px solid var(--seal); background: var(--paper); border-radius: 0 10px 10px 0; }
+.book__lead { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
+.book__form textarea { font: inherit; font-weight: 400; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--wash); background: #fff; color: var(--ink); width: 100%; resize: vertical; }
+.book__form textarea:focus { border-color: var(--ink); outline: none; }
+.book__form small { font-weight: 400; color: var(--ink-soft); }
+.book__form [aria-invalid="true"] { border-color: var(--seal) !important; }
+.book__error { color: var(--seal); font-weight: 600; font-size: 0.85rem; }
+.book__sent { margin: 0; padding: 10px 12px; border-radius: 10px; background: #e2efe3; color: #1f4d30; font-weight: 600; }
+.book__wa { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
+.book__foot { text-align: center; font-size: var(--step--1); }
+.book__foot a { color: var(--ink-soft); }
+@media (max-width: 480px) { .book__top { grid-template-columns: auto 1fr; } .book__top .lang-switch, .book__top > :last-child { grid-column: 1 / -1; justify-self: start; } }
+.book__field { display: grid; gap: 6px; align-content: start; min-width: 0; }

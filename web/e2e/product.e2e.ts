@@ -88,6 +88,7 @@ for (const [name, viewport, locale] of [
     test.use({ viewport })
 
     test('every operator screen is free of accessibility violations and fits the width', async ({ page }) => {
+      test.setTimeout(120_000) // twenty-odd screens, each scanned
       await signInWithSampleData(page, locale)
       await page.goto('/app')
       const bookingHref = await page.locator('a[href*="#care"]').first().getAttribute('href')
@@ -97,7 +98,7 @@ for (const [name, viewport, locale] of [
       const invoiceHref = (await page.locator('a[href^="/app/invoices/"]').first().getAttribute('href')) ?? '/app'
       const paths = [receiptHref, invoiceHref,
         '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings',
-        '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/dashboard', '/app/transactions', '/app/help', bookingHref!.replace('#care', ''),
+        '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/dashboard', '/app/transactions', '/app/link', '/app/help', bookingHref!.replace('#care', ''),
       ]
       for (const path of paths) {
         await page.goto(path)
@@ -107,6 +108,17 @@ for (const [name, viewport, locale] of [
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
         expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0)
       }
+    })
+
+    test('the public booking page from the link is accessible and fits the width', async ({ page }) => {
+      await signInWithSampleData(page, locale)
+      await page.goto('/app/link')
+      const url = await page.locator('input[readonly]').inputValue()
+      await page.goto(url.replace(/^https?:\/\/[^/]+/, ''))
+      await page.getByRole('heading', { level: 1 }).waitFor()
+      const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze()
+      expect(violations.map((v) => `${v.id}: ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
     })
   })
 }

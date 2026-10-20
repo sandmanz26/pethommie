@@ -6,6 +6,7 @@ import { Loading } from "@/shared/ui/Loading";
 import { LandingPage } from "@/site/pages/LandingPage";
 import { LegalPage } from "@/site/pages/LegalPage";
 import { NotFoundPage } from "@/site/pages/NotFoundPage";
+import { BookPage } from "@/site/pages/BookPage";
 import { SiteShell } from "@/site/SiteShell";
 
 // The operator app is its own bundle so the landing page stays light.
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/privacy" element={<LegalPage kind="privacy" />} />
               <Route path="/terms" element={<LegalPage kind="terms" />} />
+              <Route path="/book" element={<BookPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
             {/* Short links people type or remember. */}

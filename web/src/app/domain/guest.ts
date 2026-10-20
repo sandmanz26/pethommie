@@ -36,3 +36,18 @@ export function guestErrors(data: HotelData, g: GuestDraft, words: { owner: stri
   if (g.newPet && !g.newPet.name.trim()) err.petName = words.petName;
   return err;
 }
+
+/**
+ * The guest of a request from the booking link: the owner on record with that number (and their pet of that name,
+ * if they have one), or a new owner and pet filled in from the request.
+ */
+export function guestFromRequest(data: HotelData, r: { owner: string; wa: string; petName: string; species: string }): GuestDraft {
+  const species = (["cat", "dog", "rabbit", "other"] as Species[]).find((x) => x === r.species) ?? "cat";
+  const known = ownerWithNumber(data, r.wa);
+  const name = r.petName.trim();
+  if (known) {
+    const pet = data.pets.find((p) => p.ownerId === known.id && p.name.toLowerCase() === name.toLowerCase());
+    return { ownerId: known.id, newOwner: null, petIds: pet ? [pet.id] : [], newPet: pet || !name ? null : { name, species } };
+  }
+  return { ownerId: null, newOwner: { name: r.owner.trim(), whatsapp: r.wa }, petIds: [], newPet: { name, species } };
+}

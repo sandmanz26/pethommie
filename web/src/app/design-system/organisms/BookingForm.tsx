@@ -33,6 +33,8 @@ export function BookingForm({
   initialCageId,
   initialCheckIn,
   initialCheckOut,
+  initialGuest,
+  initialSource,
   simple,
   onSubmit,
   onCancel,
@@ -43,6 +45,9 @@ export function BookingForm({
   initialCageId?: string;
   initialCheckIn?: string;
   initialCheckOut?: string;
+  /** Prefill from a request made on the booking link. */
+  initialGuest?: GuestDraft;
+  initialSource?: BookingSource;
   /** Simple mode: no cage-size filter, so the cage list is just the free ones. */
   simple?: boolean;
   /** The booking, and who it is for: the page saves a new owner or pet first. `booking.petId` is empty when the only pet is new. */
@@ -54,6 +59,7 @@ export function BookingForm({
   const today = todayISO();
 
   const [guest, setGuest] = useState<GuestDraft>(() => {
+    if (initialGuest) return initialGuest;
     const pet = data.pets.find((p) => p.id === initialPetId);
     if (pet) return { ownerId: pet.ownerId, newOwner: null, petIds: [pet.id], newPet: null };
     return data.owners.length ? emptyGuest() : { ownerId: null, newOwner: { name: "", whatsapp: "" }, petIds: [], newPet: { name: "", species: "cat" } };
@@ -64,7 +70,7 @@ export function BookingForm({
   const [cageId, setCageId] = useState(initialCageId ?? "");
   const [deposit, setDeposit] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("transfer");
-  const [source, setSource] = useState<BookingSource>("whatsapp");
+  const [source, setSource] = useState<BookingSource>(initialSource ?? "whatsapp");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [guestErr, setGuestErr] = useState<GuestErrors>({});
