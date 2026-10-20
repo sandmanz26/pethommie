@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { petNames } from "@/app/domain/invoices";
-import { receiptNumbers } from "@/app/domain/ledger";
+import { receiptNumbers, standingAfter } from "@/app/domain/ledger";
 import { receiptMessage, waLink } from "@/app/domain/messages";
 import type { Language } from "@/app/domain/types";
 import { useStore } from "@/app/store/AppStore";
@@ -11,7 +11,7 @@ import { Muted } from "@/app/design-system/atoms/Text";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
-import { ReceiptDocument, standingAfter } from "@/app/design-system/organisms/ReceiptDocument";
+import { ReceiptDocument } from "@/app/design-system/organisms/ReceiptDocument";
 import "./pages.css";
 
 /** The receipt for one payment, to print, save as a PDF, or send on WhatsApp. */

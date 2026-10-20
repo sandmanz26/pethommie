@@ -3,13 +3,13 @@ import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { en } from "@/site/i18n/en";
-import { FILM_ORDER, films } from "./film";
+import { film } from "./film";
 
 const PUBLIC = fileURLToPath(new URL("../../../public", import.meta.url));
 const FPS = 12;
 
-describe.each(FILM_ORDER)("film %s", (id) => {
-  const film = films[id];
+describe("the film", () => {
+  const id = film.id;
 
   it("has exactly the frames it says it has, numbered without gaps", () => {
     const files = readdirSync(`${PUBLIC}/films/${id}`).filter((f) => /^f\d{4}\.webp$/.test(f)).sort();
@@ -29,7 +29,7 @@ describe.each(FILM_ORDER)("film %s", (id) => {
   });
 
   it("places every caption inside the film, in order", () => {
-    const at = en.chapters[id].map((c) => c.at);
+    const at = en.chapters.map((c) => c.at);
     expect(at.length).toBeGreaterThan(0);
     at.forEach((t) => {
       expect(t).toBeGreaterThan(0);
@@ -40,7 +40,7 @@ describe.each(FILM_ORDER)("film %s", (id) => {
   });
 
   it("starts the story clock at zero and keeps it in order", () => {
-    const at = en.film.clock[id].map((b) => b.at);
+    const at = en.film.clock.map((b) => b.at);
     expect(at[0]).toBe(0);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
     expect(at.at(-1)!).toBeLessThanOrEqual(film.durationSeconds);

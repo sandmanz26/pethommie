@@ -3,8 +3,8 @@
 
 /** The small app screen shown beside a caption. */
 export type MomentKind = "profile" | "booking" | "checkin" | "care" | "extra" | "night" | "report" | "pickup";
-/** A caption of the film. `at` is the second of the film it belongs to. */
-export type Chapter = { at: number; moment: MomentKind; when: string; title: string; body: string };
+/** A caption of the film. `at` is the second of the film it belongs to; the moment picks its icon and app screen. */
+export type Chapter = { at: number; moment: MomentKind; title: string; body: string };
 /** The real app screen captured for a feature (scripts/capture-features.mjs). */
 export type FeatureShot = "calendar" | "checkin" | "care" | "report" | "invoice" | "tax";
 
@@ -46,31 +46,19 @@ export const en = {
     label: "One stay",
     skip: "Skip the story",
     inApp: "In Pethommie",
-    switcher: { label: "Hero film", options: { ink: "V1 · Ink", turntable: "V2 · Turntable" }, drag: "Drag to move" },
-    /** Story clock under each film, keyed to the video's beats (seconds). */
-    clock: {
-      ink: [
-        { at: 0, label: "D-3 · Booking in" },
-        { at: 3, label: "Day 1 · 08:30" },
-        { at: 5.5, label: "Day 1 · 09:15" },
-        { at: 8, label: "Day 1 · 21:00" },
-        { at: 10.8, label: "Day 2 · 07:30" },
-        { at: 12.8, label: "Day 5 · 16:00" },
-      ],
-      turntable: [
-        { at: 0, label: "D-3 · Booking in" },
-        { at: 1, label: "D-3 · New regulars" },
-        { at: 3, label: "Day 1 · 08:30" },
-        { at: 5, label: "Day 1 · 09:15" },
-        { at: 7, label: "Day 1 · 10:00" },
-        { at: 9, label: "Day 1 · 15:00" },
-        { at: 11, label: "Day 1 · 21:00" },
-        { at: 13, label: "Day 2 · 07:30" },
-        { at: 15, label: "Day 4 · 10:00" },
-        { at: 16.5, label: "Day 5 · 16:00" },
-      ],
-    },
-    /** The small app screens shown next to each caption. Sample data, in the visitor's language. */
+    /** Story clock under the film: the stage of the stay, keyed to the video's beats (seconds). */
+    clock: [
+      { at: 0, label: "Booking in" },
+      { at: 1, label: "New regulars" },
+      { at: 3, label: "Arrival" },
+      { at: 5, label: "Check-in" },
+      { at: 7, label: "Playtime" },
+      { at: 9, label: "Grooming" },
+      { at: 11, label: "Lights out" },
+      { at: 13, label: "Morning report" },
+      { at: 15, label: "Happy days" },
+      { at: 16.5, label: "Pickup" },
+    ],
     moments: {
       profile: { title: "Mochi", meta: "Persian cat · Rina K.", chips: ["Vaccine OK", "3 stays"] },
       booking: { title: "Cage calendar", rows: [["S-01", "Mochi"], ["S-02", "Kopi"]], freeCage: "M-01", free: "Free", note: "S-01 booked · 20 → 24 Oct" },
@@ -82,26 +70,17 @@ export const en = {
       pickup: { title: "INV-2026-0012", status: "Paid", lines: [["Total", "Rp275.000"], ["Balance", "Rp0"]], note: "Next stay: two taps" },
     },
   },
-  /** Captions per film. `moment` picks the app screen shown beside it. */
-  chapters: {
-    ink: [
-      { at: 3.8, moment: "booking", when: "Day 1 · 08:30 · Drop-off", title: "Every cage, booked once.", body: "Bookings sit on the cage calendar. A taken cage can't be booked twice." },
-      { at: 6.5, moment: "checkin", when: "Day 1 · 09:15 · Check-in", title: "Check-in in under a minute.", body: "Health, fleas, weight and food on record. Expiring vaccines get flagged." },
-      { at: 9.5, moment: "care", when: "Day 1 · 21:00 · Night shift", title: "Nothing forgotten at handover.", body: "Meals, play, toilet and medicine: one tap each, with the time." },
-      { at: 12, moment: "report", when: "Day 2 · 07:30 · Morning report", title: "Reports go out. Chats go down.", body: "The day's report is written for you. Add a photo and send it from your WhatsApp." },
-      { at: 14, moment: "pickup", when: "Day 5 · 16:00 · Pickup", title: "Paid in full, back next month.", body: "Payments, invoice and history in one place. Regulars rebook in seconds." },
-    ],
-    turntable: [
-      { at: 2, moment: "profile", when: "D-3 · Pet profiles", title: "Every guest has a profile.", body: "Pet, owner, WhatsApp and vaccines in one place. Regulars are saved." },
-      { at: 4, moment: "booking", when: "Day 1 · 08:30 · Arrival", title: "Every cage, booked once.", body: "Bookings sit on the cage calendar. A taken cage can't be booked twice." },
-      { at: 6, moment: "checkin", when: "Day 1 · 09:15 · Check-in", title: "Check-in in under a minute.", body: "Health, fleas, weight and food on record. Expiring vaccines get flagged." },
-      { at: 8, moment: "care", when: "Day 1 · 10:00 · Playtime", title: "Every play session, on record.", body: "Meals, play, toilet and medicine: one tap each, with the time." },
-      { at: 10, moment: "extra", when: "Day 1 · 15:00 · Grooming", title: "Extras land on the same bill.", body: "Grooming, pickup or a discount, added to the stay and its invoice." },
-      { at: 12, moment: "night", when: "Day 1 · 21:00 · Lights out", title: "Know every cage, every night.", body: "Who sleeps where tonight, and what's free tomorrow." },
-      { at: 14, moment: "report", when: "Day 2 · 07:30 · Morning report", title: "Reports go out. Chats go down.", body: "The day's report is written for you. Add a photo and send it from your WhatsApp." },
-      { at: 16.8, moment: "pickup", when: "Day 5 · 16:00 · Pickup", title: "Paid in full, back next month.", body: "Payments, invoice and history in one place. Regulars rebook in seconds." },
-    ],
-  } as Record<"ink" | "turntable", Chapter[]>,
+  /** Captions of the film. `moment` picks the icon and the app screen shown beside it. */
+  chapters: [
+    { at: 2, moment: "profile", title: "Every guest has a profile.", body: "Pet, owner, WhatsApp and vaccines in one place. Regulars are saved." },
+    { at: 4, moment: "booking", title: "Every cage, booked once.", body: "Bookings sit on the cage calendar. A taken cage can't be booked twice." },
+    { at: 6, moment: "checkin", title: "Check-in in under a minute.", body: "Health, fleas, weight and food on record. Expiring vaccines get flagged." },
+    { at: 8, moment: "care", title: "Every play session, on record.", body: "Meals, play, toilet and medicine: one tap each, with the time." },
+    { at: 10, moment: "extra", title: "Extras land on the same bill.", body: "Grooming, pickup or a discount, added to the stay and its invoice." },
+    { at: 12, moment: "night", title: "Know every cage, every night.", body: "Who sleeps where tonight, and what's free tomorrow." },
+    { at: 14, moment: "report", title: "Reports go out. Chats go down.", body: "The day's report is written for you. Add a photo and send it from your WhatsApp." },
+    { at: 16.8, moment: "pickup", title: "Paid in full, back next month.", body: "Payments, invoice and history in one place. Regulars rebook in seconds." },
+  ] as Chapter[],
   tour: {
     eyebrow: "See it",
     title: "The real app, not a mockup.",

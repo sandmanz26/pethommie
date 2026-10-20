@@ -54,6 +54,7 @@ NAV_ICONS = [
 NAV_SHEETS = [
     (NAV_SHEET, 4, NAV_ICONS),
     ("icons/nav_sheet_2.png", 2, ["dashboard", "link", "transactions", "upgrade"]),
+    ("icons/nav_sheet_3.png", 2, ["chat", "night", "grooming", "play"]),
 ]
 NAV_SIZE = 96  # shown at 24 to 28 CSS px
 

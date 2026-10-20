@@ -2,11 +2,11 @@
    Visual world: sumi-e ink on rice paper. Black ink does the work;
    vermilion (the hanko seal) is the only color and is used sparingly. */
 body.site {
-  --paper: #f2ede2;      /* rice paper, matches the ink film's ground */
-  --paper-deep: #e7e0d1; /* folded edge, card ground */
+  --paper: #f6ebd8;      /* warm paper, matches the film's ground */
+  --paper-deep: #ecdbbf; /* folded edge, card ground */
   --ink: #1b1a17;        /* sumi ink */
   --ink-soft: #57534a;   /* diluted wash, secondary text */
-  --wash: #b9b2a3;       /* hairlines, faint strokes */
+  --wash: #c9baa0;       /* hairlines, faint strokes */
   --seal: #b8321f;       /* vermilion hanko */
   --seal-soft: #e36a52;  /* seal on dark ground */
   --ink-line: #3a3833;   /* hairline on dark ground */
@@ -24,9 +24,3 @@ body.site {
   --radius-pill: 999px;
 }
 
-/* V2 turntable film: warmer paper so the page matches the video ground. */
-body.site[data-film="turntable"] {
-  --paper: #f6ebd8;
-  --paper-deep: #ecdbbf;
-  --wash: #c9baa0;
-}

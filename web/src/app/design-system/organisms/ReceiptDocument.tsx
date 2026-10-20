@@ -1,17 +1,10 @@
-import type { Booking, Cage, HotelData, Language, Owner, Payment } from "@/app/domain/types";
-import { bookingTotal, dayOf, formatDate, formatRupiah, timeOf } from "@/app/domain/logic";
-import { signedAmount } from "@/app/domain/payments";
+import type { Booking, HotelData, Language, Owner, Payment } from "@/app/domain/types";
+import { dayOf, formatDate, formatRupiah, timeOf } from "@/app/domain/logic";
+import { standingAfter } from "@/app/domain/ledger";
 import { amountInWords } from "@/app/domain/words";
 import { formatWhatsapp } from "@/shared/lib/phone";
 import { messagesFor } from "@/app/i18n/useAppT";
 import "./organisms.css";
-
-/** What the stay came to as of one payment: everything received up to and including it. */
-export function standingAfter(booking: Booking, cage: Cage | undefined, payment: Payment) {
-  const total = bookingTotal(booking, cage);
-  const paid = booking.payments.filter((p) => p.at <= payment.at).reduce((s, p) => s + signedAmount(p), 0);
-  return { total, paid, balance: Math.max(0, total - paid) };
-}
 
 /**
  * A receipt (kuitansi) for one payment, or a refund note, to print or save as a PDF: who paid, how much in figures

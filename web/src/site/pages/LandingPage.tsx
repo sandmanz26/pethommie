@@ -3,9 +3,7 @@ import { useSiteT } from "@/site/i18n/useSiteT";
 import { TopBar } from "@/site/components/layout/TopBar";
 import { Footer } from "@/site/components/layout/Footer";
 import { InkFilm } from "@/site/components/ink/InkFilm";
-import { FilmSwitcher } from "@/site/components/film-switcher/FilmSwitcher";
-import { films } from "@/site/content/film";
-import { useFilmChoice } from "@/site/hooks/useFilmChoice";
+import { film } from "@/site/content/film";
 import { Hero } from "@/site/sections/Hero";
 import { ProductTour } from "@/site/sections/ProductTour";
 import { Features } from "@/site/sections/Features";
@@ -18,15 +16,13 @@ import { FinalCta } from "@/site/sections/FinalCta";
  * the questions people ask, and one last ask.
  */
 export function LandingPage() {
-  const [filmId, setFilmId] = useFilmChoice();
   const { t } = useSiteT();
-  useDocumentMeta({ title: t.meta.title, description: t.meta.description, themeColor: films[filmId].paper });
+  useDocumentMeta({ title: t.meta.title, description: t.meta.description, themeColor: film.paper });
   return (
     <>
       <TopBar />
       <main id="top">
-        {/* Keyed by film so switching remounts and preloads the new frames. */}
-        <InkFilm key={filmId} film={films[filmId]} intro={<Hero />} />
+        <InkFilm film={film} intro={<Hero />} />
         <ProductTour />
         <Features />
         <Pricing />
@@ -34,7 +30,6 @@ export function LandingPage() {
         <FinalCta />
       </main>
       <Footer />
-      <FilmSwitcher value={filmId} onChange={setFilmId} />
     </>
   );
 }

@@ -19,7 +19,7 @@ const DECK_GAP = 12;
 /**
  * A sticky canvas that scrubs a film's frames with scroll, a deck beside it that shows the opening (the hero)
  * and then the caption of the current moment with the app screen that goes with it, and a story clock along the
- * bottom. Remount it (key by film id) to switch films.
+ * bottom.
  *
  * Wide screens: the deck is a column on the left and the scene fills the rest. Phones and portrait tablets
  * (see ink.css, `--stacked`): the scene sits above the deck. Screen readers get the captions as a list.
@@ -38,7 +38,7 @@ export function InkFilm({ film, intro }: { film: Film; intro: ReactNode }) {
   const box = useRef<{ box: FrameBox; focus: boolean } | undefined>(undefined);
   const dpr = useRef(1);
   const { t } = useSiteT();
-  const chapters = t.chapters[film.id];
+  const chapters = t.chapters;
   const current = useRef(-1);
   const wanted = useRef(0);
 
@@ -64,7 +64,7 @@ export function InkFilm({ film, intro }: { film: Film; intro: ReactNode }) {
     paint(wanted.current);
     if (fillRef.current) fillRef.current.style.width = `${(p * 100).toFixed(2)}%`;
     if (clockRef.current) {
-      const clock = t.film.clock[film.id];
+      const clock = t.film.clock;
       const beat = [...clock].reverse().find((b) => seconds >= b.at) ?? clock[0];
       clockRef.current.textContent = beat.label;
     }
@@ -164,7 +164,7 @@ export function InkFilm({ film, intro }: { film: Film; intro: ReactNode }) {
       <ol className="film__script">
         {chapters.map((c) => (
           <li key={c.at}>
-            {c.when}: {c.title} {c.body}
+            {c.title} {c.body}
           </li>
         ))}
       </ol>

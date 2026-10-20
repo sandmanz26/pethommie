@@ -10,8 +10,8 @@ describe("site copy", () => {
 
   it("times captions and the clock identically, because it is the same film", () => {
     const times = (m: typeof en) => ({
-      chapters: Object.fromEntries(Object.entries(m.chapters).map(([film, list]) => [film, list.map((c) => [c.at, c.moment])])),
-      clock: Object.fromEntries(Object.entries(m.film.clock).map(([film, list]) => [film, list.map((b) => b.at)])),
+      chapters: m.chapters.map((c) => [c.at, c.moment]),
+      clock: m.film.clock.map((b) => b.at),
     });
     expect(times(id)).toEqual(times(en));
   });

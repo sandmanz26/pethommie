@@ -1,9 +1,9 @@
 import { toCsv } from "./csv";
 import { invoicePayment, petNames } from "./invoices";
-import { dayOf, nights } from "./logic";
+import { bookingTotal, dayOf, nights } from "./logic";
 import { paidAmount, signedAmount } from "./payments";
 import type { Period } from "./reports";
-import type { Booking, HotelData, ISODate, Invoice, Owner, Payment, PaymentKind, PaymentMethod } from "./types";
+import type { Booking, Cage, HotelData, ISODate, Invoice, Owner, Payment, PaymentKind, PaymentMethod } from "./types";
 
 /** Every payment as a line in a cash book: when, who, how, and a receipt number to quote. */
 
@@ -113,3 +113,10 @@ export function invoiceBalance(data: HotelData, invoice: Invoice): number {
 
 /** Days an overdue invoice is late; 0 when it isn't. */
 export const daysLate = (invoice: Invoice, today: ISODate) => (invoice.dueOn && invoice.dueOn < today ? nights(invoice.dueOn, today) : 0);
+
+/** What a stay came to as of one payment: everything received up to and including it. */
+export function standingAfter(booking: Booking, cage: Cage | undefined, payment: Payment) {
+  const total = bookingTotal(booking, cage);
+  const paid = booking.payments.filter((p) => p.at <= payment.at).reduce((s, p) => s + signedAmount(p), 0);
+  return { total, paid, balance: Math.max(0, total - paid) };
+}
