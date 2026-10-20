@@ -99,6 +99,20 @@ implementation saves entries to `localStorage` and the form shows a "demo mode"
 note. When an API exists, add a store that calls it and export it as
 `waitlistStore`; the form does not need to change.
 
+## Website
+
+Sections of the landing page (`src/site/sections`): the film, How it works, Product tour (real screens), Features,
+Simple/Advanced, Daily report, Trust, Lebaran package, FAQ, Waitlist; plus `/privacy` and `/terms`
+(`site/pages/LegalPage.tsx`, words in the site copy, written to describe what the product does today). Nothing on it
+is invented: there are no testimonials or customer numbers, and what isn't built is marked **Coming soon**.
+
+The tour images are captured from the running app: `npm run build && npx vite preview --port 4173`, then
+`node scripts/capture-screens.mjs` (set `PW_CHROMIUM` if needed), and commit `public/screens/`. Run it again when the
+app's look changes.
+
+Company name, contact email and WhatsApp for the footer, legal pages and Help come from environment variables
+(`web/.env.example`); anything unset is not shown.
+
 ## Operator app (`/app`, no backend yet)
 
 The SaaS lives under `/app` as its own lazily-loaded bundle. A first visit goes to
@@ -113,13 +127,20 @@ Everything else under `/app` needs an account, and each account has its own hote
 Accounts are a **mock** for now (see below); the pages talk to an `AuthService` interface, so a real
 backend replaces one file.
 
+Two modes, switched in the sidebar, on the More page or in Settings (kept per account, and only changing what is
+shown): **Simple** is the everyday core with fewer fields (quick check-in, one-tap "paid in full", a care log you fill
+in with taps); **Advanced** adds Customers, Payments, Reports and every option. On a phone the tab bar has the four
+everyday pages plus More.
+
 Pages: Today (arrivals, departures, who is staying and whether their report went out,
 vaccine alerts, a "getting started" list for new hotels), Bookings (upcoming / staying /
 past), the booking page (check-in record, payments, daily care log, the report for the owner,
 ready-made WhatsApp messages, change dates or cage, cancel), Calendar (14 days by cage; tap a
 free day to book it), New booking (only free cages are offered, so a cage can't be double-booked;
 a new pet + owner can be added inline), Pets (search, vaccine status), Cages (tonight's status,
-add/edit), Settings (hotel profile, language, JSON backup, reset).
+add/edit), Customers and a customer's page (advanced), Payments: what is owed, grouped by urgency, with a WhatsApp
+reminder ready (advanced), Reports: occupancy, money received, returning guests, CSV export (advanced), Help, and Settings
+(hotel profile, mode, language, download and restore a JSON backup, reset).
 
 Check-out asks first when money is still owed. Payments are recorded by hand (cash, QRIS,
 transfer); nothing here talks to a bank. WhatsApp messages open the operator's own WhatsApp with

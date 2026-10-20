@@ -128,10 +128,14 @@ export function todayBoard(data: HotelData, today: ISODate) {
 
 // ---------- ids ----------
 
+/** A random UUID (v4). Always a UUID, even where `crypto.randomUUID` is missing, because the server's ids are UUIDs. */
 export function newId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  const hex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16));
+  hex[12] = "4";
+  hex[16] = "89ab"[Math.floor(Math.random() * 4)];
+  const h = hex.join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 // ---------- cage generation for onboarding ----------

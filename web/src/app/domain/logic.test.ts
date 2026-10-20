@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { aBooking, aCage, aHotel, aPet, aSmallHotel } from "@/app/testing/fixtures";
 import {
   addDays,
@@ -8,6 +8,7 @@ import {
   formatRupiah,
   freeCages,
   generateCages,
+  newId,
   nights,
   occupantOn,
   overlaps,
@@ -166,5 +167,24 @@ describe("generateCages", () => {
 
   it("gives every cage its own id", () => {
     expect(new Set(cages.map((c) => c.id)).size).toBe(cages.length);
+  });
+});
+
+describe("newId", () => {
+  const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+  it("is a UUID", () => {
+    expect(newId()).toMatch(UUID_V4);
+  });
+
+  it("is still a UUID where crypto.randomUUID doesn't exist", () => {
+    vi.stubGlobal("crypto", {});
+    try {
+      const ids = Array.from({ length: 200 }, () => newId());
+      for (const id of ids) expect(id).toMatch(UUID_V4);
+      expect(new Set(ids).size).toBe(200);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

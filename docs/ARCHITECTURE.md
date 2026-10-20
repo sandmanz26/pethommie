@@ -117,16 +117,24 @@ free of third parties.
 
 ## 3. Moving to a backend
 
-The seams are in place:
+The decision, the schema, the sync design and what is left are in [`docs/backend`](backend/README.md). In short:
+Supabase (Postgres + auth + storage), the app stays local-first and syncs changes. Already built and tested:
 
-1. Implement `HotelRepository` against an API. `load()` becomes async (give `AppStoreProvider`
-   a loading state); `save()` becomes a per-action call instead of "write the whole document".
-2. The rules in `domain/` have no React or browser dependencies: run them on the server as well
-   and treat the client's checks as a convenience.
-3. Real auth (§2), and a hotel id on every record. Today there is exactly one hotel per account.
-4. `site/lib/waitlist.ts` has a `WaitlistStore` interface with the same idea. Entries are
-   currently stored only in the visitor's own browser, so **the owner of the product cannot see
-   sign-ups**. Fix this first when a backend exists.
+- `backend/supabase/migrations/0001_init.sql`: tables, constraints (no double booking, same-hotel references), row
+  level security. Run on a real Postgres by `web/src/app/sync/schema.test.ts`.
+- `web/src/app/sync/`: `rows.ts` (data ⇄ rows), `diff.ts` (what changed between two states, applying and
+  merging changes), `gateway.ts` (what the app needs from a server, plus an in-memory one), `ids.ts` (UUIDs).
+
+Left: a Supabase implementation of `AuthService` and of `HotelGateway`, a persistent outbox, and a sync status in
+the UI. The seams:
+
+1. `HotelRepository` stays synchronous (it returns the local copy); changes from the server arrive by replacing the
+   state, as Restore a backup already does.
+2. The rules in `domain/` have no React or browser dependencies: the same rules run on the server and the client's
+   checks are a convenience. The one that can't be left to the client, no double booking, is also a database
+   constraint.
+3. `site/lib/waitlist.ts` has a `WaitlistStore` interface. Entries are currently stored only in the visitor's own
+   browser, so **the owner of the product cannot see sign-ups**. The `join_requests` table is the fix (phase 2).
 
 ## 4. Styling
 
@@ -204,6 +212,6 @@ Honest list, roughly by importance:
    rate limiting (all need a server).
 4. Binary assets (about 37 MB of frames, source videos and illustrations) live in git. Fine now; consider
    Git LFS or an asset bucket if they keep growing.
-5. No screenshot tests in CI (§7).
+5. No screenshot tests in CI (§7). The landing page's tour images are captured by a script, not on every build.
 6. Offline works per phone: data is not synced, and nothing here has been tried on a real Android
    phone or Safari yet (see `docs/product/riset.md` §6).

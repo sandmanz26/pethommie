@@ -14,6 +14,10 @@ Dua pertanyaan: (1) apakah operator bisa menjalankan satu hari kerja di aplikasi
 | F | Kalender kandang | Tinggi | Sedang | Tidak | ✅ |
 | G | Offline (PWA) | Tinggi untuk Android dan sinyal buruk | Sedang | Tidak | ✅ |
 | H | Daftar "Mulai di sini" untuk pengguna baru | Sedang | Rendah | Tidak | ✅ |
+| H2 | Mode Sederhana / Lengkap | Tinggi (operator sibuk vs yang ingin kontrol) | Sedang | Tidak | ✅ |
+| H3 | Halaman Pelanggan, Tagihan, Laporan, Bantuan; pulihkan cadangan | Tinggi | Sedang | Tidak | ✅ |
+| H4 | Landing lebih meyakinkan: tur produk dengan layar asli, FAQ, legal, footer | Tinggi | Sedang | Tidak | ✅ |
+| H5 | Persiapan backend: skema, pemetaan, sinkron, server tiruan, rencana | Tinggi | Sedang | Tidak | ✅ (belum tersambung) |
 | I | Link booking publik dengan DP | Tinggi (janji utama landing) | Tinggi | **Ya** | Berikutnya |
 | J | Foto di rapor dan kartu vaksin | Tinggi | Sedang | **Ya** (penyimpanan file) | Setelah I |
 | K | Akun asli, banyak perangkat, staf | Tinggi | Tinggi | **Ya** | Bersama I |
@@ -63,3 +67,20 @@ PAWSI sudah punya pembayaran online di paket tertingginya, jadi ini bukan pembed
 - **Pesan WhatsApp otomatis.** Tidak ada API berbayar; semua lewat tombol kirim operator.
 - **Foto di rapor.** Tautan `wa.me` tidak bisa melampirkan; operator menambahkan foto di WhatsApp. Foto di dalam aplikasi menunggu penyimpanan.
 - **Sinkron antar HP.** Satu hotel = satu browser sampai ada backend.
+
+## Mode Sederhana dan Lengkap
+
+Dua kebiasaan hidup berdampingan di operator: yang sibuk dan ingin sesedikit mungkin isian, dan yang ingin gambaran utuh. Daripada memilih salah satu, ada dua mode. Mode hanya mengubah **apa yang ditampilkan**, bukan data atau aturan, jadi boleh ganti kapan saja. Dipilih per akun; awalnya Sederhana.
+
+| | Sederhana | Lengkap |
+|---|---|---|
+| Menu | Hari ini, Booking, Kalender, Anabul, Kandang, Pengaturan, Bantuan | + Pelanggan, Tagihan, Laporan |
+| Check-in | dua centang dan berat | catatan lengkap: bawaan, makanan, catatan, atau lewati |
+| Pembayaran | satu ketukan "Tandai lunas" | jumlah sebagian, catatan |
+| Log harian | ketukan saja; kata-kata hanya untuk catatan/obat/kejadian | + jam bisa diubah, keterangan |
+| Pesan WhatsApp | hanya rapor | + konfirmasi, kedatangan, penjemputan, vaksin |
+| Booking baru | tanpa filter ukuran | dengan filter ukuran |
+
+Kriteria penerimaan (diuji): mode awal Sederhana; menu sesuai mode; pilihan tersimpan per akun; bilah tab HP berisi empat halaman harian + Lainnya; check-in sederhana tetap menyimpan catatan yang diminta; "Tandai lunas" mencatat seluruh sisa; log harian sederhana tidak menampilkan jam/keterangan kecuali perlu; rapor tetap ada. *(modes.test.tsx, e2e)*
+
+Yang belum diketahui: berapa banyak operator yang akan pindah ke mode Lengkap, dan fitur mana yang memicunya. Ini masuk eksperimen pertama di `metrik.md`.
