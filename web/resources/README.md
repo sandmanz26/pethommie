@@ -39,3 +39,21 @@ keeps the alpha channel. Commit both the original and the generated file.
 
 Cut off flat at the bottom edge in the source: `setup-store`, `setup-price`, `pickup-delivery`,
 `additional-service`, `playing-time`.
+
+## Icons and logo received (not used in the app yet)
+
+Kept as originals only; nothing here is deployed or prepared. All are 64 px (the logo 340 x 287).
+
+| Folder | What |
+|---|---|
+| `icons/app/` | calendar, user dog/cat, clock, cctv, data, report, bag, food, kibble, diaper, money, voucher, promo, bone, drink |
+| `icons/play/` | happy dog/cat, walking, toys, carriers, dog house, cat bed, haircut, grooming, ear cleaning, big/small dogs, cctv |
+| `icons/care/` | sleep, night, day, fleas, sick, confused cat, reservation, full calendar, holiday, raw meat, litter box, litter, nails, paws |
+| `logo/` | `logo_pethomi.png` |
+
+Known problems in these sources (they were sliced from a sheet): many tiles contain slivers of the
+neighbouring icon, some drawings are cut flat at the tile edge (calendar, user dog/cat, clock, data
+and others), the sets with a sticker outline show a dashed halo, and the logo is cut off on the right
+(the last letter of "pethomi"). 64 px is sharp only up to about 32 px on a 2x phone screen. The
+12 illustrations received again in `pet_hotel_12_no_background*.zip` are byte-identical to the ones
+already in `illustrations/`.
