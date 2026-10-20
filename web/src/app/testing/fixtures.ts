@@ -3,7 +3,7 @@ import { emptyData, type Booking, type Cage, type CageSize, type CareEntry, type
 /** Small builders for tests: just enough fields, with sensible defaults. */
 export const aCage = (id: string, size: CageSize = "S", pricePerNight = 50_000): Cage => ({ id, name: id.toUpperCase(), size, pricePerNight });
 
-export const anOwner = (id: string, whatsapp = ""): Owner => ({ id, name: `Owner ${id}`, whatsapp });
+export const anOwner = (id: string, whatsapp = "", language: Owner["language"] = "id"): Owner => ({ id, name: `Owner ${id}`, whatsapp, language });
 
 export const aPet = (id: string, ownerId: string, over: Partial<Pet> = {}): Pet => ({
   id,
@@ -20,6 +20,8 @@ export const aBooking = (id: string, over: Pick<Booking, "petId" | "cageId" | "c
   id,
   status: "booked",
   payments: [],
+  charges: [],
+  companionIds: [],
   arrival: null,
   notes: "",
   createdAt: "2026-10-01T00:00:00.000Z",

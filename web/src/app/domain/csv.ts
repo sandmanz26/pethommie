@@ -1,6 +1,7 @@
 import { bookingTotal, nights } from "./logic";
 import { balanceDue, paidAmount } from "./payments";
-import type { HotelData } from "./types";
+import { invoicePayment } from "./invoices";
+import type { HotelData, Invoice } from "./types";
 
 /** Cells that a spreadsheet would run as a formula get a leading quote, so a name like "=cmd()" stays text. */
 const safe = (cell: string) => (/^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell);
@@ -36,5 +37,28 @@ export function staysCsv(data: HotelData): string {
         b.notes,
       ];
     });
+  return toCsv([header, ...rows]);
+}
+
+/** The invoices given, one row each, for the monthly register. Voided ones are listed and marked. */
+export function invoicesCsv(data: HotelData, invoices: Invoice[]): string {
+  const header = ["number", "issued_on", "due_on", "status", "customer", "whatsapp", "pets", "check_in", "check_out", "subtotal", "tax_percent", "tax", "total", "payment", "language"];
+  const rows = invoices.map((i) => [
+    i.number,
+    i.issuedOn,
+    i.dueOn ?? "",
+    i.status,
+    i.customer.name,
+    i.customer.whatsapp,
+    i.petNames,
+    i.stay.checkIn,
+    i.stay.checkOut,
+    String(i.subtotal),
+    String(i.taxPercent),
+    String(i.taxAmount),
+    String(i.total),
+    i.status === "void" ? "" : invoicePayment(data, i),
+    i.language,
+  ]);
   return toCsv([header, ...rows]);
 }

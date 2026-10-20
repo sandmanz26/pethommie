@@ -1,4 +1,4 @@
-import type { Booking, Cage, CageSize, HotelData, ISODate, Pet } from "./types";
+import type { Booking, Cage, CageSize, Charge, HotelData, ISODate, Pet } from "./types";
 
 // ---------- dates (local calendar days, no time zones) ----------
 
@@ -83,10 +83,18 @@ export function occupantOn(data: HotelData, cageId: string, night: ISODate) {
 
 // ---------- money ----------
 
-export function bookingTotal(booking: Pick<Booking, "checkIn" | "checkOut">, cage: Cage | undefined) {
+/** The price of a stay: the nights at the cage's rate, plus add-ons and minus discounts. Never below zero. */
+export function bookingTotal(booking: Pick<Booking, "checkIn" | "checkOut"> & { charges?: Pick<Charge, "amount">[] }, cage: Cage | undefined) {
   if (!cage) return 0;
-  return Math.max(0, nights(booking.checkIn, booking.checkOut)) * cage.pricePerNight;
+  const base = Math.max(0, nights(booking.checkIn, booking.checkOut)) * cage.pricePerNight;
+  const extras = (booking.charges ?? []).reduce((sum, c) => sum + c.amount, 0);
+  return Math.max(0, base + extras);
 }
+
+/** Every pet in a stay: the one it was booked for, then those sharing the cage. */
+export const stayPetIds = (b: Pick<Booking, "petId" | "companionIds">): string[] => [b.petId, ...b.companionIds];
+
+export const involvesPet = (b: Pick<Booking, "petId" | "companionIds">, petId: string) => b.petId === petId || b.companionIds.includes(petId);
 
 export function formatRupiah(amount: number, locale: string) {
   return new Intl.NumberFormat(locale === "id" ? "id-ID" : "en-ID", {

@@ -1,4 +1,4 @@
-import { emptyData, type HotelData } from "@/app/domain/types";
+import { defaultSettings, emptyData, type HotelData } from "@/app/domain/types";
 
 /**
  * Where one hotel's data lives. Today: this browser's localStorage, one document per account.
@@ -17,7 +17,7 @@ export const dataKeyFor = (accountId: string) => `pethommie.app.v1.${accountId}`
  * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
  * one, and a test with an old document. Older documents are upgraded on load, never discarded.
  */
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 export type StoredProblem = "corrupt" | "newer";
 export type Parsed = { data: HotelData; problem: StoredProblem | null; migratedFrom?: number };
@@ -35,12 +35,24 @@ function isBasicShape(x: Record<string, unknown>): boolean {
   return hotelOk(x) && ["cages", "owners", "pets", "bookings"].every((k) => hasIds(x[k]));
 }
 
-function isHotelData(x: Record<string, unknown>): boolean {
+/** The shape version 2 had: payments, a care log and reports, but no charges, invoices or settings. */
+function isV2(x: Record<string, unknown>): boolean {
   return (
     isBasicShape(x) &&
     hasIds(x.careLog) &&
     Array.isArray(x.reportsSent) &&
     (x.bookings as Record<string, unknown>[]).every((b) => Array.isArray(b.payments))
+  );
+}
+
+function isHotelData(x: Record<string, unknown>): boolean {
+  return (
+    isV2(x) &&
+    isObject(x.settings) &&
+    isObject(x.settings.tax) &&
+    hasIds(x.invoices) &&
+    (x.bookings as Record<string, unknown>[]).every((b) => Array.isArray(b.charges) && Array.isArray(b.companionIds)) &&
+    (x.owners as Record<string, unknown>[]).every((o) => o.language === "id" || o.language === "en")
   );
 }
 
@@ -55,6 +67,13 @@ function migrateV1(doc: Record<string, unknown>): Record<string, unknown> {
     arrival: null,
   }));
   return { ...doc, version: 2, bookings, careLog: [], reportsSent: [] };
+}
+
+/** v3 adds charges and companions to stays, a language to owners, the hotel's settings, and invoices. Nothing is lost or changed. */
+function migrateV2(doc: Record<string, unknown>): Record<string, unknown> {
+  const bookings = (doc.bookings as Record<string, unknown>[]).map((b) => ({ ...b, charges: [], companionIds: [] }));
+  const owners = (doc.owners as Record<string, unknown>[]).map((o) => ({ ...o, language: "id" }));
+  return { ...doc, version: 3, bookings, owners, settings: defaultSettings(), invoices: [] };
 }
 
 /**
@@ -77,6 +96,10 @@ export function parseStored(raw: string | null): Parsed {
   if (doc.version === 1 && isBasicShape(doc)) {
     doc = migrateV1(doc);
     migratedFrom = 1;
+  }
+  if (doc.version === 2 && isV2(doc)) {
+    doc = migrateV2(doc);
+    migratedFrom ??= 2;
   }
   if (doc.version !== CURRENT_VERSION || !isHotelData(doc)) return { data: emptyData(), problem: "corrupt" };
   return { data: doc as unknown as HotelData, problem: null, migratedFrom };

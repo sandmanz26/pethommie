@@ -3,7 +3,9 @@ import type { BookingIssue } from "@/app/domain/bookingRules";
 import type { BookingPatch } from "@/app/domain/bookingRules";
 import type { CareIssue } from "@/app/domain/careLog";
 import type { PaymentIssue } from "@/app/domain/payments";
-import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Hotel, HotelData, ISODate, Owner, Payment, Pet } from "@/app/domain/types";
+import type { ChargeIssue } from "@/app/domain/charges";
+import type { InvoiceIssue } from "@/app/domain/invoices";
+import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Payment, Pet } from "@/app/domain/types";
 import { emptyData } from "@/app/domain/types";
 import * as actions from "./actions";
 import { sampleData } from "./sampleData";
@@ -40,7 +42,7 @@ function useStoreValue(repo: HotelRepository) {
       /** False if the cage has a pending or current stay. */
       deleteCage: (id: string): boolean => run((s) => actions.removeCage(s, id)),
       /** Returns the owner's id; an owner with the same WhatsApp number is reused. */
-      saveOwner: (owner: Omit<Owner, "id"> & { id?: string }): string => run((s) => actions.upsertOwner(s, owner)),
+      saveOwner: (owner: actions.OwnerInput): string => run((s) => actions.upsertOwner(s, owner)),
       savePet: (pet: Pet) => commit(actions.upsertPet(latest.current, pet)),
       deletePet: (id: string) => commit(actions.removePet(latest.current, id)),
       /** Empty when saved; otherwise what is wrong with the booking. */
@@ -53,6 +55,13 @@ function useStoreValue(repo: HotelRepository) {
       checkIn: (id: string, arrival: Arrival | null): boolean => run((s) => actions.checkInBooking(s, id, arrival)),
       recordPayment: (bookingId: string, payment: Omit<Payment, "id">): PaymentIssue[] => run((s) => actions.recordPayment(s, bookingId, payment)),
       removePayment: (bookingId: string, paymentId: string) => commit(actions.removePayment(latest.current, bookingId, paymentId)),
+      addCharge: (bookingId: string, charge: Omit<Charge, "id">): ChargeIssue[] => run((s) => actions.addCharge(s, bookingId, charge)),
+      removeCharge: (bookingId: string, chargeId: string) => commit(actions.removeCharge(latest.current, bookingId, chargeId)),
+      /** Empty when saved; otherwise what is wrong with the settings. */
+      saveSettings: (settings: HotelSettings): actions.SettingsIssue[] => run((s) => actions.saveSettings(s, settings)),
+      /** Empty when the invoice was made; otherwise why not. */
+      issueInvoice: (bookingId: string, request: { issuedOn: ISODate; language?: "id" | "en"; dueOn?: ISODate | null }): InvoiceIssue[] => run((s) => actions.issueInvoice(s, bookingId, request)),
+      voidInvoice: (invoiceId: string, on: ISODate): boolean => run((s) => actions.voidInvoice(s, invoiceId, on)),
       recordCare: (entry: Omit<CareEntry, "id">): CareIssue[] => run((s) => actions.recordCare(s, entry)),
       removeCare: (id: string) => commit(actions.removeCare(latest.current, id)),
       markReportSent: (bookingId: string, date: ISODate, at: string) => commit(actions.markReportSent(latest.current, bookingId, date, at)),

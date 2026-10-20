@@ -20,6 +20,13 @@ describe("toRows / fromRows", () => {
     expect(fromRows(hotel, rows)).toEqual(settled(data));
   });
 
+  it("carries the add-ons, shared cages and invoices of the sample hotel, so the round trip above is not empty", () => {
+    const { rows } = toRows(sampleData(), HOTEL);
+    expect(rows.charges.length).toBeGreaterThan(0);
+    expect(rows.booking_pets.length).toBeGreaterThan(0);
+    expect(rows.invoices.length).toBeGreaterThan(0);
+  });
+
   it("puts every row in its hotel, and every payment under its stay", () => {
     const data = sampleData();
     const { rows } = toRows(data, HOTEL);
@@ -90,6 +97,6 @@ describe("the fixtures used elsewhere", () => {
   it("convert without losing a record", () => {
     const data = aSmallHotel({ cages: [aCage("s1")], owners: [anOwner("o1", "6281234567890")] });
     const { hotel, rows } = toRows(data, HOTEL);
-    expect(fromRows(hotel, rows).owners).toEqual([{ id: uuidFor("o1", HOTEL), name: "Owner o1", whatsapp: "6281234567890" }]);
+    expect(fromRows(hotel, rows).owners).toEqual([{ id: uuidFor("o1", HOTEL), name: "Owner o1", whatsapp: "6281234567890", language: "id" }]);
   });
 });

@@ -19,9 +19,12 @@ export const KEYS: Record<Table, readonly string[]> = {
   owners: ["id"],
   pets: ["id"],
   bookings: ["id"],
+  booking_pets: ["booking_id", "pet_id"],
   payments: ["id"],
+  charges: ["id"],
   care_entries: ["id"],
   reports_sent: ["booking_id", "report_date"],
+  invoices: ["id"],
 };
 
 const keyOf = (table: Table, row: AnyRow): Key => Object.fromEntries(KEYS[table].map((k) => [k, String(row[k])]));

@@ -1,4 +1,4 @@
-import { cageIsFree, holdsCage } from "./logic";
+import { cageIsFree, holdsCage, involvesPet, overlaps, stayPetIds } from "./logic";
 import type { Booking, BookingStatus, HotelData, ISODate } from "./types";
 
 /**
@@ -11,7 +11,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** Problems with where and when a stay happens. */
 export type ScheduleIssue = "dates" | "cage" | "cage_taken";
 /** Everything that can be wrong with a whole booking. */
-export type BookingIssue = ScheduleIssue | "pet" | "locked";
+export type BookingIssue = ScheduleIssue | "pet" | "companion" | "pet_busy" | "locked";
 
 export type Schedule = { id?: string; cageId: string; checkIn: ISODate; checkOut: ISODate };
 
@@ -25,11 +25,21 @@ export function scheduleIssues(data: HotelData, s: Schedule): ScheduleIssue[] {
   return issues;
 }
 
+const datesAreReal = (b: Pick<Booking, "checkIn" | "checkOut">) => ISO_DATE.test(b.checkIn) && ISO_DATE.test(b.checkOut) && b.checkOut > b.checkIn;
+
 /** A booking also needs a pet that exists. A cancelled or finished stay no longer holds its cage. */
 export function bookingIssues(data: HotelData, b: Booking): BookingIssue[] {
   const issues: BookingIssue[] = scheduleIssues(data, b);
   const result = holdsCage(b) ? issues : issues.filter((i) => i !== "cage_taken");
-  if (!data.pets.some((p) => p.id === b.petId)) result.push("pet");
+  const primary = data.pets.find((p) => p.id === b.petId);
+  if (!primary) result.push("pet");
+  // Companions share the cage: other pets of the same owner, each listed once.
+  const bad = b.companionIds.some((id, i) => id === b.petId || b.companionIds.indexOf(id) !== i || data.pets.find((p) => p.id === id)?.ownerId !== primary?.ownerId);
+  if (bad) result.push("companion");
+  // A pet can't be in two places: none of the pets may already be in another live stay on those nights.
+  if (holdsCage(b) && datesAreReal(b) && data.bookings.some((o) => o.id !== b.id && holdsCage(o) && overlaps(b.checkIn, b.checkOut, o.checkIn, o.checkOut) && stayPetIds(b).some((id) => involvesPet(o, id)))) {
+    result.push("pet_busy");
+  }
   return result;
 }
 
@@ -50,7 +60,7 @@ export function cageCanBeRemoved(data: HotelData, cageId: string) {
   return !data.bookings.some((b) => b.cageId === cageId && holdsCage(b));
 }
 
-export type BookingPatch = Partial<Pick<Booking, "checkIn" | "checkOut" | "cageId" | "notes">>;
+export type BookingPatch = Partial<Pick<Booking, "checkIn" | "checkOut" | "cageId" | "notes" | "companionIds">>;
 
 /**
  * Can this change be made to a stay that already exists? Not once it is finished or cancelled, and not

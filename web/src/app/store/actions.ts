@@ -2,7 +2,9 @@ import { newId } from "@/app/domain/logic";
 import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
 import { careIssues, type CareIssue } from "@/app/domain/careLog";
 import { isValidAmount, type PaymentIssue } from "@/app/domain/payments";
-import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Hotel, HotelData, ISODate, Owner, Payment, Pet } from "@/app/domain/types";
+import { chargeIssues, type ChargeIssue } from "@/app/domain/charges";
+import { buildInvoice, type InvoiceIssue } from "@/app/domain/invoices";
+import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Invoice, Language, Owner, Payment, Pet } from "@/app/domain/types";
 
 /**
  * Every change to the hotel's data, as a pure function: (state, input) → new state.
@@ -28,10 +30,14 @@ export function removeCage(s: HotelData, id: string): Outcome<boolean> {
 }
 
 /** Saves an owner, reusing an existing one with the same WhatsApp number. Returns the owner's id. */
-export function upsertOwner(s: HotelData, owner: Omit<Owner, "id"> & { id?: string }): Outcome<string> {
+export type OwnerInput = Omit<Owner, "id" | "language"> & { id?: string; language?: Language };
+
+export function upsertOwner(s: HotelData, owner: OwnerInput): Outcome<string> {
   const existing = owner.whatsapp ? s.owners.find((o) => o.whatsapp === owner.whatsapp && o.id !== owner.id) : undefined;
   const id = owner.id ?? existing?.id ?? newId();
-  return { state: { ...s, owners: upsert(s.owners, { ...owner, id }) }, result: id };
+  // Saving an owner again keeps the language they were set to, unless a new one is given.
+  const language = owner.language ?? s.owners.find((o) => o.id === id)?.language ?? "id";
+  return { state: { ...s, owners: upsert(s.owners, { ...owner, id, language }) }, result: id };
 }
 
 export const upsertPet = (s: HotelData, pet: Pet): HotelData => ({ ...s, pets: upsert(s.pets, pet) });
@@ -42,7 +48,8 @@ export function removePet(s: HotelData, id: string): HotelData {
   return {
     ...s,
     pets: s.pets.filter((p) => p.id !== id),
-    bookings: s.bookings.filter((b) => b.petId !== id),
+    // A pet that only shared a cage leaves the stay; the stay carries on for the others.
+    bookings: s.bookings.filter((b) => b.petId !== id).map((b) => (b.companionIds.includes(id) ? { ...b, companionIds: b.companionIds.filter((c) => c !== id) } : b)),
     careLog: s.careLog.filter((e) => !gone.has(e.bookingId)),
     reportsSent: s.reportsSent.filter((r) => !gone.has(r.bookingId)),
   };
@@ -111,4 +118,57 @@ export const removeCare = (s: HotelData, id: string): HotelData => ({ ...s, care
 export function markReportSent(s: HotelData, bookingId: string, date: ISODate, at: string): HotelData {
   const others = s.reportsSent.filter((r) => !(r.bookingId === bookingId && r.date === date));
   return { ...s, reportsSent: [...others, { bookingId, date, at }] };
+}
+
+/** Adds a charge or a discount to a stay. A cancelled stay has no price to change. */
+export function addCharge(s: HotelData, bookingId: string, charge: Omit<Charge, "id">): Outcome<ChargeIssue[]> {
+  const booking = s.bookings.find((b) => b.id === bookingId);
+  const issues: ChargeIssue[] = chargeIssues(charge);
+  if (!booking) issues.unshift("booking");
+  else if (booking.status === "cancelled") issues.unshift("locked");
+  if (issues.length) return { state: s, result: issues };
+  return { state: withBooking(s, bookingId, (b) => ({ ...b, charges: [...b.charges, { ...charge, label: charge.label.trim(), id: newId() }] })), result: [] };
+}
+
+export const removeCharge = (s: HotelData, bookingId: string, chargeId: string): HotelData =>
+  withBooking(s, bookingId, (b) => ({ ...b, charges: b.charges.filter((c) => c.id !== chargeId) }));
+
+/** What can be wrong with the hotel's business and tax settings. */
+export type SettingsIssue = "ppn" | "prefix";
+
+export function settingsIssues(settings: HotelSettings): SettingsIssue[] {
+  const issues: SettingsIssue[] = [];
+  const { ppnPercent } = settings.tax;
+  if (!Number.isFinite(ppnPercent) || ppnPercent < 0 || ppnPercent > 100) issues.push("ppn");
+  if (!settings.invoicePrefix.replace(/[^A-Za-z0-9]/g, "")) issues.push("prefix");
+  return issues;
+}
+
+export function saveSettings(s: HotelData, settings: HotelSettings): Outcome<SettingsIssue[]> {
+  const issues = settingsIssues(settings);
+  if (issues.length) return { state: s, result: issues };
+  const clean: HotelSettings = {
+    ...settings,
+    legalName: settings.legalName.trim(),
+    address: settings.address.trim(),
+    npwp: settings.npwp.trim(),
+    invoicePrefix: settings.invoicePrefix.replace(/[^A-Za-z0-9]/g, "").toUpperCase(),
+    paymentInstructions: settings.paymentInstructions.trim(),
+  };
+  return { state: { ...s, settings: clean }, result: [] };
+}
+
+/** Makes the invoice for a stay and keeps it. Refused for a cancelled stay, or one that already has a live invoice. */
+export function issueInvoice(s: HotelData, bookingId: string, request: { issuedOn: ISODate; language?: Language; dueOn?: ISODate | null }): Outcome<InvoiceIssue[]> {
+  const made = buildInvoice(s, bookingId, { ...request, id: newId() });
+  if ("issues" in made) return { state: s, result: made.issues };
+  return { state: { ...s, invoices: [...s.invoices, made.invoice] }, result: [] };
+}
+
+/** Cancels an invoice. It stays in the list with its number, marked void, so numbers have no gaps. */
+export function voidInvoice(s: HotelData, invoiceId: string, on: ISODate): Outcome<boolean> {
+  const invoice = s.invoices.find((i) => i.id === invoiceId);
+  if (!invoice || invoice.status !== "issued") return { state: s, result: false };
+  const next: Invoice = { ...invoice, status: "void", voidedOn: on };
+  return { state: { ...s, invoices: s.invoices.map((i) => (i.id === invoiceId ? next : i)) }, result: true };
 }

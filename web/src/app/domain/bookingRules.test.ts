@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aBooking, aSmallHotel } from "@/app/testing/fixtures";
+import { aBooking, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, scheduleIssues } from "./bookingRules";
 import type { BookingStatus } from "./types";
 
@@ -102,5 +102,42 @@ describe("editIssues", () => {
     for (const status of ["checked_out", "cancelled"] as const) {
       expect(editIssues(world, { ...booked, status }, { notes: "late edit" })).toEqual(["locked"]);
     }
+  });
+});
+
+describe("companions and pets in two places", () => {
+  const world = aSmallHotel({
+    owners: [anOwner("o1"), anOwner("o2")],
+    pets: [aPet("p1", "o1"), aPet("p2", "o1"), aPet("p3", "o2")],
+    bookings: [aBooking("b1", { petId: "p1", companionIds: ["p2"], cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-18" })],
+  });
+  const stay = (over: object) => aBooking("new", { petId: "p3", cageId: "s2", checkIn: "2026-10-14", checkOut: "2026-10-18", ...over });
+
+  it("lets pets of one owner share a cage", () => {
+    expect(bookingIssues(world, stay({ petId: "p1", companionIds: ["p2"], cageId: "m1", checkIn: "2026-10-20", checkOut: "2026-10-22" }))).toEqual([]);
+  });
+
+  it("refuses a companion of another owner, the pet itself, or one listed twice", () => {
+    expect(bookingIssues(world, stay({ petId: "p1", companionIds: ["p3"], cageId: "m1", checkIn: "2026-10-20", checkOut: "2026-10-22" }))).toContain("companion");
+    expect(bookingIssues(world, stay({ petId: "p1", companionIds: ["p1"], cageId: "m1", checkIn: "2026-10-20", checkOut: "2026-10-22" }))).toContain("companion");
+    expect(bookingIssues(world, stay({ petId: "p1", companionIds: ["p2", "p2"], cageId: "m1", checkIn: "2026-10-20", checkOut: "2026-10-22" }))).toContain("companion");
+    expect(bookingIssues(world, stay({ petId: "p1", companionIds: ["ghost"], cageId: "m1", checkIn: "2026-10-20", checkOut: "2026-10-22" }))).toContain("companion");
+  });
+
+  it("won't book a pet that is already in another stay on those nights, as the main pet or as a companion", () => {
+    expect(bookingIssues(world, stay({ petId: "p1", cageId: "m1", checkIn: "2026-10-16", checkOut: "2026-10-19" }))).toEqual(["pet_busy"]);
+    expect(bookingIssues(world, stay({ petId: "p2", cageId: "m1", checkIn: "2026-10-16", checkOut: "2026-10-19" }))).toEqual(["pet_busy"]);
+    expect(bookingIssues(world, stay({ petId: "p3", companionIds: [], cageId: "m1" }))).toEqual([]);
+  });
+
+  it("lets a pet come back the day it left, and ignores stays that are over or cancelled", () => {
+    expect(bookingIssues(world, stay({ petId: "p1", cageId: "m1", checkIn: "2026-10-18", checkOut: "2026-10-20" }))).toEqual([]);
+    const done = aSmallHotel({ ...world, bookings: [{ ...world.bookings[0], status: "checked_out" }] });
+    expect(bookingIssues(done, stay({ petId: "p1", cageId: "m1", checkIn: "2026-10-16", checkOut: "2026-10-19" }))).toEqual([]);
+  });
+
+  it("doesn't count a stay against itself when it is edited", () => {
+    expect(editIssues(world, world.bookings[0], { checkOut: "2026-10-19" })).toEqual([]);
+    expect(editIssues(world, world.bookings[0], { companionIds: [] })).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { emptyData } from "@/app/domain/types";
+import { defaultSettings, emptyData } from "@/app/domain/types";
 import { aSmallHotel } from "@/app/testing/fixtures";
 import { createLocalRepository, dataKeyFor, parseStored } from "./storage";
 
@@ -29,7 +29,7 @@ describe("parseStored", () => {
   });
 
   it("flags data from a newer version of the app, without trying to read it", () => {
-    const raw = JSON.stringify({ ...aSmallHotel(), version: 3, somethingNew: true });
+    const raw = JSON.stringify({ ...aSmallHotel(), version: 4, somethingNew: true });
     expect(parseStored(raw)).toEqual({ data: emptyData(), problem: "newer" });
   });
 });
@@ -43,7 +43,7 @@ describe("upgrading a version 1 document", () => {
     const { data, problem, migratedFrom } = parseStored(v1([{ ...old, deposit: 100_000 }]));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(1);
-    expect(data.version).toBe(2);
+    expect(data.version).toBe(3);
     expect(data.bookings[0]).not.toHaveProperty("deposit");
     expect(data.bookings[0].payments).toEqual([expect.objectContaining({ amount: 100_000, at: "2026-09-30T10:00:00.000Z" })]);
     expect(data.bookings[0]).toMatchObject({ arrival: null, notes: "x" });
@@ -58,6 +58,41 @@ describe("upgrading a version 1 document", () => {
 
   it("still refuses a version 1 document that is broken", () => {
     expect(parseStored(JSON.stringify({ version: 1, hotel: null, cages: null }))).toEqual({ data: emptyData(), problem: "corrupt" });
+  });
+});
+
+describe("upgrading a version 2 document", () => {
+  const v2 = () => {
+    const { settings: _s, invoices: _i, ...rest } = aSmallHotel({
+      bookings: [{ id: "b1", petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", status: "checked_in", payments: [{ id: "pay", at: "2026-10-01T08:00:00.000Z", amount: 5, method: "cash", note: "" }], arrival: null, notes: "keep", createdAt: "2026-09-30T10:00:00.000Z" }] as never,
+      careLog: [{ id: "c", bookingId: "b1", at: "2026-10-02T08:00:00.000Z", kind: "meal", preset: "all", note: "" }],
+    });
+    return { ...rest, version: 2, owners: rest.owners.map(({ language: _l, ...o }) => o) };
+  };
+
+  it("adds what is new and changes nothing else", () => {
+    const { data, problem, migratedFrom } = parseStored(JSON.stringify(v2()));
+    expect(problem).toBeNull();
+    expect(migratedFrom).toBe(2);
+    expect(data.version).toBe(3);
+    expect(data.bookings[0]).toMatchObject({ id: "b1", status: "checked_in", notes: "keep", charges: [], companionIds: [], payments: [expect.objectContaining({ amount: 5 })] });
+    expect(data.owners.every((o) => o.language === "id")).toBe(true);
+    expect(data.invoices).toEqual([]);
+    expect(data.settings).toEqual(defaultSettings());
+    expect(data.careLog).toHaveLength(1);
+    expect(data.hotel?.name).toBe("Rumah Meong");
+  });
+
+  it("does not take a version 2 document that is broken", () => {
+    expect(parseStored(JSON.stringify({ ...v2(), careLog: null }))).toEqual({ data: emptyData(), problem: "corrupt" });
+  });
+
+  it("does not take a version 3 document without its settings, invoices or owner languages", () => {
+    const ok = JSON.parse(JSON.stringify(aSmallHotel()));
+    expect(parseStored(JSON.stringify(ok)).problem).toBeNull();
+    for (const bad of [{ ...ok, settings: undefined }, { ...ok, invoices: undefined }, { ...ok, owners: [{ id: "o", name: "x", whatsapp: "" }] }]) {
+      expect(parseStored(JSON.stringify(bad)).problem).toBe("corrupt");
+    }
   });
 });
 
@@ -108,7 +143,7 @@ describe("createLocalRepository", () => {
   it("keeps the original of an upgraded document, once", () => {
     const raw = JSON.stringify({ version: 1, hotel: null, cages: [], owners: [], pets: [], bookings: [] });
     localStorage.setItem(KEY, raw);
-    expect(repo.load().version).toBe(2);
+    expect(repo.load().version).toBe(3);
     expect(localStorage.getItem(`${KEY}.v1.backup`)).toBe(raw);
     localStorage.setItem(`${KEY}.v1.backup`, "kept");
     repo.load();

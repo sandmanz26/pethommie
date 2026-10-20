@@ -1,5 +1,6 @@
 import { addDays, generateCages, newId, todayISO } from "@/app/domain/logic";
-import type { Arrival, Booking, CareEntry, HotelData, ISODate, Owner, Pet, ReportSent } from "@/app/domain/types";
+import { buildInvoice } from "@/app/domain/invoices";
+import { defaultSettings, type Arrival, type Booking, type CareEntry, type HotelData, type ISODate, type Owner, type Pet, type ReportSent } from "@/app/domain/types";
 
 /** Local time `hour:minute` on a calendar day, as an ISO date-time. */
 const at = (day: ISODate, hour: number, minute: number) => {
@@ -16,10 +17,11 @@ export function sampleData(): HotelData {
     L: { count: 2, price: 120_000 },
   });
   const owners: Owner[] = [
-    { id: newId(), name: "Rina Kusuma", whatsapp: "6281234567890" },
-    { id: newId(), name: "Budi Santoso", whatsapp: "6285711223344" },
-    { id: newId(), name: "Sari Wijaya", whatsapp: "6287855512345" },
-    { id: newId(), name: "Andi Pratama", whatsapp: "6281399887766" },
+    { id: newId(), name: "Rina Kusuma", whatsapp: "6281234567890", language: "id" },
+    { id: newId(), name: "Budi Santoso", whatsapp: "6285711223344", language: "id" },
+    { id: newId(), name: "Sari Wijaya", whatsapp: "6287855512345", language: "id" },
+    { id: newId(), name: "Andi Pratama", whatsapp: "6281399887766", language: "id" },
+    { id: newId(), name: "Emma Clarke", whatsapp: "6281511122233", language: "en" },
   ];
   const pet = (name: string, species: Pet["species"], breed: string, owner: number, vaccineInDays: number | null, notes = ""): Pet => ({
     id: newId(),
@@ -36,6 +38,8 @@ export function sampleData(): HotelData {
     pet("Nala", "cat", "Domestic", 2, -10),
     pet("Bobi", "dog", "Golden Retriever", 3, 300, "Needs a long walk in the morning"),
     pet("Kelinci", "rabbit", "Holland Lop", 0, null),
+    pet("Boba", "cat", "Domestic", 0, 150, "Mochi's brother, they sleep together"),
+    pet("Luna", "cat", "British Shorthair", 4, 240),
   ];
   const b = (petIdx: number, cageIdx: number, inOffset: number, outOffset: number, status: Booking["status"], deposit: number, arrival: Arrival | null = null): Booking => ({
     id: newId(),
@@ -44,6 +48,8 @@ export function sampleData(): HotelData {
     checkIn: addDays(today, inOffset),
     checkOut: addDays(today, outOffset),
     status,
+    companionIds: [],
+    charges: [],
     payments: deposit > 0 ? [{ id: newId(), at: new Date().toISOString(), amount: deposit, method: deposit % 100_000 === 0 ? "qris" : "cash", note: "" }] : [],
     arrival,
     notes: "",
@@ -65,7 +71,12 @@ export function sampleData(): HotelData {
     b(3, 10, 0, 5, "booked", 200_000),
     b(4, 2, 2, 6, "booked", 0),
     b(0, 0, -20, -15, "checked_out", 100_000),
+    b(6, 3, 3, 6, "booked", 0),
   ];
+  // Mochi's brother shares the cage, a pickup and a grooming were added, and the old stay is paid in part.
+  bookings[0] = { ...bookings[0], companionIds: [pets[5].id], charges: [{ id: newId(), label: "Hewan tambahan", amount: 25_000 }] };
+  bookings[2] = { ...bookings[2], charges: [{ id: newId(), label: "Antar jemput", amount: 50_000 }] };
+  bookings[3] = { ...bookings[3], charges: [{ id: newId(), label: "Grooming", amount: 75_000 }, { id: newId(), label: "Diskon langganan", amount: -25_000 }] };
 
   // A few days of care, so the daily report has something to say the first time you open it.
   const entry = (booking: Booking, day: ISODate, hour: number, minute: number, kind: CareEntry["kind"], preset: string | null, note = ""): CareEntry => ({
@@ -92,14 +103,26 @@ export function sampleData(): HotelData {
     entry(kopi, today, 8, 30, "play", "30min"),
   ];
   const reportsSent: ReportSent[] = [{ bookingId: mochi.id, date: yesterday, at: at(yesterday, 18, 0) }];
-  return {
-    version: 2,
+  const data: HotelData = {
+    version: 3,
     hotel: { name: "Rumah Meong Bintaro", city: "South Tangerang", whatsapp: "6281200001111", createdAt: new Date().toISOString() },
+    settings: {
+      ...defaultSettings(),
+      legalName: "Rumah Meong Bintaro",
+      address: "Jl. Bintaro Utama Sektor 3, Tangerang Selatan",
+      paymentInstructions: "Contoh: BCA 1234567890 a.n. Rumah Meong · QRIS tersedia di kasir",
+      tax: { ...defaultSettings().tax, regime: "final_umkm" },
+    },
     cages,
     owners,
     pets,
     bookings,
     careLog,
     reportsSent,
+    invoices: [],
   };
+  // The old, finished stay already has its invoice, so the invoice pages have something to show.
+  const old = bookings[5];
+  const made = buildInvoice(data, old.id, { id: newId(), issuedOn: old.checkOut });
+  return "invoice" in made ? { ...data, invoices: [made.invoice] } : data;
 }
