@@ -14,4 +14,16 @@ describe("Features", () => {
     expect(soon).toHaveLength(1);
     expect(within(soon[0].closest(".feature") as HTMLElement).getByRole("heading")).toHaveTextContent("Booking link with deposit");
   });
+
+  it("shows the real screen of every feature that exists, in the visitor's language, and none for the one that doesn't", () => {
+    render(
+      <LocaleProvider>
+        <Features />
+      </LocaleProvider>,
+    );
+    const shots = screen.getAllByRole("img", { name: /^Pethommie screen: / });
+    expect(shots).toHaveLength(6);
+    for (const s of shots) expect(s.getAttribute("src")).toMatch(/^\/screens\/feature-[a-z]+-en\.webp$/);
+    expect(screen.queryByRole("img", { name: "Pethommie screen: Booking link with deposit" })).not.toBeInTheDocument();
+  });
 });

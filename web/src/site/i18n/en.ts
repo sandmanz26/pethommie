@@ -5,7 +5,8 @@
 export type MomentKind = "profile" | "booking" | "checkin" | "care" | "extra" | "night" | "report" | "pickup";
 /** A caption of the film. `at` is the second of the film it belongs to. */
 export type Chapter = { at: number; moment: MomentKind; when: string; title: string; body: string };
-export type FeatureIcon = "calendar" | "check" | "log" | "chat" | "invoice" | "chart" | "offline" | "link";
+/** The real app screen captured for a feature (scripts/capture-features.mjs). */
+export type FeatureShot = "calendar" | "checkin" | "care" | "report" | "invoice" | "tax";
 
 export const en = {
   meta: {
@@ -110,6 +111,7 @@ export const en = {
       { key: "calendar", title: "Calendar", body: "Cages down the side, days across. Tap a free day to book." },
     ],
     tabsLabel: "Screens",
+    phoneAlt: (title: string) => `Pethommie on a phone: ${title}`,
     imageAlt: (title: string) => `Pethommie screen: ${title}`,
     cta: "Open the demo",
     ctaNote: "No sign-up. Sample data included.",
@@ -118,16 +120,17 @@ export const en = {
     eyebrow: "Features",
     title: "Everything a pet hotel runs on.",
     soon: "Soon",
+    shotAlt: (title: string) => `Pethommie screen: ${title}`,
     items: [
-      { icon: "calendar", title: "Cage calendar", body: "Tap a free day to book. No double bookings." },
-      { icon: "check", title: "Check-in & vaccines", body: "A one-minute checklist. Expiring vaccines flagged." },
-      { icon: "log", title: "Daily care log", body: "Meals, play, toilet, medicine, with the time." },
-      { icon: "chat", title: "WhatsApp reports", body: "Written for you, sent from your own number." },
-      { icon: "invoice", title: "Payments & invoices", body: "Deposits, balances, invoices in two languages." },
-      { icon: "chart", title: "Monthly & tax reports", body: "Turnover and PPh final estimate, CSV for your accountant." },
-      { icon: "offline", title: "Works offline", body: "Keeps going when the signal drops." },
-      { icon: "link", title: "Booking link with deposit", body: "Owners book from your Instagram bio.", soon: true },
-    ] as { icon: FeatureIcon; title: string; body: string; soon?: boolean }[],
+      { art: "feature-calendar", shot: "calendar", title: "Cage calendar", body: "Tap a free day to book. No double bookings." },
+      { art: "feature-checkin", shot: "checkin", title: "Check-in & vaccines", body: "A one-minute checklist. Expiring vaccines flagged." },
+      { art: "feature-care", shot: "care", title: "Daily care log", body: "Meals, play, toilet, medicine, with the time." },
+      { art: "feature-report", shot: "report", title: "WhatsApp reports", body: "Written for you, sent from your own number." },
+      { art: "feature-payments", shot: "invoice", title: "Payments & invoices", body: "Deposits, balances, invoices in two languages." },
+      { art: "feature-tax", shot: "tax", title: "Monthly & tax reports", body: "Turnover and PPh final estimate, CSV for your accountant." },
+      { art: "feature-offline", title: "Works offline", body: "Keeps going when the signal drops.", chip: "Saved on this phone · no signal needed" },
+      { art: "feature-booking-link", title: "Booking link with deposit", body: "Owners book from your Instagram bio.", chip: "Book a stay at Rumah Meong →", soon: true },
+    ] as { art: string; shot?: FeatureShot; title: string; body: string; chip?: string; soon?: boolean }[],
   },
   pricing: {
     eyebrow: "Pricing",

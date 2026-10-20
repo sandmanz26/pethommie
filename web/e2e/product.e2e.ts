@@ -128,19 +128,24 @@ for (const [name, viewport] of [
   })
 }
 
-test('the landing page shows each tour screen and it loads, and the last ask opens the help form', async ({ page }) => {
+test('the landing page shows each tour screen and every feature picture, and the last ask opens the help form', async ({ page }) => {
   await page.goto('/')
   await page.locator('#tour').scrollIntoViewIfNeeded()
   const tabs = page.locator('#tour [role=tab]')
   await expect(tabs).toHaveCount(3)
   for (const tab of await tabs.all()) {
     await tab.click()
-    const img = page.locator('#tour [role=tabpanel]:not([hidden]) img')
-    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
+    for (const img of await page.locator('#tour [role=tabpanel]:not([hidden]) img').all()) {
+      await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
+    }
   }
   await page.getByRole('link', { name: "Tell me when it's ready" }).click()
   await expect(page.getByLabel('WhatsApp number')).toBeVisible()
-  await expect(page.locator('#join img')).toHaveJSProperty('complete', true)
+  await page.locator('#features').scrollIntoViewIfNeeded()
+  for (const img of await page.locator('#features img').all()) {
+    await img.scrollIntoViewIfNeeded()
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
+  }
   await expect(page.getByRole('contentinfo')).toContainText('All rights reserved')
 })
 

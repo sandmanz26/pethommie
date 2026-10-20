@@ -3,13 +3,15 @@
 Drop raw images here. They are kept in the repo but **not** deployed. The web-ready versions are
 generated into `public/`, which is what the site serves.
 
-**Right now this folder is empty on purpose**: the first icon and illustration sets were removed and
-are being replaced. The app shows plain line icons (and emoji in the care log) until the new ones arrive.
+What is here now: `illustrations/0*_feature_*.png` (one diorama per feature on the landing page, generated in the
+style of the V2 turntable film), `backgrounds/pet_hotel_scene.webp` (register page) and `backgrounds/faq_scene.webp`
+(only its two bottom corners are used, see `CORNERS` in the script).
 
 | Put it in | What | Becomes |
 |---|---|---|
 | `illustrations/` | PNG cut-outs with a transparent background | `public/illustrations/<name>.webp` |
 | `icons/<set>/` | Small icons cut from a sheet | `public/icons/ui/<name>.webp`, for those listed in `ICONS` in the script |
+| `backgrounds/` | Full scenes with an empty or faded middle | `public/backgrounds/<name>.webp` and `-800.webp`; or only corners (`CORNERS`) |
 | `photos/` | Real photos (JPG, PNG or WebP) | `public/photos/<name>.webp` (max 1600 px, EXIF removed) |
 
 `<name>` is the file name without its leading number, in kebab-case: `01_setup_store.png` becomes

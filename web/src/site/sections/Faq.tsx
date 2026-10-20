@@ -1,22 +1,14 @@
 import { useSiteT } from "@/site/i18n/useSiteT";
 import "./sections.css";
 
-/** The questions people ask first, over a scene of a puzzled dog and cat. */
+/** The questions people ask first, with a puzzled dog and cat in the bottom corners. */
 export function Faq() {
   const faq = useSiteT().t.faq;
   return (
     <section className="section faq-sec" id="faq">
-      <img
-        className="faq__art"
-        src="/backgrounds/faq-scene.webp"
-        srcSet="/backgrounds/faq-scene-800.webp 800w, /backgrounds/faq-scene.webp 1600w"
-        sizes="100vw"
-        width={1600}
-        height={900}
-        alt=""
-        loading="lazy"
-        decoding="async"
-      />
+      {/* Fixed-size corners, so opening a question never stretches them. */}
+      <img className="faq__corner faq__corner--dog" src="/backgrounds/faq-dog.webp" width={560} height={541} alt="" loading="lazy" decoding="async" />
+      <img className="faq__corner faq__corner--cat" src="/backgrounds/faq-cat.webp" width={432} height={581} alt="" loading="lazy" decoding="async" />
       <div className="wrap faq">
         <div className="section-head section-head--center">
           <span className="eyebrow">{faq.eyebrow}</span>

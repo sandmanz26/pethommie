@@ -2,7 +2,7 @@
 """Turn the raw files in resources/ into web-ready WebP under public/.
 
   resources/illustrations/*.png   cut-outs with a transparent background
-      -> stray slivers left over from cropping are removed, the empty margin is trimmed
+      -> stray slivers left over from cropping are removed, the empty margin is trimmed, max 560 px
       -> public/illustrations/<name>.webp
 
   resources/icons/<set>/*.png     small icons (64 px) cut from a sheet
@@ -35,12 +35,19 @@ from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 PHOTO_MAX = 1600
+ILLUSTRATION_MAX = 560  # shown at up to ~280 CSS px, so this stays sharp on 2x screens
 ALPHA_MIN = 16  # alpha above this counts as "ink"
 CELL = 4  # components are found on a grid 4x coarser than the image
 PAD = 16  # transparent margin kept around the trimmed illustration
 
 # Icons the app uses: public name -> "<set folder>/<file>" in resources/icons. Add a line to use another one.
 ICONS: dict[str, str] = {}
+# Corners cut from a background, shown at a fixed size instead of stretching the whole scene over a section:
+# public name -> (source slug, (left, top, right, bottom), fade in px on (left, top, right) edges).
+CORNERS = {
+    "faq-dog": ("faq-scene", (0, 400, 560, 941), (0, 90, 200)),
+    "faq-cat": ("faq-scene", (1240, 360, 1672, 941), (140, 90, 0)),
+}
 ICON_PAD = 2
 ICON_CROPS: dict[str, tuple[int, int, int, int]] = {}  # name -> keep only this box of the tile (left, top, right, bottom)
 
@@ -138,14 +145,29 @@ def save_webp(img: Image.Image, path: Path, quality: int) -> None:
     print(f"  {path.relative_to(ROOT)}  {img.width}x{img.height}  {path.stat().st_size // 1024} KB")
 
 
+def screens() -> None:
+    """PNG captures from scripts/capture-features.mjs -> WebP sized for the landing page; the PNG is removed."""
+    for src in sorted((ROOT / "public" / "screens").glob("*.png")):
+        shot = Image.open(src).convert("RGB")
+        shot.thumbnail((520 if "-phone-" in src.name else 640, 4000), Image.LANCZOS)
+        print(f"{src.name}:")
+        save_webp(shot, src.with_suffix(".webp"), 82)
+        src.unlink()
+
+
 def main() -> None:
+    if sys.argv[1:] == ["--screens"]:
+        screens()
+        return
     only = set(sys.argv[1:])
     for src in sorted((ROOT / "resources" / "illustrations").glob("*.png")):
         if only and slug(src) not in only:
             continue
         cleaned = clean_cutout(Image.open(src))
         print(f"{src.name}: removed {cleaned.info.get('removed', 0)} stray piece(s)")
-        save_webp(trim(cleaned), ROOT / "public" / "illustrations" / f"{slug(src)}.webp", 90)
+        art = trim(cleaned)
+        art.thumbnail((ILLUSTRATION_MAX, ILLUSTRATION_MAX), Image.LANCZOS)
+        save_webp(art, ROOT / "public" / "illustrations" / f"{slug(src)}.webp", 82)
     for name, ref in ICONS.items():
         if only and name not in only:
             continue
@@ -163,6 +185,8 @@ def main() -> None:
     for src in sorted((ROOT / "resources" / "backgrounds").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"} or (only and slug(src) not in only):
             continue
+        if slug(src) in {source for source, _, _ in CORNERS.values()}:
+            continue  # only its corners are used
         scene = Image.open(src)
         # A scene that fades out (an alpha channel) keeps it, so the page shows through the faded part.
         scene = scene.convert("RGBA" if "A" in scene.getbands() else "RGB")
@@ -171,6 +195,23 @@ def main() -> None:
             copy = scene.copy()
             copy.thumbnail((width, width), Image.LANCZOS)
             save_webp(copy, ROOT / "public" / "backgrounds" / f"{slug(src)}{suffix}.webp", 80)
+    for name, (source_slug, box, (fade_l, fade_t, fade_r)) in CORNERS.items():
+        if only and name not in only:
+            continue
+        src = next(p for p in (ROOT / "resources" / "backgrounds").glob("*") if slug(p) == source_slug)
+        corner = Image.open(src).convert("RGBA").crop(box)
+        alpha = np.asarray(corner.getchannel("A")).astype(float)
+        h, w = alpha.shape
+        ramp = np.ones((h, w))
+        if fade_l:
+            ramp *= np.clip(np.arange(w) / fade_l, 0, 1)[None, :]
+        if fade_r:
+            ramp *= np.clip((w - 1 - np.arange(w)) / fade_r, 0, 1)[None, :]
+        if fade_t:
+            ramp *= np.clip(np.arange(h) / fade_t, 0, 1)[:, None]
+        corner.putalpha(Image.fromarray((alpha * ramp).astype(np.uint8)))
+        print(f"{name}:")
+        save_webp(corner, ROOT / "public" / "backgrounds" / f"{name}.webp", 85)
     for src in sorted((ROOT / "resources" / "photos").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue

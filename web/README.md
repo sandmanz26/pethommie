@@ -104,8 +104,11 @@ note. When an API exists, add a store that calls it and export it as
 ## Website
 
 Sections of the landing page (`src/site/sections`): the film (the story of one stay,
-with the hero as its opening), Product tour (real screens behind tabs), Features (one line each), Pricing, FAQ, and a
-last call to action over the pet hotel scene with an optional "help me set up" form. Kept short on purpose; plus `/privacy` and `/terms`
+with the hero as its opening), Product tour (real screens behind tabs, laptop and phone), Features (an
+illustration in the film's style and the real app screen for each, one line of words), Pricing, FAQ (with a puzzled
+dog and cat in the corners), and a last call to action with an optional "help me set up" form.
+Screens are captured from the running app with `scripts/capture-screens.mjs` and `scripts/capture-features.mjs`
+(then `python3 scripts/prepare-resources.py --screens`); run them again when the app's look changes. Kept short on purpose; plus `/privacy` and `/terms`
 (`site/pages/LegalPage.tsx`, words in the site copy, written to describe what the product does today). Nothing on it
 is invented: there are no testimonials or customer numbers, and what isn't built is marked **Coming soon**.
 

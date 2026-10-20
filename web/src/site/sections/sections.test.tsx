@@ -20,11 +20,14 @@ describe("landing sections", () => {
     expect(faq.getByText(/free for 30 days/i)).toBeVisible();
   });
 
-  it("shows real screens, one at a time behind tabs, in the visitor's language", async () => {
+  it("shows real screens, one at a time behind tabs, on a laptop and a phone, in the visitor's language", async () => {
     wrap(<ProductTour />);
     const tabs = screen.getAllByRole("tab");
-    expect(tabs.map((t) => t.querySelector("b")?.textContent)).toEqual(["Today", "One stay", "Calendar"]);
-    expect(screen.getByRole("tabpanel").querySelector("img")).toHaveAttribute("src", "/screens/today-en.jpg");
+    expect(tabs.map((t) => t.textContent)).toEqual(["Today", "One stay", "Calendar"]);
+    expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
+    expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.jpg");
+    expect(screen.getByRole("img", { name: "Pethommie on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
+    expect(screen.getByText(/who arrives, who leaves/i)).toBeInTheDocument();
 
     await userEvent.click(tabs[2]);
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
@@ -32,7 +35,7 @@ describe("landing sections", () => {
     expect(img).toHaveAttribute("src", "/screens/calendar-en.jpg");
     expect(img).toHaveAttribute("width");
     expect(img).toHaveAttribute("height");
-    expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
+    expect(screen.getByText(/tap a free day to book/i)).toBeInTheDocument();
 
     // arrow keys move between tabs
     tabs[2].focus();

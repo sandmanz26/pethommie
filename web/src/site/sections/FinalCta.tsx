@@ -4,7 +4,7 @@ import { Button } from "@/site/components/ui/Button";
 import { WaitlistForm } from "./WaitlistForm";
 import "./sections.css";
 
-/** The last ask, over the pet hotel scene: try it, or let us set it up with you. */
+/** The last ask: try it, or let us set it up with you. */
 export function FinalCta() {
   const { cta } = useSiteT().t;
   const help = useRef<HTMLDetailsElement>(null);
@@ -21,17 +21,6 @@ export function FinalCta() {
 
   return (
     <section className="cta" id="join">
-      <img
-        className="cta__art"
-        src="/backgrounds/pet-hotel-scene.webp"
-        srcSet="/backgrounds/pet-hotel-scene-800.webp 800w, /backgrounds/pet-hotel-scene.webp 1586w"
-        sizes="100vw"
-        width={1586}
-        height={992}
-        alt=""
-        loading="lazy"
-        decoding="async"
-      />
       <div className="cta__card">
         <h2>{cta.title}</h2>
         <p>{cta.lead}</p>

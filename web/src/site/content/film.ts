@@ -43,5 +43,5 @@ export const films: Record<FilmId, Film> = {
 };
 
 export const FILM_ORDER: FilmId[] = ["ink", "turntable"];
-export const DEFAULT_FILM: FilmId = "ink";
+export const DEFAULT_FILM: FilmId = "turntable";
 
