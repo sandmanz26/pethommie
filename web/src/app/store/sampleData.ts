@@ -1,7 +1,7 @@
 import { addDays, generateCages, newId, todayISO } from "@/app/domain/logic";
 import { buildInvoice } from "@/app/domain/invoices";
 import { advancedSample } from "./sampleAdvanced";
-import { defaultSettings, type Arrival, type Booking, type CareEntry, type HotelData, type ISODate, type Owner, type Pet, type ReportSent } from "@/app/domain/types";
+import { defaultSettings, type Arrival, type Booking, type CareEntry, type Expense, type HotelData, type ISODate, type Owner, type Pet, type ReportSent } from "@/app/domain/types";
 
 /** Local time `hour:minute` on a calendar day, as an ISO date-time. */
 const at = (day: ISODate, hour: number, minute: number) => {
@@ -69,6 +69,16 @@ function simpleSample(): HotelData {
     notes: "",
     createdAt: new Date().toISOString(),
   });
+  const expense = (offset: number, category: Expense["category"], amount: number, method: Expense["method"], vendor: string, note: string, recurring = false): Expense => ({
+    id: newId(),
+    date: addDays(today, offset),
+    category,
+    amount,
+    method,
+    vendor,
+    note,
+    recurring,
+  });
   const arrivedAt = (daysAgo: number) => at(addDays(today, -daysAgo), 9, 15);
   const bookings = [
     b(0, 0, -2, 3, "checked_in", 100_000, {
@@ -134,7 +144,16 @@ function simpleSample(): HotelData {
     careLog,
     reportsSent,
     invoices: [],
-    expenses: [],
+    expenses: [
+      expense(-40, "rent", 2_500_000, "transfer", "Bu Lina", "Sewa rumah", true),
+      expense(-30, "food", 650_000, "transfer", "Toko Pakan Bintaro", "Dry food 2 karung"),
+      expense(-26, "supplies", 180_000, "cash", "Pet Shop Sektor 3", "Pasir kucing"),
+      expense(-20, "utilities", 620_000, "transfer", "PLN", "Listrik"),
+      expense(-9, "rent", 2_500_000, "transfer", "Bu Lina", "Sewa rumah", true),
+      expense(-6, "food", 420_000, "transfer", "Toko Pakan Bintaro", "Dry food & wet food"),
+      expense(-3, "supplies", 150_000, "cash", "Pet Shop Sektor 3", "Pasir kucing, pee pad"),
+      expense(-2, "vet", 250_000, "transfer", "Klinik drh. Ayu", "Obat muntah untuk Kopi"),
+    ],
   };
   // The old, finished stay already has its invoice, so the invoice pages have something to show.
   const old = bookings[5];

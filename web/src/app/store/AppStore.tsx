@@ -3,9 +3,10 @@ import type { BookingIssue } from "@/app/domain/bookingRules";
 import type { BookingPatch } from "@/app/domain/bookingRules";
 import type { CareIssue } from "@/app/domain/careLog";
 import type { PaymentIssue } from "@/app/domain/payments";
+import type { ExpenseIssue } from "@/app/domain/finance";
 import type { ChargeIssue } from "@/app/domain/charges";
 import type { InvoiceIssue } from "@/app/domain/invoices";
-import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Payment, Pet } from "@/app/domain/types";
+import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Expense, Hotel, HotelData, HotelSettings, ISODate, Payment, Pet } from "@/app/domain/types";
 import { emptyData } from "@/app/domain/types";
 import * as actions from "./actions";
 import { sampleData, type SampleKind } from "./sampleData";
@@ -71,6 +72,11 @@ function useStoreValue(repo: HotelRepository) {
       recordCare: (entry: Omit<CareEntry, "id">): CareIssue[] => run((s) => actions.recordCare(s, entry)),
       removeCare: (id: string) => commit(actions.removeCare(latest.current, id)),
       markReportSent: (bookingId: string, date: ISODate, at: string) => commit(actions.markReportSent(latest.current, bookingId, date, at)),
+      /** Empty when saved; otherwise what is wrong with it. */
+      saveExpense: (expense: Expense): ExpenseIssue[] => run((s) => actions.saveExpense(s, expense)),
+      /** Returns how many were added. */
+      addExpenses: (list: Omit<Expense, "id">[]): number => run((s) => actions.addExpenses(s, list)),
+      removeExpense: (id: string) => commit(actions.removeExpense(latest.current, id)),
       loadSample: (kind: SampleKind = "simple") => commit(sampleData(kind)),
       /** Replaces everything with a restored backup. The caller has already checked it with `parseStored`. */
       importData: (next: HotelData) => commit(next),

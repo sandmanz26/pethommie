@@ -8,6 +8,7 @@ import {
   type BookingSource,
   type Cage,
   type CareEntry,
+  type Expense,
   type Charge,
   type HotelData,
   type ISODate,
@@ -217,7 +218,60 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
     const again = buildInvoice(data, wrong.bookingId, { id: newId(), issuedOn: wrong.issuedOn, dueOn: wrong.dueOn, language: wrong.language });
     if ("invoice" in again) data.invoices.push(again.invoice);
   }
+  data.expenses = expensesFor(data, today, rnd);
   return data;
+}
+
+/**
+ * Six months of what a 28-place hotel spends: rent, three staff, bills every month; pet food and litter bought each
+ * week in step with the guests; the vet, repairs, ads and card fees now and then. Nothing after today.
+ */
+function expensesFor(data: HotelData, today: ISODate, rnd: () => number): Expense[] {
+  const between = (lo: number, hi: number) => lo + Math.floor(rnd() * (hi - lo + 1));
+  const round = (n: number) => Math.round(n / 1_000) * 1_000;
+  const out: Expense[] = [];
+  const add = (date: ISODate, category: Expense["category"], amount: number, method: Expense["method"], vendor: string, note = "", recurring = false) => {
+    if (date <= today && amount > 0) out.push({ id: newId(), date, category, amount: round(amount), method, vendor, note, recurring });
+  };
+  const petNights = (from: ISODate, to: ISODate) =>
+    data.bookings
+      .filter((b) => b.status !== "cancelled")
+      .reduce((n, b) => n + Math.max(0, nights(b.checkIn > from ? b.checkIn : from, b.checkOut < to ? b.checkOut : to)) * (1 + b.companionIds.length), 0);
+
+  let month = addDays(today, -175).slice(0, 7);
+  const last = today.slice(0, 7);
+  for (let i = 0; month <= last && i < 12; i++) {
+    const day = (d: number) => `${month}-${String(d).padStart(2, "0")}`;
+    add(day(1), "rent", 6_000_000, "transfer", "Pak Hendro (pemilik ruko)", "Sewa ruko Kemang", true);
+    add(day(25), "staff", 3_200_000, "transfer", "Rudi", "Gaji perawat", true);
+    add(day(25), "staff", 3_200_000, "transfer", "Wati", "Gaji perawat", true);
+    add(day(25), "staff", 2_600_000, "transfer", "Andi", "Gaji resepsionis paruh waktu", true);
+    add(day(5), "utilities", between(1_500_000, 2_100_000), "transfer", "PLN", "Listrik, AC 24 jam");
+    add(day(5), "utilities", 450_000, "transfer", "IndiHome", "Internet & CCTV", true);
+    add(day(6), "utilities", between(180_000, 260_000), "transfer", "PDAM", "Air");
+    add(day(10), "cleaning", between(350_000, 500_000), "cash", "Toko Bersih Jaya", "Disinfektan, sabun, kain pel");
+    add(day(12), "marketing", between(400_000, 1_200_000), "card", "Meta Ads", "Iklan Instagram");
+    if (rnd() < 0.5) add(day(between(8, 26)), "maintenance", between(250_000, 900_000), "cash", "Pak Joko", "Perbaikan pintu kandang & AC");
+    if (rnd() < 0.25) add(day(between(3, 27)), "equipment", between(600_000, 2_400_000), "transfer", "Tokopedia", "Kandang lipat & tempat makan");
+    // food and litter, bought weekly for the pet-nights of that week
+    for (let w = 1; w <= 22; w += 7) {
+      const from = day(w);
+      const to = addDays(from, 7);
+      const n = petNights(from, to);
+      add(from, "food", n * between(7_500, 9_500), "transfer", "Toko Pakan Sejahtera", `Dry & wet food, ${n} malam anabul`);
+      add(addDays(from, 1), "supplies", n * between(2_500, 3_500), "cash", "Pet Shop Kemang", "Pasir kucing, pee pad, plastik");
+    }
+    add(day(between(9, 23)), "vet", between(300_000, 1_100_000), "transfer", "Klinik drh. Sinta", "Pemeriksaan & obat tamu");
+    add(day(15), "grooming", between(200_000, 450_000), "cash", "Pet Shop Kemang", "Sampo, sisir, gunting kuku");
+    // card and QRIS fees on what came in that way
+    const viaCard = data.bookings
+      .flatMap((b) => b.payments)
+      .filter((p) => (p.method === "qris" || p.method === "card") && p.kind !== "refund" && p.at.slice(0, 7) === month)
+      .reduce((s, p) => s + p.amount, 0);
+    add(day(28), "fees", viaCard * 0.007, "transfer", "Bank & QRIS", "Biaya MDR QRIS/kartu");
+    month = addDays(`${month}-28`, 4).slice(0, 7);
+  }
+  return out;
 }
 
 // ---------- helpers and made-up names ----------

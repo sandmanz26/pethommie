@@ -3,6 +3,7 @@ export const NAV_ART = [
   "today", "bookings", "calendar", "pets", "customers", "payments", "invoices", "reports",
   "tax", "cages", "settings", "help", "more", "website", "logout", "new-booking",
   "dashboard", "link", "transactions", "upgrade", "chat", "night", "grooming", "play",
+  "expenses", "finance", "savings", "incident",
 ] as const;
 export type NavArt = (typeof NAV_ART)[number];
 

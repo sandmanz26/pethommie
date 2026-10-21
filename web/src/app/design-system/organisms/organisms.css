@@ -407,3 +407,20 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-upgrade__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
 .ds-upgrade__foot small { color: var(--ink-soft); }
 .ds-vaccinegate { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--radius); background: var(--danger-bg); color: var(--ink); }
+
+/* ---------- Two measures side by side; and profit above / loss below zero ---------- */
+.ds-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.82em; color: var(--ink-soft); }
+.ds-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ds-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.ds-legend__a, .ds-pair__a { background: var(--info); }
+.ds-legend__b, .ds-pair__b { background: var(--seal); }
+.ds-pair__group { flex: 1; min-width: 10px; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 2px; border-radius: 4px 4px 0 0; padding: 0 2px; }
+.ds-pair__group i { display: block; flex: 1; max-width: 22px; min-height: 2px; border-radius: 4px 4px 0 0; }
+.ds-pair__group:hover, .ds-pair__group.is-active { background: var(--surface-sunk); }
+.ds-signed__plot { border-top: 0; }
+.ds-signed__zero { position: absolute; left: 0; right: 0; border-top: 1.5px solid var(--ink-faint); z-index: 1; pointer-events: none; }
+.ds-signed__col { position: relative; flex: 1; min-width: 6px; height: 100%; border-radius: 4px; }
+.ds-signed__col:hover, .ds-signed__col.is-active { background: var(--surface-sunk); }
+.ds-signed__col i { position: absolute; left: 15%; right: 15%; min-height: 2px; }
+.ds-signed__col i.is-gain { background: var(--ok); border-radius: 4px 4px 0 0; }
+.ds-signed__col i.is-loss { background: var(--danger); border-radius: 0 0 4px 4px; }

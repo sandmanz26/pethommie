@@ -84,7 +84,7 @@
 .pg-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; }
 .pg-toolbar .ds-field { min-width: 11rem; }
 .pg-invoice-tools { display: grid; gap: 8px; justify-items: start; margin-bottom: 14px; }
-.pg-tablewrap { overflow-x: auto; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+.pg-tablewrap { position: relative; overflow-x: auto; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
 .pg-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 34rem; }
 .pg-table th { text-align: left; padding: 10px 12px; font: 800 0.74rem var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 1.5px solid var(--line); white-space: nowrap; }
 .pg-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
@@ -142,3 +142,26 @@
 .pg-link__how { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
 .pg-archived { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-width: 32rem; }
 .pg-archived li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-radius: var(--radius); background: var(--surface); color: var(--ink-soft); }
+.pg-toolbar__label { align-self: center; font-size: 0.9em; font-weight: 700; }
+.pg-finance__period { margin: 0; font-weight: 700; font-size: 1.05em; }
+.pg-finance__side { display: grid; gap: 22px; align-content: start; min-width: 0; }
+.pg-statement__table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.pg-statement__table th { text-align: left; font-weight: 400; padding: 7px 0 7px 14px; }
+.pg-statement__table td { text-align: right; padding: 7px 0; white-space: nowrap; }
+.pg-statement__table tr { border-bottom: 1px solid var(--line); }
+.pg-statement__table tr.is-sub th, .pg-statement__table tr.is-sub td { color: var(--ink-soft); font-weight: 600; padding-left: 0; }
+.pg-statement__table tr.is-total th, .pg-statement__table tr.is-total td { font-weight: 800; padding-left: 0; border-top: 1.5px solid var(--ink); }
+.pg-statement__table tr.is-total.is-negative td { color: var(--danger); }
+.pg-pernight { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.pg-pernight div { display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--radius); background: var(--paper); }
+.pg-pernight dt { font-size: 0.78em; color: var(--ink-soft); }
+.pg-pernight dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .pg-pernight { grid-template-columns: 1fr; } }
+.pg-breakeven { margin: 0; }
+.pg-meter--wide { width: 100%; height: 10px; margin: 0; }
+.pg-meter i.is-short { background: var(--warn); }
+@media print {
+  .pg-finance__side, .pg-columns { break-inside: avoid; }
+  .ds-chart, .pg-panel, .ds-barlist { box-shadow: none; border: 1px solid #ddd; }
+}
+.pg-finance__period small { font-weight: 400; color: var(--ink-soft); }

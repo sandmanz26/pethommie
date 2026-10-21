@@ -70,7 +70,7 @@ describe("simple and advanced mode", () => {
     const more = within(await screen.findByRole("navigation", { name: "More" }));
     expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Reports", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
     await user.click(screen.getAllByRole("tab", { name: "Advanced" })[0]);
-    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Invoices", "Reports", "Tax", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
+    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Expenses", "Invoices", "Finance", "Reports", "Tax", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
   });
 
   it("offers the upgrade in Settings on Simple, and takes you to the dashboard on Advanced", async () => {

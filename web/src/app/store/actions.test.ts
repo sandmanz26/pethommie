@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aBooking, aCage, aCareEntry, aHotel, aSmallHotel, anOwner, aPet } from "@/app/testing/fixtures";
-import { addCharge, changeBookingStatus, checkInBooking, issueInvoice, removeCharge, saveSettings, voidInvoice, editBooking, markReportSent, recordCare, recordPayment, removeCage, removeCare, removePayment, removePet, upsertBooking, cancelBooking, checkOutBooking, restoreCage, upsertOwner, upsertPet } from "./actions";
+import { addCharge, changeBookingStatus, checkInBooking, issueInvoice, removeCharge, saveSettings, voidInvoice, editBooking, markReportSent, recordCare, recordPayment, removeCage, removeCare, removePayment, removePet, upsertBooking, cancelBooking, checkOutBooking, restoreCage, upsertOwner, upsertPet, saveExpense, addExpenses, removeExpense } from "./actions";
 
 const stay = aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-18" });
 
@@ -450,5 +450,31 @@ describe("a stay's rate when it moves", () => {
     expect(later.bookings[0].rate).toBe(45_000);
     const moved = editBooking(s, "b1", { cageId: "m1" }).state;
     expect(moved.bookings[0].rate).toBe(75_000);
+  });
+});
+
+describe("expenses", () => {
+  const e = { id: "e1", date: "2026-10-01", category: "food" as const, amount: 250_000, method: "cash" as const, vendor: " Toko ", note: "", recurring: false };
+
+  it("saves one, edits it in place, and removes it", () => {
+    const one = saveExpense(aSmallHotel(), e);
+    expect(one.result).toEqual([]);
+    expect(one.state.expenses).toEqual([{ ...e, vendor: "Toko" }]);
+    const edited = saveExpense(one.state, { ...e, amount: 300_000 }).state;
+    expect(edited.expenses.map((x) => x.amount)).toEqual([300_000]);
+    expect(removeExpense(edited, "e1").expenses).toEqual([]);
+  });
+
+  it("refuses a wrong amount or date and changes nothing", () => {
+    const s = aSmallHotel();
+    expect(saveExpense(s, { ...e, amount: -5 })).toEqual({ state: s, result: ["amount"] });
+    expect(saveExpense(s, { ...e, date: "kemarin" }).result).toEqual(["date"]);
+  });
+
+  it("adds several at once, leaving out any that is wrong", () => {
+    const { id: _id, ...draft } = e;
+    const out = addExpenses(aSmallHotel(), [draft, { ...draft, amount: 0 }]);
+    expect(out.result).toBe(1);
+    expect(out.state.expenses).toHaveLength(1);
   });
 });

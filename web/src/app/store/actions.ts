@@ -4,7 +4,8 @@ import { careIssues, type CareIssue } from "@/app/domain/careLog";
 import { isValidAmount, paidAmount, type PaymentIssue } from "@/app/domain/payments";
 import { chargeIssues, type ChargeIssue } from "@/app/domain/charges";
 import { buildInvoice, type InvoiceIssue } from "@/app/domain/invoices";
-import type { Arrival, Booking, BookingStatus, CancelReason, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Invoice, Language, Owner, Payment, PaymentMethod, Pet } from "@/app/domain/types";
+import { expenseIssues, type ExpenseIssue } from "@/app/domain/finance";
+import type { Arrival, Booking, BookingStatus, CancelReason, CareEntry, Cage, Charge, Expense, Hotel, HotelData, HotelSettings, ISODate, Invoice, Language, Owner, Payment, PaymentMethod, Pet } from "@/app/domain/types";
 
 /**
  * Every change to the hotel's data, as a pure function: (state, input) → new state.
@@ -239,3 +240,19 @@ export function voidInvoice(s: HotelData, invoiceId: string, on: ISODate): Outco
   const next: Invoice = { ...invoice, status: "void", voidedOn: on };
   return { state: { ...s, invoices: s.invoices.map((i) => (i.id === invoiceId ? next : i)) }, result: true };
 }
+
+/** Saves an expense (new, or an edit of one with the same id), unless its amount, date or category is wrong. */
+export function saveExpense(s: HotelData, expense: Expense): Outcome<ExpenseIssue[]> {
+  const issues = expenseIssues(expense);
+  if (issues.length) return { state: s, result: issues };
+  const clean = { ...expense, vendor: expense.vendor.trim(), note: expense.note.trim() };
+  return { state: { ...s, expenses: upsert(s.expenses, clean) }, result: [] };
+}
+
+/** Adds several expenses at once (the recurring ones of a month); any that is wrong is left out. */
+export function addExpenses(s: HotelData, list: Omit<Expense, "id">[]): Outcome<number> {
+  const ok = list.filter((e) => expenseIssues(e).length === 0).map((e) => ({ ...e, id: newId() }));
+  return { state: { ...s, expenses: [...s.expenses, ...ok] }, result: ok.length };
+}
+
+export const removeExpense = (s: HotelData, id: string): HotelData => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) });
