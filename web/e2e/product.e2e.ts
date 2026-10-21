@@ -153,7 +153,7 @@ test('the landing page shows each tour screen and every feature picture, and the
   await expect(tabs).toHaveCount(3)
   for (const tab of await tabs.all()) {
     await tab.click()
-    for (const img of await page.locator('#tour [role=tabpanel]:not([hidden]) img').all()) {
+    for (const img of await page.locator('#tour [role=tabpanel]:not([hidden]) img:visible').all()) {
       await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
     }
   }
@@ -165,6 +165,21 @@ test('the landing page shows each tour screen and every feature picture, and the
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
   }
   await expect(page.getByRole('contentinfo')).toContainText('All rights reserved')
+})
+
+test('from the tour, one click opens that very screen in the demo: no login form, sample data in it', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('#tour').scrollIntoViewIfNeeded()
+  await page.getByRole('tab', { name: 'One stay' }).click()
+  await page.getByRole('link', { name: 'Open a stay in the demo' }).click()
+  await expect(page).toHaveURL(/\/app\/bookings\/(?!current)[^/]+$/)
+  await expect(page.getByRole('heading', { name: 'Daily care log' })).toBeVisible()
+
+  await page.goto('/')
+  await page.getByRole('tab', { name: 'Calendar' }).click()
+  await page.getByRole('link', { name: 'Open the calendar in the demo' }).click()
+  await expect(page).toHaveURL(/\/app\/calendar$/)
+  await expect(page.getByRole('heading', { name: 'Cage calendar', level: 1 })).toBeVisible()
 })
 
 test('the app opens without a connection after the first visit, and the website is not touched', async ({ page, context }) => {

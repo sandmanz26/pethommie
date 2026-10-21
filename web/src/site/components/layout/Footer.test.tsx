@@ -33,7 +33,7 @@ describe("Footer", () => {
     const foot = within(screen.getByRole("contentinfo"));
     expect(foot.getByRole("link", { name: "Privacy policy" })).toHaveAttribute("href", "/privacy");
     expect(foot.getByRole("link", { name: "Terms of use" })).toHaveAttribute("href", "/terms");
-    expect(foot.getByRole("link", { name: "Open the demo" })).toHaveAttribute("href", "/app/login");
+    expect(foot.getByRole("link", { name: "Open the demo" })).toHaveAttribute("href", "/app/demo");
     expect(foot.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/#faq");
   });
 

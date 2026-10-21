@@ -27,7 +27,7 @@ export function Footer() {
               </li>
             ))}
             <li>
-              <a href="/app/login">{f.demo}</a>
+              <a href="/app/demo">{f.demo}</a>
             </li>
           </ul>
         </nav>

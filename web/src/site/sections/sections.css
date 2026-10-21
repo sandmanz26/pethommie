@@ -121,7 +121,14 @@
   letter-spacing: 0.04em;
 }
 
-/* ---------- Product tour: a tab bar, the laptop view with the phone view beside it ---------- */
+/* ---------- Product tour: tabs; the screen with numbered points, and beside it what they do and a way in ---------- */
+.tour__lead {
+  max-width: 34rem;
+  margin: 12px auto 0;
+  color: var(--ink-soft);
+  font-size: var(--step-0);
+  text-wrap: balance;
+}
 .tour__tabs {
   display: flex;
   width: fit-content;
@@ -149,32 +156,35 @@
   background: var(--ink);
   color: var(--paper);
 }
-/* A soft panel the screens sit on, with a dotted grid like a desk mat. The laptop and the phone stand side by side,
-   bottoms aligned, so neither covers the other. */
+/* The screen and its pitch side by side: the ask sits next to the picture, not under it. */
 .tour__stage {
-  position: relative;
-  max-width: 64rem;
-  margin-inline: auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(120px, 20%, 210px);
-  align-items: end;
-  gap: clamp(16px, 3vw, 36px);
-  padding: clamp(20px, 4vw, 48px);
+  grid-template-columns: minmax(0, 2.1fr) minmax(16rem, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+.tour__stage[hidden] {
+  display: none;
+}
+/* A soft panel the screen sits on, with a dotted grid like a desk mat. */
+.tour__screen {
+  padding: clamp(16px, 3vw, 36px);
   border-radius: 28px;
   background:
     radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ink) 12%, transparent) 1px, transparent 1.6px) 0 0 / 22px 22px,
     linear-gradient(135deg, #f3dcc0, #e8e2c8 55%, #d9e4cf);
 }
-.tour__stage[hidden] {
-  display: none;
-}
 .tour__laptop {
   position: relative;
   padding-top: 24px;
   border-radius: 14px;
-  overflow: hidden;
   background: var(--ink);
   box-shadow: 0 30px 60px -30px rgba(27, 26, 23, 0.6);
+}
+.tour__shot {
+  position: relative;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
 }
 .tour__laptop img,
 .tour__phone img {
@@ -195,7 +205,49 @@
   border-radius: 50%;
   background: color-mix(in srgb, var(--paper) 40%, transparent);
 }
+/* A numbered point on the screen, the same number as in the list beside it. */
+.tour__spot,
+.tour__num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font: 800 0.8rem / 1 var(--font-body);
+  color: #fff;
+  background: var(--seal);
+}
+.tour__spot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--seal) 25%, transparent), 0 6px 14px -4px rgba(27, 26, 23, 0.5);
+  cursor: default;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.tour__spot.is-on {
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--seal) 30%, transparent), 0 6px 14px -4px rgba(27, 26, 23, 0.5);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tour__spot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--seal) 55%, transparent);
+    animation: tour-ping 2.4s ease-out infinite;
+  }
+}
+@keyframes tour-ping {
+  70%,
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
 .tour__phone {
+  display: none;
+  width: min(64%, 240px);
+  margin-inline: auto;
   padding: 7px;
   border-radius: 28px;
   background: var(--ink);
@@ -203,29 +255,74 @@
 }
 .tour__phone img {
   border-radius: 21px;
-  aspect-ratio: 390 / 760;
+  aspect-ratio: 390 / 700;
   object-fit: cover;
   object-position: top;
 }
-.tour__caption {
-  max-width: 34rem;
+.tour__pitch {
+  display: grid;
+  gap: 18px;
+  align-content: center;
+}
+.tour__pitch h3 {
+  font-size: clamp(1.45rem, 1.1rem + 1vw, 2rem);
+  line-height: 1.1;
   text-wrap: balance;
-  margin: clamp(40px, 5vw, 56px) auto 0;
-  text-align: center;
-  font-size: var(--step-1);
+}
+.tour__points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.tour__points li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  margin-inline: -12px;
+  border-radius: 14px;
   line-height: 1.45;
+  transition: background 0.15s ease;
+}
+.tour__points li.is-on {
+  background: color-mix(in srgb, var(--paper-deep) 80%, #fff);
+}
+.tour__num {
+  margin-top: -1px;
 }
 .tour__cta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 20px;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin-top: 4px;
+}
+.tour__cta small {
   color: var(--ink-soft);
   font-size: var(--step--1);
 }
-/* Phones: only the phone view, which is the one that reads at this size. */
+.tour__trial {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: var(--step--1);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tour__trial:hover {
+  color: var(--seal);
+}
+/* Narrower: the screen on top, the pitch under it. */
+@media (max-width: 960px) {
+  .tour__stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tour__pitch {
+    max-width: 36rem;
+  }
+}
+/* Phones: the phone view, which is the one that reads at this size; the points become ticks. */
 @media (max-width: 640px) {
   .tour__tabs {
     width: 100%;
@@ -234,20 +331,35 @@
     flex: 1;
     padding-inline: 8px;
   }
-  .tour__stage {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    padding: 24px 0;
+  .tour__screen {
+    padding: 20px 0;
   }
   .tour__laptop {
     display: none;
   }
   .tour__phone {
-    width: min(64%, 240px);
+    display: block;
   }
-  .tour__caption {
-    margin-top: 20px;
-    font-size: 1.05rem;
+  .tour__pitch h3 {
+    font-size: var(--step-1);
+  }
+  .tour__num {
+    font-size: 0;
+    width: 22px;
+    height: 22px;
+    background: var(--ink);
+  }
+  .tour__num::before {
+    content: "✓";
+    font-size: 0.75rem;
+  }
+  .tour__cta {
+    justify-items: stretch;
+    text-align: center;
+  }
+  .tour__cta .btn {
+    justify-content: center;
+    padding-block: 15px;
   }
 }
 

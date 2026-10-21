@@ -5,6 +5,7 @@ import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { Faq } from "./Faq";
 import { FinalCta } from "./FinalCta";
 import { Pricing } from "./Pricing";
+import { tourSpots } from "@/site/content/tourSpots";
 import { ProductTour } from "./ProductTour";
 import { Kinds } from "./Kinds";
 import { Compare } from "./Compare";
@@ -24,14 +25,18 @@ describe("landing sections", () => {
     expect(faq.getByText(/free for 30 days/i)).toBeVisible();
   });
 
-  it("shows real screens, one at a time behind tabs, on a laptop and a phone, in the visitor's language", async () => {
+  it("shows real screens behind tabs, says what each does for the owner, and opens it in the demo in one click", async () => {
     wrap(<ProductTour />);
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((t) => t.textContent)).toEqual(["Today", "One stay", "Calendar"]);
     expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
     expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.webp");
     expect(screen.getByRole("img", { name: "Pethommie on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
-    expect(screen.getByText(/who arrives, who leaves/i)).toBeInTheDocument();
+    // a benefit, three numbered points, and the way in beside them
+    expect(screen.getByRole("heading", { name: /know your day/i })).toBeInTheDocument();
+    expect(within(screen.getByRole("list", { name: /what this screen does/i })).getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Open Today in the demo" })).toHaveAttribute("href", "/app/demo");
+    expect(screen.getByRole("link", { name: /start your free 30 days/i })).toHaveAttribute("href", "/app/register");
 
     await userEvent.click(tabs[2]);
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
@@ -39,14 +44,32 @@ describe("landing sections", () => {
     expect(img).toHaveAttribute("src", "/screens/calendar-en.webp");
     expect(img).toHaveAttribute("width");
     expect(img).toHaveAttribute("height");
-    expect(screen.getByText(/tap a free day to book/i)).toBeInTheDocument();
+    expect(screen.getByText(/tap an empty day to book it/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open the calendar in the demo" })).toHaveAttribute("href", "/app/demo?to=%2Fapp%2Fcalendar");
+
+    await userEvent.click(tabs[1]);
+    expect(screen.getByRole("link", { name: "Open a stay in the demo" })).toHaveAttribute("href", "/app/demo?to=%2Fapp%2Fbookings%2Fcurrent");
 
     // arrow keys move between tabs
-    tabs[2].focus();
-    await userEvent.keyboard("{ArrowRight}");
+    tabs[1].focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(tabs[0]).toHaveFocus();
-    expect(screen.getByRole("link", { name: "Open the demo" })).toHaveAttribute("href", "/app/login");
+  });
+
+  it("marks each point on the screen with its number, for every screen and language", () => {
+    for (const locale of ["en", "id"] as const)
+      for (const key of ["today", "booking", "calendar"]) {
+        const spots = tourSpots[locale][key];
+        expect(spots, `${locale} ${key}`).toHaveLength(3);
+        for (const s of spots) {
+          expect(s, `${locale} ${key}`).not.toBeNull();
+          expect(s!.x).toBeGreaterThan(0);
+          expect(s!.x).toBeLessThan(100);
+          expect(s!.y).toBeGreaterThan(0);
+          expect(s!.y).toBeLessThan(100);
+        }
+      }
   });
 
   it("prices only what exists, and says plainly what is coming", () => {

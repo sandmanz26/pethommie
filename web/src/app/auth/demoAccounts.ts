@@ -37,6 +37,9 @@ export const demoAccounts: SeedAccount[] = [
   },
 ];
 
+/** The demo a visitor from the website lands in (/app/demo): the small hotel, already filled with sample data. */
+export const DEMO_ENTRY_EMAIL = "demo@pethommie.id";
+
 export const MOCK_REGISTRANT_PASSWORD = "Pethommie123";
 
 type Registrant = { name: string; hotelName: string; emailName: string; whatsapp: string };

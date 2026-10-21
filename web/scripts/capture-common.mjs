@@ -28,8 +28,19 @@ export async function open(browser, locale, { phone = false, viewport = { width:
   return { context, page }
 }
 
-/** Signs in to the small sample hotel (filled with sample data) in advanced mode, or to the big one. */
+/**
+ * Signs in to a sample hotel:
+ *   'demo'   the one a website visitor lands in with one click (/app/demo), as they see it
+ *   'small'  a fresh account filled with the same sample data, in advanced mode (every feature on)
+ *   'big'    the big hotel, months of history
+ */
 export async function signIn(page, hotel = 'small') {
+  if (hotel === 'demo') {
+    await page.goto(`${base}/app/demo`)
+    await page.waitForURL((u) => !u.pathname.endsWith('/demo'))
+    await page.getByRole('heading', { level: 1 }).first().waitFor()
+    return
+  }
   await page.goto(`${base}/app/login`)
   await page.getByRole('button', { name: /^(use|pakai)$/i }).nth(hotel === 'big' ? 2 : 1).click()
   await page.getByRole('button', { name: /^(log in|masuk)$/i }).click()
