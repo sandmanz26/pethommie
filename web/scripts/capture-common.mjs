@@ -1,0 +1,55 @@
+// What every landing-page capture shares: a clean window on the built app, signed in to a sample hotel.
+// No service worker (its "ready to work offline" notice), no backup reminder, no demo line, and a fixed morning in
+// Jakarta so the times on screen read like a working day.
+import { chromium } from '@playwright/test'
+
+export const base = process.env.E2E_BASE_URL ?? 'http://localhost:4173'
+export const out = new URL('../public/screens/', import.meta.url).pathname
+const today = new Date().toISOString().slice(0, 10)
+
+export const launch = () => chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {})
+
+/** `phone`: 390x844 at 2x, as an iPhone; otherwise a laptop window of `viewport` at `scale`. */
+export async function open(browser, locale, { phone = false, viewport = { width: 1280, height: 800 }, scale = 1 } = {}) {
+  const context = await browser.newContext({
+    viewport: phone ? { width: 390, height: 844 } : viewport,
+    deviceScaleFactor: phone ? 2 : scale,
+    reducedMotion: 'reduce',
+    serviceWorkers: 'block',
+    timezoneId: 'Asia/Jakarta',
+    ...(phone ? { isMobile: true, hasTouch: true } : {}),
+  })
+  await context.addInitScript(([l, d]) => {
+    localStorage.setItem('pethommie.locale', l)
+    for (const id of ['demo-pro', 'demo-rina', 'demo-baru']) localStorage.setItem(`pethommie.backupAt.${id}`, d)
+  }, [locale, today])
+  const page = await context.newPage()
+  await page.clock.setFixedTime(new Date(`${today}T09:40:00+07:00`))
+  return { context, page }
+}
+
+/** Signs in to the small sample hotel (filled with sample data) in advanced mode, or to the big one. */
+export async function signIn(page, hotel = 'small') {
+  await page.goto(`${base}/app/login`)
+  await page.getByRole('button', { name: /^(use|pakai)$/i }).nth(hotel === 'big' ? 2 : 1).click()
+  await page.getByRole('button', { name: /^(log in|masuk)$/i }).click()
+  await page.waitForURL((u) => !u.pathname.includes('login'))
+  if (hotel === 'small') {
+    await page.getByRole('button', { name: /sample data|data contoh/i }).click()
+    await page.getByRole('heading', { level: 1 }).first().waitFor()
+    await page.goto(`${base}/app/more`)
+    await page.getByRole('tab', { name: /^(advanced|lengkap)$/i }).first().click()
+  }
+}
+
+/** Goes to a screen and waits until it has drawn, without the demo line under it. */
+export async function show(page, path) {
+  if (path) await page.goto(`${base}${path}`)
+  await page.getByRole('heading', { level: 1 }).first().waitFor()
+  await page.addStyleTag({ content: '.tpl-app__demo { display: none !important; }' })
+  await page.evaluate(() => document.fonts.ready)
+  // the pointer rests in an empty corner, not over the last thing clicked (a hovered menu item would show)
+  const { width } = page.viewportSize()
+  await page.mouse.move(width - 4, 4)
+  await page.waitForTimeout(500)
+}

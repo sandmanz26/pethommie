@@ -1,44 +1,31 @@
-// Captures the app screens shown in the landing page's product tour, from the sample hotel.
+// Captures the screens in the landing page's product tour, from the small sample hotel, in both languages:
+//   public/screens/<today|booking|calendar>-<locale>.png        laptop view, 1280x800 at 2x
+//   public/screens/<today|booking|calendar>-phone-<locale>.png  phone view, 390x844 at 2x
 //
 //   npm run build && npx vite preview --port 4173 &      (the built app must be running)
 //   PW_CHROMIUM=/path/to/chromium node scripts/capture-screens.mjs
+//   python3 scripts/prepare-resources.py --screens       (PNG -> WebP, sized for the page)
 //
-// Writes public/screens/<today|booking|calendar>-<en|id>.jpg at 1280x800. Run it again when the app's look changes.
-import { chromium } from '@playwright/test'
+// Run it again when the app's look changes.
 import { mkdirSync } from 'node:fs'
+import { launch, open, out, show, signIn } from './capture-common.mjs'
 
-const base = process.env.E2E_BASE_URL ?? 'http://localhost:4173'
-const out = new URL('../public/screens/', import.meta.url).pathname
 mkdirSync(out, { recursive: true })
-
-const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {})
+const browser = await launch()
 for (const locale of ['en', 'id']) {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, reducedMotion: 'reduce' })
-  await context.addInitScript((l) => localStorage.setItem('pethommie.locale', l), locale)
-  const page = await context.newPage()
-  await page.goto(`${base}/app/login`)
-  await page.getByRole('button', { name: /^(use|pakai)$/i }).nth(1).click()
-  await page.getByRole('button', { name: /^(log in|masuk)$/i }).click()
-  await page.getByRole('button', { name: /sample data|data contoh/i }).click()
-  await page.getByRole('heading', { level: 1 }).first().waitFor()
-
-  const shot = async (name) => {
-    await page.waitForTimeout(500) // let images and fonts settle
-    const banner = page.getByRole('button', { name: /^(dismiss|tutup)$/i }) // the one-time "works offline" notice
-    if (await banner.count()) await banner.first().click()
-    await page.screenshot({ path: `${out}${name}-${locale}.jpg`, type: 'jpeg', quality: 82 })
-    console.log(`${name}-${locale}.jpg`)
+  for (const phone of [false, true]) {
+    const { context, page } = await open(browser, locale, { phone, scale: 2 })
+    await signIn(page)
+    const file = (key) => `${out}${key}${phone ? '-phone' : ''}-${locale}.png`
+    await show(page, '/app')
+    const stay = (await page.locator('a[href*="#care"]').first().getAttribute('href')).replace('#care', '')
+    await page.screenshot({ path: file('today') })
+    await show(page, '/app/calendar')
+    await page.screenshot({ path: file('calendar') })
+    await show(page, stay)
+    await page.screenshot({ path: file('booking') })
+    console.log(`${phone ? 'phone' : 'laptop'} ${locale}`)
+    await context.close()
   }
-
-  await shot('today')
-  await page.goto(`${base}/app/calendar`)
-  await page.getByRole('heading', { level: 1 }).first().waitFor()
-  await shot('calendar')
-  await page.goto(`${base}/app`)
-  const care = await page.locator('a[href*="#care"]').first().getAttribute('href')
-  await page.goto(`${base}${care.replace('#care', '')}`)
-  await page.getByRole('heading', { level: 1 }).first().waitFor()
-  await shot('booking')
-  await context.close()
 }
 await browser.close()

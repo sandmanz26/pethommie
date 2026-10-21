@@ -3,13 +3,13 @@ import { useSiteT } from "@/site/i18n/useSiteT";
 import { Button } from "@/site/components/ui/Button";
 import "./sections.css";
 
-/** The screens are captured from the real app (scripts/capture-screens.mjs and capture-features.mjs), per language. */
-const SCREEN_SIZE = { width: 1280, height: 800 };
+/** The screens are captured from the real app (scripts/capture-screens.mjs), per language. */
+const SCREEN_SIZE = { width: 1600, height: 1000 };
 const PHONE_SIZE = { width: 520, height: 1125 };
 
 /**
- * Three real screens behind a tab bar: the laptop view with the same screen on a phone beside it (on a phone,
- * only the phone view, which is the one that reads at that size).
+ * Three real screens behind a tab bar: the laptop view with the same screen on a phone beside it, side by side so
+ * neither hides the other (on a phone, only the phone view, which is the one that reads at that size).
  */
 export function ProductTour() {
   const { t, locale } = useSiteT();
@@ -56,7 +56,7 @@ export function ProductTour() {
                 <i />
                 <i />
               </span>
-              <img src={`/screens/${it.key}-${locale}.jpg`} alt={tour.imageAlt(it.title)} {...SCREEN_SIZE} loading="lazy" decoding="async" />
+              <img src={`/screens/${it.key}-${locale}.webp`} alt={tour.imageAlt(it.title)} {...SCREEN_SIZE} loading="lazy" decoding="async" />
             </div>
             <div className="tour__phone">
               <img src={`/screens/${it.key}-phone-${locale}.webp`} alt={tour.phoneAlt(it.title)} {...PHONE_SIZE} loading="lazy" decoding="async" />

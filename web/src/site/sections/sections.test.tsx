@@ -29,14 +29,14 @@ describe("landing sections", () => {
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((t) => t.textContent)).toEqual(["Today", "One stay", "Calendar"]);
     expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
-    expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.jpg");
+    expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.webp");
     expect(screen.getByRole("img", { name: "Pethommie on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
     expect(screen.getByText(/who arrives, who leaves/i)).toBeInTheDocument();
 
     await userEvent.click(tabs[2]);
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
     const img = screen.getByRole("img", { name: "Pethommie screen: Calendar" });
-    expect(img).toHaveAttribute("src", "/screens/calendar-en.jpg");
+    expect(img).toHaveAttribute("src", "/screens/calendar-en.webp");
     expect(img).toHaveAttribute("width");
     expect(img).toHaveAttribute("height");
     expect(screen.getByText(/tap a free day to book/i)).toBeInTheDocument();

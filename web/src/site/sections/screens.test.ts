@@ -10,7 +10,7 @@ describe("landing page pictures", () => {
   it("exist for every tour screen, laptop and phone, in every language, so no image is broken", () => {
     for (const screen of ["today", "booking", "calendar"]) {
       for (const locale of ["en", "id"]) {
-        expect(existsSync(file(`/screens/${screen}-${locale}.jpg`)), screen).toBe(true);
+        expect(existsSync(file(`/screens/${screen}-${locale}.webp`)), screen).toBe(true);
         expect(existsSync(file(`/screens/${screen}-phone-${locale}.webp`)), screen).toBe(true);
       }
     }

@@ -149,16 +149,24 @@
   background: var(--ink);
   color: var(--paper);
 }
-/* A soft panel the screens sit on, with a dotted grid like a desk mat. */
+/* A soft panel the screens sit on, with a dotted grid like a desk mat. The laptop and the phone stand side by side,
+   bottoms aligned, so neither covers the other. */
 .tour__stage {
   position: relative;
-  max-width: 54rem;
+  max-width: 64rem;
   margin-inline: auto;
-  padding: clamp(20px, 4vw, 48px) clamp(20px, 8vw, 120px) clamp(20px, 4vw, 48px) clamp(20px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(120px, 20%, 210px);
+  align-items: end;
+  gap: clamp(16px, 3vw, 36px);
+  padding: clamp(20px, 4vw, 48px);
   border-radius: 28px;
   background:
     radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ink) 12%, transparent) 1px, transparent 1.6px) 0 0 / 22px 22px,
     linear-gradient(135deg, #f3dcc0, #e8e2c8 55%, #d9e4cf);
+}
+.tour__stage[hidden] {
+  display: none;
 }
 .tour__laptop {
   position: relative;
@@ -187,12 +195,7 @@
   border-radius: 50%;
   background: color-mix(in srgb, var(--paper) 40%, transparent);
 }
-/* The phone overlaps the laptop's bottom right corner. */
 .tour__phone {
-  position: absolute;
-  right: clamp(16px, 3vw, 40px);
-  bottom: clamp(-28px, -2vw, -12px);
-  width: clamp(120px, 19%, 200px);
   padding: 7px;
   border-radius: 28px;
   background: var(--ink);
@@ -200,12 +203,13 @@
 }
 .tour__phone img {
   border-radius: 21px;
-  aspect-ratio: 390 / 700;
+  aspect-ratio: 390 / 760;
   object-fit: cover;
   object-position: top;
 }
 .tour__caption {
   max-width: 34rem;
+  text-wrap: balance;
   margin: clamp(40px, 5vw, 56px) auto 0;
   text-align: center;
   font-size: var(--step-1);
@@ -231,7 +235,7 @@
     padding-inline: 8px;
   }
   .tour__stage {
-    display: grid;
+    grid-template-columns: 1fr;
     justify-items: center;
     padding: 24px 0;
   }
@@ -239,7 +243,6 @@
     display: none;
   }
   .tour__phone {
-    position: static;
     width: min(64%, 240px);
   }
   .tour__caption {

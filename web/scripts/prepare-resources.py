@@ -166,7 +166,10 @@ def screens() -> None:
     """PNG captures from scripts/capture-features.mjs -> WebP sized for the landing page; the PNG is removed."""
     for src in sorted((ROOT / "public" / "screens").glob("*.png")):
         shot = Image.open(src).convert("RGB")
-        shot.thumbnail((520 if "-phone-" in src.name else 1200 if src.name.startswith("wide-") else 640, 4000), Image.LANCZOS)
+        # phone views 520 wide; the tour's laptop views 1600 (shown up to ~800 CSS px); the wide dashboard 1200; feature crops 640
+        tour = src.name.split("-")[0] in {"today", "booking", "calendar"}
+        width = 520 if "-phone-" in src.name else 1600 if tour else 1200 if src.name.startswith("wide-") else 640
+        shot.thumbnail((width, 4000), Image.LANCZOS)
         print(f"{src.name}:")
         save_webp(shot, src.with_suffix(".webp"), 82)
         src.unlink()
