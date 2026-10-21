@@ -15,19 +15,27 @@ import { FirstSteps } from "@/app/design-system/organisms/FirstSteps";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { StayingRow } from "@/app/design-system/organisms/StayingRow";
 import { useCheckOut } from "./useCheckOut";
+import { useAuth } from "@/app/auth/AuthProvider";
+import { BACKUP_EVERY_DAYS, daysSinceBackup } from "@/app/store/backupNote";
+import { Alert } from "@/app/design-system/molecules/Alert";
+import { useCancelBooking } from "./useCancelBooking";
 import "./pages.css";
 import { useUnitWords } from "@/app/i18n/useUnitWords";
 
 export function TodayPage() {
   const { data } = useStore();
   const checkOut = useCheckOut();
+  const cancel = useCancelBooking();
   const { t, locale } = useAppT();
   const units = useUnitWords();
   const [today] = useState(todayISO);
   const board = todayBoard(data, today);
+  const { account } = useAuth();
+  const sinceBackup = account ? daysSinceBackup(account.id, today) : 0;
+  const needsBackup = data.bookings.length > 0 && (sinceBackup === null || sinceBackup >= BACKUP_EVERY_DAYS);
   const hotel = data.hotel!;
 
-  const card = (b: Booking, action: "in" | "out") => (
+  const card = (b: Booking, action: "in" | "out", late = false) => (
     <BookingCard
       key={b.id}
       booking={b}
@@ -37,6 +45,7 @@ export function TodayPage() {
       cage={data.cages.find((c) => c.id === b.cageId)}
       checkInTo={action === "in" ? `/app/bookings/${b.id}#checkin` : undefined}
       onCheckOut={action === "out" ? () => checkOut.request(b) : undefined}
+      onNoShow={late ? () => cancel.request(b, "no_show") : undefined}
     />
   );
 
@@ -73,6 +82,15 @@ export function TodayPage() {
         }
       />
 
+      {needsBackup && (
+        <Alert tone="warn">
+          {sinceBackup === null ? t.backupNote.never : t.backupNote.since(sinceBackup)}{" "}
+          <Button size="sm" variant="secondary" to="/app/settings#data">
+            {t.backupNote.cta}
+          </Button>
+        </Alert>
+      )}
+
       {!stepsDone.every(Boolean) && <FirstSteps done={stepsDone} links={stepLinks} />}
 
       <div className="pg-stats">
@@ -88,7 +106,7 @@ export function TodayPage() {
           {board.lateArrivals.length > 0 && (
             <>
               <Badge tone="warn">{t.today.late}</Badge>
-              {board.lateArrivals.map((b) => card(b, "in"))}
+              {board.lateArrivals.map((b) => card(b, "in", true))}
             </>
           )}
           {board.arriving.length ? board.arriving.map((b) => card(b, "in")) : !board.lateArrivals.length && <EmptyState art="feature-calendar">{t.today.emptyArrivals}</EmptyState>}
@@ -130,6 +148,7 @@ export function TodayPage() {
         )}
       </section>
       {checkOut.dialog}
+      {cancel.dialog}
     </>
   );
 }

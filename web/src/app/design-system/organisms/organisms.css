@@ -406,3 +406,4 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-upgrade__list small { color: var(--ink-soft); }
 .ds-upgrade__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
 .ds-upgrade__foot small { color: var(--ink-soft); }
+.ds-vaccinegate { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--radius); background: var(--danger-bg); color: var(--ink); }

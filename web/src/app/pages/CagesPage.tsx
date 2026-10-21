@@ -14,15 +14,17 @@ import "./pages.css";
 import { useUnitWords } from "@/app/i18n/useUnitWords";
 
 export function CagesPage() {
-  const { data, saveCage, deleteCage } = useStore();
+  const { data, saveCage, deleteCage, restoreCage } = useStore();
   const { t } = useAppT();
   const units = useUnitWords();
   const [editing, setEditing] = useState<Cage | "new" | null>(null);
   const [blocked, setBlocked] = useState(false);
+  const [archivedName, setArchivedName] = useState<string | null>(null);
   const today = todayISO();
 
-  const bySize = (s: CageSize) => data.cages.filter((c) => c.size === s && !isShared(c)).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  const rooms = data.cages.filter(isShared);
+  const bySize = (s: CageSize) => data.cages.filter((c) => c.size === s && !isShared(c) && !c.archived).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const rooms = data.cages.filter((c) => isShared(c) && !c.archived);
+  const archived = data.cages.filter((c) => c.archived);
   const guestsTonight = (cageId: string) =>
     data.bookings.filter((b) => b.cageId === cageId && holdsCage(b) && b.checkIn <= today && today < b.checkOut).flatMap((b) => stayPetIds(b).map((id) => data.pets.find((p) => p.id === id)).filter((p): p is Pet => Boolean(p)));
 
@@ -52,7 +54,9 @@ export function CagesPage() {
             onDelete={
               editing !== "new"
                 ? () => {
-                    if (!deleteCage(editing.id)) return setBlocked(true);
+                    const result = deleteCage(editing.id);
+                    if (result === "busy") return setBlocked(true);
+                    setArchivedName(result === "archived" ? editing.name : null);
                     setEditing(null);
                   }
                 : undefined
@@ -61,6 +65,7 @@ export function CagesPage() {
         </>
       )}
 
+      {archivedName && <Alert tone="info">{t.cages.archivedNote(archivedName)}</Alert>}
       {data.cages.length === 0 && <EmptyState art="app-cage">{t.cages.empty}</EmptyState>}
 
       {rooms.length > 0 && (
@@ -100,6 +105,23 @@ export function CagesPage() {
           </section>
         );
       })}
+      {archived.length > 0 && (
+        <section className="pg-section" aria-label={t.cages.archivedTitle}>
+          <Heading level={2} size="md">
+            {t.cages.archivedTitle} · {archived.length}
+          </Heading>
+          <ul className="pg-archived">
+            {archived.map((c) => (
+              <li key={c.id}>
+                <span>{c.name}</span>
+                <Button size="sm" variant="secondary" onClick={() => (restoreCage(c.id), setArchivedName(null))}>
+                  {t.cages.restore}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   );
 }

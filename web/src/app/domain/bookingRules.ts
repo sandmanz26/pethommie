@@ -21,7 +21,7 @@ export function scheduleIssues(data: HotelData, s: Schedule): ScheduleIssue[] {
   const issues: ScheduleIssue[] = [];
   const datesOk = ISO_DATE.test(s.checkIn) && ISO_DATE.test(s.checkOut) && s.checkOut > s.checkIn;
   if (!datesOk) issues.push("dates");
-  if (!data.cages.some((c) => c.id === s.cageId)) issues.push("cage");
+  if (!data.cages.some((c) => c.id === s.cageId && !c.archived)) issues.push("cage");
   else if (datesOk && !cageIsFree(data, s.cageId, s.checkIn, s.checkOut, s.id, s.places ?? 1)) issues.push("cage_taken");
   return issues;
 }
@@ -71,4 +71,13 @@ export function editIssues(data: HotelData, booking: Booking, patch: BookingPatc
   if (booking.status === "checked_out" || booking.status === "cancelled") return ["locked"];
   if (booking.status === "checked_in" && patch.checkIn !== undefined && patch.checkIn !== booking.checkIn) return ["locked"];
   return bookingIssues(data, { ...booking, ...patch });
+}
+
+/**
+ * Whether a pet has a history the books depend on: a stay that has started, money on any of its stays, or an
+ * invoice. Such a pet can't be removed, or past revenue, receipts and tax would change with it.
+ */
+export function petHasHistory(s: HotelData, petId: string): boolean {
+  const stays = s.bookings.filter((b) => involvesPet(b, petId));
+  return stays.some((b) => b.status === "checked_in" || b.status === "checked_out" || b.payments.length > 0) || s.invoices.some((i) => stays.some((b) => b.id === i.bookingId));
 }

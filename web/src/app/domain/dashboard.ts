@@ -3,7 +3,7 @@ import { invoicePayment } from "./invoices";
 import { receivables, signedAmount } from "./payments";
 import { nextMonthStart, periodRange, reportFor, type Report } from "./reports";
 import { taxFor } from "./tax";
-import type { Booking, HotelData, ISODate, Invoice, Pet } from "./types";
+import type { Booking, CareEntry, HotelData, ISODate, Invoice, Pet } from "./types";
 
 /** Everything the owner wants at a glance: tonight, this month against last, what's owed, what's coming, what needs doing. */
 
@@ -34,6 +34,8 @@ export type Dashboard = {
   vaccineAlerts: Pet[];
   /** Invoices past their due date and not paid in full. */
   overdueInvoices: Invoice[];
+  /** Incidents written in the care log in the last 7 days, newest first. */
+  incidents: CareEntry[];
   /** This month's tax estimate, or null when the hotel hasn't set up how it is taxed. */
   taxThisMonth: { pph: number; ppn: number; dueOn: ISODate } | null;
 };
@@ -101,6 +103,7 @@ export function dashboardFor(data: HotelData, today: ISODate): Dashboard {
     arrivingSoon,
     vaccineAlerts,
     overdueInvoices,
+    incidents: data.careLog.filter((e) => e.kind === "incident" && dayOf(e.at) > addDays(today, -7) && dayOf(e.at) <= today).sort((a, b) => b.at.localeCompare(a.at)),
     taxThisMonth: monthTax ? { pph: monthTax.pph, ppn: monthTax.ppn, dueOn: monthTax.dueOn } : null,
   };
 }

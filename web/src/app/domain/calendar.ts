@@ -37,5 +37,5 @@ export function calendarBars(data: HotelData, cageId: string, from: ISODate, day
 
 /** Places taken on a night across the hotel (a cage counts one), for "how full are we" along the top of the calendar. */
 export function occupiedCount(data: HotelData, night: ISODate): number {
-  return data.cages.reduce((n, c) => n + Math.min(Math.max(1, c.capacity), placesUsed(data, c.id, night)), 0);
+  return data.cages.filter((c) => !c.archived).reduce((n, c) => n + Math.min(Math.max(1, c.capacity), placesUsed(data, c.id, night)), 0);
 }

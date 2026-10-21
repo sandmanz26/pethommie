@@ -1,10 +1,10 @@
-import { newId } from "@/app/domain/logic";
-import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
+import { addDays, cageIsFree, newId, placesFor } from "@/app/domain/logic";
+import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, petHasHistory, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
 import { careIssues, type CareIssue } from "@/app/domain/careLog";
 import { isValidAmount, paidAmount, type PaymentIssue } from "@/app/domain/payments";
 import { chargeIssues, type ChargeIssue } from "@/app/domain/charges";
 import { buildInvoice, type InvoiceIssue } from "@/app/domain/invoices";
-import type { Arrival, Booking, BookingStatus, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Invoice, Language, Owner, Payment, Pet } from "@/app/domain/types";
+import type { Arrival, Booking, BookingStatus, CancelReason, CareEntry, Cage, Charge, Hotel, HotelData, HotelSettings, ISODate, Invoice, Language, Owner, Payment, PaymentMethod, Pet } from "@/app/domain/types";
 
 /**
  * Every change to the hotel's data, as a pure function: (state, input) → new state.
@@ -23,11 +23,19 @@ export const setCages = (s: HotelData, cages: Cage[]): HotelData => ({ ...s, cag
 
 export const upsertCage = (s: HotelData, cage: Cage): HotelData => ({ ...s, cages: upsert(s.cages, cage) });
 
-/** Refuses (result false) while the cage has a pending or current stay. */
-export function removeCage(s: HotelData, id: string): Outcome<boolean> {
-  if (!s.cages.some((c) => c.id === id) || !cageCanBeRemoved(s, id)) return { state: s, result: false };
-  return { state: { ...s, cages: s.cages.filter((c) => c.id !== id) }, result: true };
+/**
+ * Takes a unit out of use. Refused ("busy") while it has a pending or current stay. A unit that ever had a stay is
+ * archived, so those stays keep their unit (and their price and history); one that never did is removed.
+ */
+export function removeCage(s: HotelData, id: string): Outcome<"removed" | "archived" | "busy" | "unknown"> {
+  if (!s.cages.some((c) => c.id === id)) return { state: s, result: "unknown" };
+  if (!cageCanBeRemoved(s, id)) return { state: s, result: "busy" };
+  if (s.bookings.some((b) => b.cageId === id)) return { state: { ...s, cages: s.cages.map((c) => (c.id === id ? { ...c, archived: true } : c)) }, result: "archived" };
+  return { state: { ...s, cages: s.cages.filter((c) => c.id !== id) }, result: "removed" };
 }
+
+/** Puts an archived unit back in use. */
+export const restoreCage = (s: HotelData, id: string): HotelData => ({ ...s, cages: s.cages.map((c) => (c.id === id ? { ...c, archived: false } : c)) });
 
 /** Saves an owner, reusing an existing one with the same WhatsApp number. Returns the owner's id. */
 export type OwnerInput = Omit<Owner, "id" | "language"> & { id?: string; language?: Language };
@@ -42,8 +50,13 @@ export function upsertOwner(s: HotelData, owner: OwnerInput): Outcome<string> {
 
 export const upsertPet = (s: HotelData, pet: Pet): HotelData => ({ ...s, pets: upsert(s.pets, pet) });
 
-/** Removes the pet, its stays, and everything recorded against them. */
-export function removePet(s: HotelData, id: string): HotelData {
+/** Removes the pet, its stays, and everything recorded against them; refused (false) for a pet with history. */
+export function removePet(s: HotelData, id: string): Outcome<boolean> {
+  if (!s.pets.some((p) => p.id === id) || petHasHistory(s, id)) return { state: s, result: false };
+  return { state: removePetRecords(s, id), result: true };
+}
+
+function removePetRecords(s: HotelData, id: string): HotelData {
   const gone = new Set(s.bookings.filter((b) => b.petId === id).map((b) => b.id));
   return {
     ...s,
@@ -62,10 +75,10 @@ export function upsertBooking(s: HotelData, booking: Booking): Outcome<BookingIs
   return { state: { ...s, bookings: upsert(s.bookings, booking) }, result: [] };
 }
 
-/** Moves a stay along its life cycle; refuses (result false) any other jump. */
+/** Moves a stay along its life cycle; refuses (result false) any other jump. Cancelling goes through cancelBooking. */
 export function changeBookingStatus(s: HotelData, id: string, status: BookingStatus): Outcome<boolean> {
   const current = s.bookings.find((b) => b.id === id);
-  if (!current || !canTransition(current.status, status)) return { state: s, result: false };
+  if (!current || status === "cancelled" || !canTransition(current.status, status)) return { state: s, result: false };
   return { state: { ...s, bookings: s.bookings.map((b) => (b.id === id ? { ...b, status } : b)) }, result: true };
 }
 
@@ -73,6 +86,52 @@ const withBooking = (s: HotelData, id: string, change: (b: Booking) => Booking):
   ...s,
   bookings: s.bookings.map((b) => (b.id === id ? change(b) : b)),
 });
+
+export type CancelRequest = {
+  reason: CancelReason;
+  /** Money given back now, from what was paid; 0 keeps it all (a cancellation fee, or a no-show's deposit). */
+  refund: number;
+  method: PaymentMethod;
+  /** Today, for voiding the stay's invoice; and the time the refund was given. */
+  on: ISODate;
+  at: string;
+};
+export type CancelIssue = "status" | "refund";
+
+/**
+ * Calls a booked stay off, saying why. Gives back what the hotel decides to give back (never more than was paid),
+ * and voids the stay's invoice, so it no longer counts as sold.
+ */
+export function cancelBooking(s: HotelData, id: string, r: CancelRequest): Outcome<CancelIssue[]> {
+  const current = s.bookings.find((b) => b.id === id);
+  if (!current || !canTransition(current.status, "cancelled")) return { state: s, result: ["status"] };
+  if (!Number.isInteger(r.refund) || r.refund < 0 || r.refund > paidAmount(current)) return { state: s, result: ["refund"] };
+  const refund: Payment[] = r.refund > 0 ? [{ id: newId(), at: r.at, amount: r.refund, method: r.method, kind: "refund", reference: "", note: "" }] : [];
+  const next = withBooking(s, id, (b) => ({ ...b, status: "cancelled", cancelReason: r.reason, payments: [...b.payments, ...refund] }));
+  return {
+    state: { ...next, invoices: next.invoices.map((i) => (i.bookingId === id && i.status === "issued" ? { ...i, status: "void", voidedOn: r.on } : i)) },
+    result: [],
+  };
+}
+
+export type CheckOutIssue = "status" | "cage_taken";
+
+/**
+ * The pet goes home. With `endOn`, the stay is re-dated to the day it really ended: earlier (picked up early, so
+ * fewer nights) or later (picked up late, so more nights, if the unit is free for them). Without it the booked
+ * dates stand.
+ */
+export function checkOutBooking(s: HotelData, id: string, endOn?: ISODate): Outcome<CheckOutIssue[]> {
+  const current = s.bookings.find((b) => b.id === id);
+  if (!current || !canTransition(current.status, "checked_out")) return { state: s, result: ["status"] };
+  let checkOut = current.checkOut;
+  if (endOn && endOn !== current.checkOut) {
+    checkOut = endOn > current.checkIn ? endOn : addDays(current.checkIn, 1);
+    const unit = s.cages.find((c) => c.id === current.cageId);
+    if (checkOut > current.checkOut && !cageIsFree(s, current.cageId, current.checkOut, checkOut, current.id, placesFor(current, unit))) return { state: s, result: ["cage_taken"] };
+  }
+  return { state: withBooking(s, id, (b) => ({ ...b, status: "checked_out", checkOut })), result: [] };
+}
 
 /** Changes dates, cage or notes of a stay that exists, under the same rules as a new booking. */
 export function editBooking(s: HotelData, id: string, patch: BookingPatch): Outcome<BookingIssue[]> {
@@ -101,7 +160,8 @@ export function recordPayment(s: HotelData, bookingId: string, payment: Omit<Pay
   const booking = s.bookings.find((b) => b.id === bookingId);
   const issues: PaymentIssue[] = [];
   if (!booking) issues.push("booking");
-  else if (booking.status === "cancelled") issues.push("cancelled");
+  // A cancelled stay takes no more money in, but can still give money back.
+  else if (booking.status === "cancelled" && payment.kind !== "refund") issues.push("cancelled");
   if (!isValidAmount(payment.amount)) issues.push("amount");
   else if (booking && payment.kind === "refund" && payment.amount > paidAmount(booking)) issues.push("refund");
   if (issues.length) return { state: s, result: issues };

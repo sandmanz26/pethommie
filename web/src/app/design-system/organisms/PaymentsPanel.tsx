@@ -8,6 +8,7 @@ import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
+import { Alert } from "@/app/design-system/molecules/Alert";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
@@ -31,14 +32,18 @@ export function PaymentsPanel({
 }) {
   const { t, locale } = useAppT();
   const p = t.payments;
+  const cancelled = booking.status === "cancelled";
   const total = bookingTotal(booking, cage);
+  const kept = paidAmount(booking);
+  // Paid more than the stay costs: the difference is the owner's, to give back or carry to the next stay.
+  const over = cancelled ? 0 : Math.max(0, kept - total);
   const balance = balanceDue(booking, cage);
   const status = paymentStatus(booking, cage);
   const rp = (n: number) => formatRupiah(n, locale);
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("transfer");
-  const [kind, setKind] = useState<PaymentKind>(booking.status === "booked" ? "deposit" : "payment");
+  const [kind, setKind] = useState<PaymentKind>(booking.status === "cancelled" ? "refund" : booking.status === "booked" ? "deposit" : "payment");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | undefined>();
@@ -66,8 +71,11 @@ export function PaymentsPanel({
             <span id="payments-title">{p.title}</span>
           </Heading>
         </span>
-        <Badge tone={statusTone[status]}>{p.status[status]}</Badge>
+        {!cancelled && <Badge tone={statusTone[status]}>{p.status[status]}</Badge>}
       </div>
+      {cancelled ? (
+        <p className="ds-muted">{p.cancelledKept(rp(kept))}</p>
+      ) : (
       <dl className="ds-money">
         <div>
           <dt>{p.total}</dt>
@@ -82,6 +90,17 @@ export function PaymentsPanel({
           <dd className={balance > 0 ? "is-due" : ""}>{rp(balance)}</dd>
         </div>
       </dl>
+      )}
+      {over > 0 && (
+        <Alert tone="warn">
+          {p.overpaid(rp(over))}{" "}
+          {onAdd && (
+            <Button size="sm" variant="secondary" onClick={() => (setKind("refund"), setAmount(String(over)))}>
+              {p.refundOver}
+            </Button>
+          )}
+        </Alert>
+      )}
 
       {booking.payments.length ? (
         <ul className="ds-paylist">
@@ -106,7 +125,7 @@ export function PaymentsPanel({
         <Muted>{p.none}</Muted>
       )}
 
-      {onAdd && (
+      {onAdd && (!cancelled || kept > 0) && (
         <form className="ds-form" onSubmit={submit} noValidate aria-label={p.add}>
           <div className="ds-form__row">
             <Field label={p.amount} error={error}>
@@ -121,7 +140,7 @@ export function PaymentsPanel({
                 ))}
               </Select>
             </Field>
-            {!simple && (
+            {!simple && !cancelled && (
               <Field label={p.kind}>
                 <Select value={kind} onChange={(e) => setKind(e.target.value as PaymentKind)}>
                   {(["deposit", "payment", "refund"] as PaymentKind[]).map((k) => (
@@ -146,9 +165,9 @@ export function PaymentsPanel({
           <Muted>{p.hint}</Muted>
           <div className="ds-form__actions">
             <Button type="submit" icon="check">
-              {p.save}
+              {cancelled ? p.saveRefund : p.save}
             </Button>
-            {balance > 0 &&
+            {!cancelled && balance > 0 &&
               (simple ? (
                 <Button variant="secondary" onClick={payInFull}>
                   {p.paidInFull}

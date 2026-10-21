@@ -52,13 +52,13 @@ describe("AppStore", () => {
 
   it("reports when a cage can't be deleted or a status can't change", () => {
     const { result } = renderHook(() => useStore(), { wrapper: wrap(memoryRepo(aSmallHotel({ bookings: [aBooking("a", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16" })] }))) });
-    let deleted = true;
+    let deleted = "";
     let moved = true;
     act(() => {
       deleted = result.current.deleteCage("s1");
       moved = result.current.setBookingStatus("a", "checked_out");
     });
-    expect(deleted).toBe(false);
+    expect(deleted).toBe("busy");
     expect(moved).toBe(false);
     expect(result.current.data.cages).toHaveLength(3);
   });

@@ -74,6 +74,8 @@ export function placesUsed(data: HotelData, cageId: string, night: ISODate, igno
  */
 export function cageIsFree(data: HotelData, cageId: string, checkIn: ISODate, checkOut: ISODate, ignoreBookingId?: string, places = 1) {
   const cage = data.cages.find((c) => c.id === cageId);
+  // An archived unit takes no stays.
+  if (cage?.archived) return false;
   const capacity = cage?.capacity ?? 1;
   const overlapping = data.bookings.filter((b) => b.cageId === cageId && b.id !== ignoreBookingId && holdsCage(b) && overlaps(checkIn, checkOut, b.checkIn, b.checkOut));
   if (!overlapping.length) return places <= capacity;
@@ -97,7 +99,10 @@ export function occupantOn(data: HotelData, cageId: string, night: ISODate) {
 }
 
 /** Places the hotel has: one per cage, `capacity` per shared room. */
-export const totalPlaces = (data: Pick<HotelData, "cages">) => data.cages.reduce((n, c) => n + Math.max(1, c.capacity), 0);
+/** The units in use: archived ones keep their history but take no stays and are not places. */
+export const activeCages = (data: Pick<HotelData, "cages">) => data.cages.filter((c) => !c.archived);
+
+export const totalPlaces = (data: Pick<HotelData, "cages">) => activeCages(data).reduce((n, c) => n + Math.max(1, c.capacity), 0);
 
 // ---------- money ----------
 
@@ -159,7 +164,7 @@ export function todayBoard(data: HotelData, today: ISODate) {
     leaving: live.filter((b) => b.status === "checked_in" && b.checkOut <= today),
     inHouse: live.filter((b) => b.status === "checked_in"),
     /** Places free tonight, out of `totalPlaces`: a free cage counts one, a shared room its spare places. */
-    freeTonight: data.cages.reduce((n, c) => n + Math.max(0, Math.max(1, c.capacity) - placesUsed(data, c.id, today)), 0),
+    freeTonight: activeCages(data).reduce((n, c) => n + Math.max(0, Math.max(1, c.capacity) - placesUsed(data, c.id, today)), 0),
   };
 }
 

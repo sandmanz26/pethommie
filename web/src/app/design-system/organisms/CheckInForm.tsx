@@ -20,7 +20,17 @@ function parseWeight(text: string): number | null {
  * The check-in record: a short checklist of how the pet arrived. It can be skipped (the pet still checks in),
  * but the form makes the careful path the easy one.
  */
-export function CheckInForm({ onSubmit, compact }: { onSubmit: (arrival: Arrival | null) => void; /** Only the two checks and the weight: the simple mode. */ compact?: boolean }) {
+export function CheckInForm({
+  onSubmit,
+  compact,
+  vaccineGate = [],
+}: {
+  onSubmit: (arrival: Arrival | null) => void;
+  /** Only the two checks and the weight: the simple mode. */
+  compact?: boolean;
+  /** Pets whose vaccination is out of date or unknown, when the hotel requires a valid one: check-in waits for the card to be seen. */
+  vaccineGate?: string[];
+}) {
   const { t } = useAppT();
   const a = t.arrival;
   const [healthy, setHealthy] = useState(true);
@@ -30,9 +40,13 @@ export function CheckInForm({ onSubmit, compact }: { onSubmit: (arrival: Arrival
   const [food, setFood] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | undefined>();
+  const [cardSeen, setCardSeen] = useState(false);
+  const [gateError, setGateError] = useState(false);
+  const gated = vaccineGate.length > 0 && !cardSeen;
 
   function submit(e: FormEvent) {
     e.preventDefault();
+    if (gated) return setGateError(true);
     const weightKg = parseWeight(weight);
     if (Number.isNaN(weightKg)) return setError(a.errWeight);
     onSubmit({
@@ -42,7 +56,8 @@ export function CheckInForm({ onSubmit, compact }: { onSubmit: (arrival: Arrival
       weightKg,
       belongings: belongings.trim(),
       food: food.trim(),
-      notes: notes.trim(),
+      // The card seen at the door is part of the record.
+      notes: [vaccineGate.length ? a.cardSeenNote : "", notes.trim()].filter(Boolean).join(" "),
     });
   }
 
@@ -56,6 +71,17 @@ export function CheckInForm({ onSubmit, compact }: { onSubmit: (arrival: Arrival
         </span>
         <Muted>{a.lead}</Muted>
       </div>
+      {vaccineGate.length > 0 && (
+        <div className="ds-vaccinegate" role="group" aria-label={a.vaccineGateTitle}>
+          <b>{a.vaccineGate(vaccineGate.join(", "))}</b>
+          <Checkbox label={a.cardSeen} checked={cardSeen} onChange={(e) => (setCardSeen(e.target.checked), setGateError(false))} />
+          {gateError && (
+            <p className="ds-field__error" role="alert">
+              {a.errCardSeen}
+            </p>
+          )}
+        </div>
+      )}
       <div className="ds-form__checks">
         <Checkbox label={a.healthy} checked={healthy} onChange={(e) => setHealthy(e.target.checked)} />
         <Checkbox label={a.fleaFree} checked={fleaFree} onChange={(e) => setFleaFree(e.target.checked)} />
@@ -85,7 +111,7 @@ export function CheckInForm({ onSubmit, compact }: { onSubmit: (arrival: Arrival
           {a.save}
         </Button>
         {!compact && (
-          <Button variant="ghost" onClick={() => onSubmit(null)}>
+          <Button variant="ghost" onClick={() => (gated ? setGateError(true) : onSubmit(null))}>
             {a.skip}
           </Button>
         )}

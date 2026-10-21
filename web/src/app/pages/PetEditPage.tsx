@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { petHasHistory } from "@/app/domain/bookingRules";
+import { Muted } from "@/app/design-system/atoms/Text";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { newId } from "@/app/domain/logic";
 import { useStore } from "@/app/store/AppStore";
@@ -33,13 +35,15 @@ export function PetEditPage() {
           )
         }
       />
+      {pet && petHasHistory(data, pet.id) && <Muted>{t.petForm.keptNote}</Muted>}
       <PetForm
         pet={pet}
         owner={owner}
         submitLabel={t.petForm.save}
         onCancel={() => navigate("/app/pets")}
         extraActions={
-          pet && (
+          pet &&
+          !petHasHistory(data, pet.id) && (
             <Button variant="danger" icon="trash" onClick={() => setConfirmDelete(true)}>
               {t.common.delete}
             </Button>

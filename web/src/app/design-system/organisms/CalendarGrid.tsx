@@ -29,7 +29,7 @@ export function CalendarGrid({ data, from, days }: { data: HotelData; from: ISOD
           </span>
         ))}
       </div>
-      {data.cages.map((cage) => {
+      {data.cages.filter((c) => !c.archived).map((cage) => {
         // A shared room: each day shows how many of its places are taken; a free place books it.
         if (isShared(cage)) {
           return (

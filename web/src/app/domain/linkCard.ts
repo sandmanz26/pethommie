@@ -15,7 +15,7 @@ const WORDS = {
 /** The hotel's price list as the link shows it: one line per size of private unit, one per shared room. */
 export function priceList(data: Pick<HotelData, "cages" | "settings">, lang: Language): LinkCard["prices"] {
   const w = WORDS[lang];
-  const own = data.cages.filter((c) => !isShared(c));
+  const own = data.cages.filter((c) => !isShared(c) && !c.archived);
   const bySize = SIZE_ORDER.flatMap((size) => {
     const of = own.filter((c) => c.size === size);
     if (!of.length) return [];
@@ -23,7 +23,7 @@ export function priceList(data: Pick<HotelData, "cages" | "settings">, lang: Lan
     const mixed = of.some((c) => c.pricePerNight !== low);
     return [{ label: `${w.units[data.settings.unitTerm]} ${w.sizes[size]}${mixed ? ` (${w.from})` : ""}`, price: low }];
   });
-  const rooms = data.cages.filter(isShared).map((c) => ({ label: `${c.name} (${w.perPet})`, price: c.pricePerNight }));
+  const rooms = data.cages.filter((c) => isShared(c) && !c.archived).map((c) => ({ label: `${c.name} (${w.perPet})`, price: c.pricePerNight }));
   return [...bySize, ...rooms];
 }
 

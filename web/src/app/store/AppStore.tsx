@@ -39,18 +39,24 @@ function useStoreValue(repo: HotelRepository) {
       setHotel: (hotel: Hotel) => commit(actions.setHotel(latest.current, hotel)),
       setCages: (cages: Cage[]) => commit(actions.setCages(latest.current, cages)),
       saveCage: (cage: Cage) => commit(actions.upsertCage(latest.current, cage)),
-      /** False if the cage has a pending or current stay. */
-      deleteCage: (id: string): boolean => run((s) => actions.removeCage(s, id)),
+      /** Removes a unit that never had a stay, archives one with history; "busy" while a stay holds it. */
+      deleteCage: (id: string) => run((s) => actions.removeCage(s, id)),
+      restoreCage: (id: string) => commit(actions.restoreCage(latest.current, id)),
       /** Returns the owner's id; an owner with the same WhatsApp number is reused. */
       saveOwner: (owner: actions.OwnerInput): string => run((s) => actions.upsertOwner(s, owner)),
       savePet: (pet: Pet) => commit(actions.upsertPet(latest.current, pet)),
-      deletePet: (id: string) => commit(actions.removePet(latest.current, id)),
+      /** False for a pet with history (a started, paid or invoiced stay), which is kept. */
+      deletePet: (id: string): boolean => run((s) => actions.removePet(s, id)),
       /** Empty when saved; otherwise what is wrong with the booking. */
       saveBooking: (booking: Booking): BookingIssue[] => run((s) => actions.upsertBooking(s, booking)),
       /** False if the stay can't move to that status. */
       setBookingStatus: (id: string, status: BookingStatus): boolean => run((s) => actions.changeBookingStatus(s, id, status)),
       /** Changes dates, cage or notes of an existing stay. Empty when done; otherwise what is wrong. */
       editBooking: (id: string, patch: BookingPatch): BookingIssue[] => run((s) => actions.editBooking(s, id, patch)),
+      /** Calls a booked stay off: why, what is given back, and its invoice voided. */
+      cancelBooking: (id: string, request: actions.CancelRequest): actions.CancelIssue[] => run((s) => actions.cancelBooking(s, id, request)),
+      /** The pet goes home; `endOn` re-dates the stay to the day it really ended. */
+      checkOut: (id: string, endOn?: ISODate): actions.CheckOutIssue[] => run((s) => actions.checkOutBooking(s, id, endOn)),
       /** False unless the stay is booked. */
       checkIn: (id: string, arrival: Arrival | null): boolean => run((s) => actions.checkInBooking(s, id, arrival)),
       recordPayment: (bookingId: string, payment: Omit<Payment, "id">): PaymentIssue[] => run((s) => actions.recordPayment(s, bookingId, payment)),

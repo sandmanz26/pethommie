@@ -75,8 +75,9 @@ export type Report = {
   averageNights: number;
   /** Days between a booking being made and the stay starting, on average. null when no stay says when it was made. */
   leadDays: number | null;
-  /** Stays that began in the period and were cancelled. */
+  /** Stays that began in the period and were cancelled; how many of those the pet simply never came to. */
   cancelled: number;
+  noShows: number;
   /** Of the stays that began in the period, those by an owner who had stayed (or booked) before. */
   repeatStays: number;
   bySource: SourceRow[];
@@ -108,7 +109,10 @@ const weekday = (date: ISODate) => {
 
 export function reportFor(data: HotelData, p: Period, filter: ReportFilter = NO_REPORT_FILTER): Report {
   const days = Math.max(0, nights(p.from, p.to));
-  const cages = filter.unitId === "all" ? data.cages : data.cages.filter((c) => c.id === filter.unitId);
+  // Units in use, and archived ones that still had stays in the period.
+  const inPeriod = (id: string) => data.bookings.some((b) => b.cageId === id && b.status !== "cancelled" && b.checkIn < p.to && p.from < b.checkOut);
+  const known = data.cages.filter((c) => !c.archived || inPeriod(c.id));
+  const cages = filter.unitId === "all" ? known : known.filter((c) => c.id === filter.unitId);
   const cageOf = (b: Booking) => data.cages.find((c) => c.id === b.cageId);
   const kept = data.bookings.filter((b) => matchesFilter(data, b, filter));
   const liveKept = kept.filter(live);
@@ -223,6 +227,7 @@ export function reportFor(data: HotelData, p: Period, filter: ReportFilter = NO_
     averageNights: stays.length ? stays.reduce((n, b) => n + nights(b.checkIn, b.checkOut), 0) / stays.length : 0,
     leadDays: leads.length ? leads.reduce((a, n) => a + n, 0) / leads.length : null,
     cancelled: kept.filter((b) => b.status === "cancelled" && startsIn(b, p)).length,
+    noShows: kept.filter((b) => b.status === "cancelled" && b.cancelReason === "no_show" && startsIn(b, p)).length,
     repeatStays,
     bySource: bySource.sort((a, b) => b.stays - a.stays || b.value - a.value),
     bySpecies: bySpecies.sort((a, b) => b.pets - a.pets),

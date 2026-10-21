@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleData } from "@/app/store/sampleData";
-import { checkInBooking, markReportSent, recordCare, recordPayment, removePayment, removePet, upsertBooking, upsertCage, upsertOwner, upsertPet } from "@/app/store/actions";
+import { checkInBooking, markReportSent, recordCare, recordPayment, removePayment, upsertBooking, upsertCage, upsertOwner, upsertPet } from "@/app/store/actions";
 import { aBooking, aCage, aPet, aSmallHotel } from "@/app/testing/fixtures";
 import type { HotelData } from "@/app/domain/types";
 import { applyChanges, applyToData, diffData, diffRows, emptyChanges, isEmpty, mergeChanges } from "./diff";
@@ -41,6 +41,19 @@ describe("diffData", () => {
     expect([c.pets.remove.length, c.bookings.remove.length, c.payments.remove.length, c.care_entries.remove.length]).toEqual([1, 1, 1, 1]);
   });
 });
+
+/** A pet and everything recorded against it, gone (as another device's data could be): the app itself keeps pets with history. */
+const removePet = (d: HotelData, id: string): HotelData => {
+  const gone = new Set(d.bookings.filter((b) => b.petId === id).map((b) => b.id));
+  return {
+    ...d,
+    pets: d.pets.filter((p) => p.id !== id),
+    bookings: d.bookings.filter((b) => !gone.has(b.id)).map((b) => ({ ...b, companionIds: b.companionIds.filter((c) => c !== id) })),
+    careLog: d.careLog.filter((e) => !gone.has(e.bookingId)),
+    reportsSent: d.reportsSent.filter((r) => !gone.has(r.bookingId)),
+    invoices: d.invoices.filter((i) => !gone.has(i.bookingId)),
+  };
+};
 
 describe("applying changes", () => {
   // A realistic evening of edits, one action after another: each step's diff, applied to the previous rows, must give the next rows.

@@ -23,6 +23,7 @@ export function BookingCard({
   checkInTo,
   onCheckOut,
   onCancel,
+  onNoShow,
 }: {
   booking: Booking;
   pet?: Pet;
@@ -34,6 +35,8 @@ export function BookingCard({
   checkInTo?: string;
   onCheckOut?: () => void;
   onCancel?: () => void;
+  /** For a late arrival: the pet never came. */
+  onNoShow?: () => void;
 }) {
   const { t, locale } = useAppT();
   const total = bookingTotal(booking, cage);
@@ -65,8 +68,13 @@ export function BookingCard({
           </small>
         )}
       </div>
-      {(checkInTo || onCheckOut || onCancel) && (
+      {(checkInTo || onCheckOut || onCancel || onNoShow) && (
         <div className="ds-booking__actions">
+          {onNoShow && (
+            <Button variant="ghost" size="sm" onClick={onNoShow}>
+              {t.cancelFlow.noShow}
+            </Button>
+          )}
           {onCancel && <Button variant="ghost" size="sm" icon="x" aria-label={t.bookings.cancelBooking} onClick={onCancel} />}
           {checkInTo && (
             <Button to={checkInTo} size="sm" icon="login">

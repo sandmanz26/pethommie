@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { dashboardFor } from "@/app/domain/dashboard";
 import { petNames } from "@/app/domain/invoices";
-import { formatDate, formatRupiah, todayISO, vaccineState } from "@/app/domain/logic";
+import { dayOf, formatDate, formatRupiah, todayISO, vaccineState } from "@/app/domain/logic";
 import { receivables } from "@/app/domain/payments";
 import type { PaymentMethod } from "@/app/domain/types";
 import { useStore } from "@/app/store/AppStore";
@@ -125,6 +125,19 @@ export function DashboardPage() {
               <li key={p.id}>
                 <Link to={`/app/pets/${p.id}`}>{p.name}</Link>
                 <Badge tone={state === "expired" ? "danger" : "warn"}>{t.pets.vaccine[state]}</Badge>
+              </li>
+            );
+          })}
+        </Panel>
+        <Panel title={d.incidentsTitle} empty={d.incidentsNone}>
+          {dash.incidents.slice(0, 5).map((e) => {
+            const b = data.bookings.find((x) => x.id === e.bookingId);
+            return (
+              <li key={e.id}>
+                <Link to={`/app/bookings/${e.bookingId}#care`}>{b ? petNames(data, b) : "—"}</Link>
+                <span>
+                  {day(dayOf(e.at))} · {e.note}
+                </span>
               </li>
             );
           })}

@@ -130,3 +130,13 @@
 .ds-filters { display: grid; gap: 8px; }
 .ds-filters__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; }
 .ds-filters__foot { display: flex; align-items: center; gap: 12px; min-height: 32px; font-size: 0.85em; color: var(--ink-soft); }
+
+/* A dialog that asks a few things before an action (cancel, check out). */
+.ds-dialog--form { width: min(92vw, 30rem); }
+.ds-flowform { display: grid; gap: 14px; }
+.ds-flowform h2 { margin: 0; font: var(--display-weight) 1.3em var(--font-display); }
+.ds-flowform__note { margin: 0 !important; color: var(--ink-soft); font-size: 0.92em; }
+.ds-flowform__note.is-owed { color: var(--danger); font-weight: 700; }
+.ds-flowform__choices { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ds-flowform__choices legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
+.ds-flowform__choices .ds-check { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--paper); }

@@ -125,30 +125,84 @@ describe("payments", () => {
 });
 
 describe("checking out", () => {
+  // Booked today -> in 3 nights (150.000 at 50.000 a night), in since this morning.
   const staying = stay({ status: "checked_in" });
+  const paidIn = (amount: number) => [{ id: "d", at: new Date().toISOString(), amount, method: "cash" as const, kind: "payment" as const, reference: "", note: "" }];
+
+  it("on the booked day with nothing owed, lets the pet go without a question", async () => {
+    const user = await open(stay({ status: "checked_in", checkIn: addDays(today, -3), checkOut: today, payments: paidIn(150_000) }));
+    await user.click(await screen.findByRole("button", { name: /^check out$/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(stored().bookings[0]).toMatchObject({ status: "checked_out", checkOut: today });
+  });
 
   it("stops and asks when money is still owed", async () => {
-    const user = await open(staying);
+    const user = await open(stay({ status: "checked_in", checkIn: addDays(today, -3), checkOut: today }));
     await user.click(await screen.findByRole("button", { name: /^check out$/i }));
-    expect(await screen.findByText(/still unpaid/i)).toBeInTheDocument();
+    expect(await screen.findByText(/still owed after this: Rp\s?150\.000/i)).toBeInTheDocument();
     expect(stored()?.bookings[0].status ?? "checked_in").toBe("checked_in");
     await user.click(screen.getByRole("button", { name: /check out anyway/i }));
     expect(stored().bookings[0].status).toBe("checked_out");
   });
 
-  it("lets the pet go without a question once everything is paid", async () => {
-    const paid = stay({ status: "checked_in", payments: [{ id: "d", at: new Date().toISOString(), amount: 150_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] });
-    const user = await open(paid);
+  it("picked up early: ends the stay today, so only the nights stayed are charged", async () => {
+    const early = stay({ status: "checked_in", checkIn: addDays(today, -1), payments: paidIn(50_000) }); // booked 4 nights, 1 so far
+    const user = await open(early);
     await user.click(await screen.findByRole("button", { name: /^check out$/i }));
-    expect(screen.queryByText(/still unpaid/i)).not.toBeInTheDocument();
-    expect(stored().bookings[0].status).toBe("checked_out");
+    const dialog = within(await screen.findByRole("dialog"));
+    expect(dialog.getByLabelText(/end the stay today: 1 night/i)).toBeChecked();
+    expect(dialog.getByText(/nothing is owed/i)).toBeInTheDocument();
+    await user.click(dialog.getByLabelText(/keep the booked dates/i));
+    expect(dialog.getByText(/still owed after this: Rp\s?150\.000/i)).toBeInTheDocument();
+    await user.click(dialog.getByLabelText(/end the stay today/i));
+    await user.click(dialog.getByRole("button", { name: /^check out$/i }));
+    expect(stored().bookings[0]).toMatchObject({ status: "checked_out", checkOut: today });
+  });
+
+  it("picked up late: adds the extra nights when the cage is free", async () => {
+    const late = stay({ status: "checked_in", checkIn: addDays(today, -3), checkOut: addDays(today, -1) });
+    const user = await open(late);
+    await user.click(await screen.findByRole("button", { name: /^check out$/i }));
+    const dialog = within(await screen.findByRole("dialog"));
+    expect(dialog.getByLabelText(/add the extra night/i)).toBeChecked();
+    await user.click(dialog.getByRole("button", { name: /check out anyway/i }));
+    expect(stored().bookings[0].checkOut).toBe(today);
   });
 
   it("asks from the bookings list as well", async () => {
     const user = await open(staying, {}, "/app/bookings");
     await user.click(await screen.findByRole("tab", { name: /staying/i }));
     await user.click(await screen.findByRole("button", { name: /^check out$/i }));
-    expect(await screen.findByText(/still unpaid/i)).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Check out" })).toBeInTheDocument();
+  });
+});
+
+describe("cancelling", () => {
+  const deposit = [{ id: "d", at: new Date().toISOString(), amount: 60_000, method: "transfer" as const, kind: "deposit" as const, reference: "", note: "" }];
+
+  it("asks why and what happens to the deposit, then gives back what was chosen", async () => {
+    const user = await open(stay({ payments: deposit }));
+    await user.click(await screen.findByRole("button", { name: /cancel booking/i }));
+    const dialog = within(await screen.findByRole("dialog", { name: /cancel this booking/i }));
+    expect(dialog.getByText(/Rp\s?60\.000 was paid/)).toBeInTheDocument();
+    await user.click(dialog.getByLabelText(/give part of it back/i));
+    await user.type(dialog.getByLabelText(/amount to give back/i), "70000");
+    await user.click(dialog.getByRole("button", { name: /^cancel booking$/i }));
+    expect(dialog.getByText(/no more than was paid/i)).toBeInTheDocument();
+    await user.clear(dialog.getByLabelText(/amount to give back/i));
+    await user.type(dialog.getByLabelText(/amount to give back/i), "30000");
+    await user.click(dialog.getByRole("button", { name: /^cancel booking$/i }));
+    expect(stored().bookings[0]).toMatchObject({ status: "cancelled", cancelReason: "owner" });
+    expect(stored().bookings[0].payments.at(-1)).toMatchObject({ kind: "refund", amount: 30_000 });
+  });
+
+  it("marks a late arrival as a no-show from today's board, keeping the deposit", async () => {
+    const user = await open(stay({ checkIn: addDays(today, -1), payments: deposit }), {}, "/app");
+    await user.click(await screen.findByRole("button", { name: /no-show/i }));
+    const dialog = within(await screen.findByRole("dialog", { name: /cancel this booking/i }));
+    expect(dialog.getByLabelText(/keep it/i)).toBeChecked();
+    await user.click(dialog.getByRole("button", { name: /^cancel booking$/i }));
+    expect(stored().bookings[0]).toMatchObject({ status: "cancelled", cancelReason: "no_show", payments: deposit });
   });
 });
 

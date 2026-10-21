@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aBooking, aCage, aCareEntry, aHotel, aSmallHotel, anOwner, aPet } from "@/app/testing/fixtures";
-import { addCharge, changeBookingStatus, checkInBooking, issueInvoice, removeCharge, saveSettings, voidInvoice, editBooking, markReportSent, recordCare, recordPayment, removeCage, removeCare, removePayment, removePet, upsertBooking, upsertOwner, upsertPet } from "./actions";
+import { addCharge, changeBookingStatus, checkInBooking, issueInvoice, removeCharge, saveSettings, voidInvoice, editBooking, markReportSent, recordCare, recordPayment, removeCage, removeCare, removePayment, removePet, upsertBooking, cancelBooking, checkOutBooking, restoreCage, upsertOwner, upsertPet } from "./actions";
 
 const stay = aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-18" });
 
@@ -41,11 +41,24 @@ describe("an owner's language", () => {
 });
 
 describe("removePet", () => {
-  it("removes the pet and only its stays", () => {
+  it("removes a pet with nothing but unpaid bookings, and only its stays", () => {
     const other = aBooking("b2", { petId: "p2", cageId: "s2", checkIn: "2026-10-14", checkOut: "2026-10-16" });
-    const next = removePet(aSmallHotel({ bookings: [stay, other] }), "p1");
+    const { state: next, result } = removePet(aSmallHotel({ bookings: [stay, other] }), "p1");
+    expect(result).toBe(true);
     expect(next.pets.map((p) => p.id)).toEqual(["p2"]);
     expect(next.bookings.map((b) => b.id)).toEqual(["b2"]);
+  });
+
+  it("refuses a pet whose stays the books depend on: started, paid for, or invoiced", () => {
+    const paid = { ...stay, payments: [{ id: "x", at: "", amount: 1, method: "cash" as const, kind: "deposit" as const, reference: "", note: "" }] };
+    for (const b of [{ ...stay, status: "checked_in" as const }, { ...stay, status: "checked_out" as const }, paid]) {
+      const state = aSmallHotel({ bookings: [b] });
+      expect(removePet(state, "p1")).toEqual({ state, result: false });
+    }
+    const invoiced = aSmallHotel({ bookings: [stay], invoices: [{ bookingId: "b1", id: "i1" } as never] });
+    expect(removePet(invoiced, "p1").result).toBe(false);
+    // a pet that only shared a paid stay is part of that history too
+    expect(removePet(aSmallHotel({ bookings: [{ ...paid, companionIds: ["p2"] }] }), "p2").result).toBe(false);
   });
 });
 
@@ -53,19 +66,80 @@ describe("removeCage", () => {
   it("refuses while a stay holds the cage, and leaves the data untouched", () => {
     const state = aSmallHotel({ bookings: [stay] });
     const out = removeCage(state, "s1");
-    expect(out.result).toBe(false);
+    expect(out.result).toBe("busy");
     expect(out.state).toBe(state);
   });
 
-  it("removes a free cage, and one that only has finished stays", () => {
-    expect(removeCage(aSmallHotel(), "s2").state.cages.map((c) => c.id)).toEqual(["s1", "m1"]);
+  it("removes a cage that never had a stay, and archives one with history so its stays keep their unit", () => {
+    expect(removeCage(aSmallHotel(), "s2")).toMatchObject({ result: "removed", state: { cages: [{ id: "s1" }, { id: "m1" }] } });
     const finished = aSmallHotel({ bookings: [{ ...stay, status: "checked_out" }] });
-    expect(removeCage(finished, "s1").result).toBe(true);
+    const out = removeCage(finished, "s1");
+    expect(out.result).toBe("archived");
+    expect(out.state.cages.find((c) => c.id === "s1")?.archived).toBe(true);
+    expect(out.state.bookings[0].cageId).toBe("s1");
+    // archived: takes no new stay, until it is restored
+    const next = aBooking("b9", { petId: "p2", cageId: "s1", checkIn: "2099-01-01", checkOut: "2099-01-02" });
+    expect(upsertBooking(out.state, next).result).toContain("cage");
+    expect(upsertBooking(restoreCage(out.state, "s1"), next).result).toEqual([]);
   });
 
   it("does nothing for an unknown cage", () => {
     const state = aSmallHotel();
-    expect(removeCage(state, "nope")).toEqual({ state, result: false });
+    expect(removeCage(state, "nope")).toEqual({ state, result: "unknown" });
+  });
+});
+
+describe("cancelBooking", () => {
+  const deposit = { id: "d", at: "2026-10-01T08:00:00.000Z", amount: 100_000, method: "transfer" as const, kind: "deposit" as const, reference: "", note: "" };
+  const req = { reason: "owner" as const, refund: 0, method: "transfer" as const, on: "2026-10-12", at: "2026-10-12T09:00:00.000Z" };
+
+  it("keeps the deposit as a cancellation fee, says why, and voids the invoice", () => {
+    const made = issueInvoice(aSmallHotel({ bookings: [{ ...stay, payments: [deposit] }] }), "b1", { issuedOn: "2026-10-10" }).state;
+    const { state, result } = cancelBooking(made, "b1", { ...req, reason: "no_show" });
+    expect(result).toEqual([]);
+    expect(state.bookings[0]).toMatchObject({ status: "cancelled", cancelReason: "no_show", payments: [deposit] });
+    expect(state.invoices[0]).toMatchObject({ status: "void", voidedOn: "2026-10-12" });
+  });
+
+  it("gives money back, never more than was paid", () => {
+    const s = aSmallHotel({ bookings: [{ ...stay, payments: [deposit] }] });
+    const { state } = cancelBooking(s, "b1", { ...req, refund: 60_000 });
+    expect(state.bookings[0].payments.at(-1)).toMatchObject({ kind: "refund", amount: 60_000, method: "transfer" });
+    expect(cancelBooking(s, "b1", { ...req, refund: 100_001 })).toEqual({ state: s, result: ["refund"] });
+  });
+
+  it("only cancels a booked stay, and nothing else can cancel it", () => {
+    const s = aSmallHotel({ bookings: [{ ...stay, status: "checked_in" }] });
+    expect(cancelBooking(s, "b1", req).result).toEqual(["status"]);
+    expect(changeBookingStatus(aSmallHotel({ bookings: [stay] }), "b1", "cancelled").result).toBe(false);
+  });
+
+  it("still takes a refund after cancelling, but no other money", () => {
+    const cancelled = aSmallHotel({ bookings: [{ ...stay, status: "cancelled", cancelReason: "owner", payments: [deposit] }] });
+    expect(recordPayment(cancelled, "b1", { ...deposit, kind: "refund", amount: 50_000 }).result).toEqual([]);
+    expect(recordPayment(cancelled, "b1", { ...deposit, kind: "payment", amount: 50_000 }).result).toEqual(["cancelled"]);
+  });
+});
+
+describe("checkOutBooking", () => {
+  const inHouse = { ...stay, status: "checked_in" as const }; // 14 -> 18 Oct in s1
+
+  it("keeps the booked dates, or ends the stay the day the pet really left", () => {
+    expect(checkOutBooking(aSmallHotel({ bookings: [inHouse] }), "b1").state.bookings[0]).toMatchObject({ status: "checked_out", checkOut: "2026-10-18" });
+    expect(checkOutBooking(aSmallHotel({ bookings: [inHouse] }), "b1", "2026-10-16").state.bookings[0].checkOut).toBe("2026-10-16");
+    // picked up the day it came: still one night
+    expect(checkOutBooking(aSmallHotel({ bookings: [inHouse] }), "b1", "2026-10-14").state.bookings[0].checkOut).toBe("2026-10-15");
+  });
+
+  it("adds the nights of a late pickup when the unit is free for them, and refuses when it isn't", () => {
+    expect(checkOutBooking(aSmallHotel({ bookings: [inHouse] }), "b1", "2026-10-20").state.bookings[0].checkOut).toBe("2026-10-20");
+    const next = aBooking("b2", { petId: "p2", cageId: "s1", checkIn: "2026-10-19", checkOut: "2026-10-21" });
+    const s = aSmallHotel({ bookings: [inHouse, next] });
+    expect(checkOutBooking(s, "b1", "2026-10-20")).toEqual({ state: s, result: ["cage_taken"] });
+  });
+
+  it("only checks out a pet that is in", () => {
+    expect(checkOutBooking(aSmallHotel({ bookings: [stay] }), "b1").result).toEqual(["status"]);
   });
 });
 
@@ -112,7 +186,8 @@ describe("changeBookingStatus", () => {
     expect(changeBookingStatus(state, "b1", "checked_out").result).toBe(false);
     const done = changeBookingStatus(changeBookingStatus(state, "b1", "checked_in").state, "b1", "checked_out").state;
     expect(changeBookingStatus(done, "b1", "booked")).toEqual({ state: done, result: false });
-    const cancelled = changeBookingStatus(state, "b1", "cancelled").state;
+    const cancelled = cancelBooking(state, "b1", { reason: "owner", refund: 0, method: "cash", on: "2026-10-12", at: "2026-10-12T08:00:00.000Z" }).state;
+    expect(cancelled.bookings[0].status).toBe("cancelled");
     expect(changeBookingStatus(cancelled, "b1", "checked_in").result).toBe(false);
   });
 
@@ -236,11 +311,11 @@ describe("care log", () => {
     expect(removeCare(withLog, "c1").careLog.map((e) => e.id)).toEqual(["c2"]);
   });
 
-  it("removes a pet's log and report marks along with the pet", () => {
+  it("keeps a staying pet's log and report marks: such a pet can't be removed", () => {
     const withLog = aSmallHotel({ bookings: [staying], careLog: [aCareEntry("c1", "b1")], reportsSent: [{ bookingId: "b1", date: "2026-10-15", at: "" }] });
-    const next = removePet(withLog, "p1");
-    expect(next.careLog).toEqual([]);
-    expect(next.reportsSent).toEqual([]);
+    const { state, result } = removePet(withLog, "p1");
+    expect(result).toBe(false);
+    expect(state.careLog).toHaveLength(1);
   });
 });
 
@@ -288,10 +363,10 @@ describe("charges", () => {
 describe("a pet sharing a cage when it is removed", () => {
   it("leaves the stay, which carries on for the pet it was booked for", () => {
     const shared = aSmallHotel({ bookings: [{ ...stay, companionIds: ["p2"] }] });
-    const next = removePet(shared, "p2");
+    const next = removePet(shared, "p2").state;
     expect(next.bookings).toHaveLength(1);
     expect(next.bookings[0].companionIds).toEqual([]);
-    expect(removePet(shared, "p1").bookings).toEqual([]);
+    expect(removePet(shared, "p1").state.bookings).toEqual([]);
   });
 });
 
@@ -350,11 +425,12 @@ describe("invoices", () => {
     expect(later.invoices[0].customer.name).toBe("Owner o1");
   });
 
-  it("outlives its pet: removing the pet removes the stay but not the invoice", () => {
+  it("keeps the pet and its stay once the stay is invoiced", () => {
     const once = issueInvoice(state, "b1", { issuedOn: "2026-10-18" }).state;
-    const gone = removePet(once, "p1");
-    expect(gone.bookings).toEqual([]);
-    expect(gone.invoices).toHaveLength(1);
+    const { state: kept, result } = removePet(once, "p1");
+    expect(result).toBe(false);
+    expect(kept.bookings).toHaveLength(1);
+    expect(kept.invoices).toHaveLength(1);
   });
 });
 

@@ -74,7 +74,7 @@ export function ReportsPage() {
           <Field label={r.unit}>
             <Select value={filter.unitId} onChange={(e) => setFilter((f) => ({ ...f, unitId: e.target.value }))}>
               <option value="all">{r.allUnits}</option>
-              {data.cages.map((c) => (
+              {data.cages.filter((c) => !c.archived).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -114,7 +114,7 @@ export function ReportsPage() {
             <StatCard label={r.averageNights} value={report.stays ? r.nightsUnit(num(report.averageNights)) : "–"} />
             <StatCard label={r.leadTime} value={report.leadDays !== null ? r.leadDays(num(report.leadDays)) : "–"} note={r.leadNote} />
             <StatCard label={r.repeat} value={report.stays ? pct(report.repeatStays / report.stays) : "–"} note={report.stays ? r.repeatNote(report.repeatStays, report.stays) : undefined} />
-            <StatCard label={r.cancelled} value={report.cancelled} tone={report.cancelled ? "warn" : "neutral"} />
+            <StatCard label={r.cancelled} value={report.cancelled} tone={report.cancelled ? "warn" : "neutral"} note={report.noShows ? r.noShows(report.noShows) : undefined} />
             <StatCard label={r.addOns} value={rp(report.addOns)} />
             <StatCard label={r.discounts} value={rp(report.discounts)} />
           </div>

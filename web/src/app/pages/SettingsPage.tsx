@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount, useAuth } from "@/app/auth/AuthProvider";
+import { markBackedUp } from "@/app/store/backupNote";
 import { useStore } from "@/app/store/AppStore";
 import { useMode } from "@/app/mode/ModeProvider";
 import type { HotelSettings, Language } from "@/app/domain/types";
@@ -84,6 +85,7 @@ export function SettingsPage() {
     a.download = `pethommie-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+    markBackedUp(account.id);
   }
 
   return (
@@ -148,6 +150,8 @@ export function SettingsPage() {
             ))}
           </Select>
         </Field>
+        <Checkbox label={t.vaccineRule.label} checked={draft.requireVaccine} onChange={(e) => edit({ requireVaccine: e.target.checked })} />
+        <Muted>{t.vaccineRule.hint}</Muted>
         <Field label={t.settingsBiz.language}>
           <Select value={draft.invoiceLanguage} onChange={(e) => edit({ invoiceLanguage: e.target.value as Language })}>
             <option value="id">{t.settingsBiz.languages.id}</option>
@@ -233,7 +237,7 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="ds-form__section pg-settings">
+      <section className="ds-form__section pg-settings" id="data">
         <Heading level={2} size="md">{t.settings.data}</Heading>
         <Muted>{t.settings.dataLead}</Muted>
         <div className="ds-form__actions">

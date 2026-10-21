@@ -6,7 +6,6 @@ import { petNames } from "@/app/domain/invoices";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
-import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { Select } from "@/app/design-system/atoms/Input";
@@ -18,17 +17,18 @@ import { useUnitWords } from "@/app/i18n/useUnitWords";
 import { BookingCard } from "@/app/design-system/organisms/BookingCard";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { useCheckOut } from "./useCheckOut";
+import { useCancelBooking } from "./useCancelBooking";
 import "./pages.css";
 
 type Filter = "upcoming" | "inHouse" | "past";
 
 export function BookingsPage() {
-  const { data, setBookingStatus } = useStore();
+  const { data } = useStore();
   const checkOut = useCheckOut();
   const { t } = useAppT();
   const units = useUnitWords();
   const [filter, setFilter] = useState<Filter>("upcoming");
-  const [cancelId, setCancelId] = useState<string | null>(null);
+  const cancel = useCancelBooking();
   const { advanced } = useMode();
   const [f, setF] = useState<BookingFilter>(NO_BOOKING_FILTER);
   const set = (patch: Partial<BookingFilter>) => setF((prev) => ({ ...prev, ...patch }));
@@ -131,7 +131,7 @@ export function BookingsPage() {
                 cage={data.cages.find((c) => c.id === b.cageId)}
                 checkInTo={b.status === "booked" && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}
                 onCheckOut={b.status === "checked_in" ? () => checkOut.request(b) : undefined}
-                onCancel={b.status === "booked" ? () => setCancelId(b.id) : undefined}
+                onCancel={b.status === "booked" ? () => cancel.request(b) : undefined}
               />
             );
           })
@@ -151,18 +151,7 @@ export function BookingsPage() {
         )}
       </div>
       {checkOut.dialog}
-      <ConfirmDialog
-        open={cancelId !== null}
-        message={t.bookings.confirmCancel}
-        confirmLabel={t.bookings.cancelBooking}
-        cancelLabel={t.bookings.keep}
-        danger
-        onCancel={() => setCancelId(null)}
-        onConfirm={() => {
-          if (cancelId) setBookingStatus(cancelId, "cancelled");
-          setCancelId(null);
-        }}
-      />
+      {cancel.dialog}
     </>
   );
 }
