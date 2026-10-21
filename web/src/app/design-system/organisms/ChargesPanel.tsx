@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Booking, Cage } from "@/app/domain/types";
 import { CHARGE_SUGGESTIONS, type ChargeIssue } from "@/app/domain/charges";
-import { bookingTotal, formatRupiah, nights } from "@/app/domain/logic";
+import { bookingTotal, formatRupiah, nightlyRate, nights } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
@@ -54,7 +54,7 @@ export function ChargesPanel({
       </div>
       <ul className="ds-paylist">
         <li>
-          <span>{cage ? c.nights(n, rp(cage.pricePerNight), rp(n * cage.pricePerNight)) : "—"}</span>
+          <span>{cage ? c.nights(n, rp(nightlyRate(booking, cage)), rp(n * nightlyRate(booking, cage))) : "—"}</span>
         </li>
         {booking.charges.map((x) => (
           <li key={x.id}>

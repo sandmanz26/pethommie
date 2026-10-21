@@ -228,3 +228,11 @@ describe("shared rooms (a unit with more than one place)", () => {
     expect(todayBoard(d, "2026-11-11").freeTonight).toBe(2);
   });
 });
+
+describe("the rate a stay keeps", () => {
+  it("prices a stay at its agreed rate, whatever the unit costs today, and at the unit's price when none was kept", () => {
+    const cage = aCage("s1", "S", 80_000);
+    expect(bookingTotal({ checkIn: "2026-10-01", checkOut: "2026-10-03", rate: 50_000 }, cage)).toBe(100_000);
+    expect(bookingTotal({ checkIn: "2026-10-01", checkOut: "2026-10-03", rate: 0 }, cage)).toBe(160_000);
+  });
+});

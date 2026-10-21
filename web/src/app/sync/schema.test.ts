@@ -97,15 +97,16 @@ async function readRows(hotelId: string): Promise<{ hotel: HotelRow; rows: Rows 
   return {
     hotel,
     rows: {
-      cages: (await pick("cages", "id, hotel_id, name, size, price_per_night, capacity")) as Rows["cages"],
+      cages: (await pick("cages", "id, hotel_id, name, size, price_per_night, capacity, archived")) as Rows["cages"],
       owners: (await pick("owners", "id, hotel_id, name, whatsapp, language")) as Rows["owners"],
       pets: (await pick("pets", `id, hotel_id, owner_id, name, species, breed, ${day("vaccine_expiry")}, notes`)) as Rows["pets"],
-      bookings: (await pick("bookings", `id, hotel_id, pet_id, cage_id, ${day("check_in")}, ${day("check_out")}, status, source, arrival, notes, ${ts("created_at")}`)) as Rows["bookings"],
+      bookings: (await pick("bookings", `id, hotel_id, pet_id, cage_id, ${day("check_in")}, ${day("check_out")}, rate, status, cancel_reason, source, arrival, notes, ${ts("created_at")}`)) as Rows["bookings"],
       booking_pets: (await pick("booking_pets", "hotel_id, booking_id, pet_id, position")) as Rows["booking_pets"],
       charges: (await pick("charges", "id, hotel_id, booking_id, position, label, amount")) as Rows["charges"],
       invoices: (await db.query(`select id, hotel_id, booking_id, number, ${day("issued_on")}, ${day("due_on")}, language, status, ${day("voided_on")}, seller, customer, pet_names, stay, lines, subtotal, tax_percent::float8 as tax_percent, tax_amount, total, prices_include_tax from invoices where hotel_id = $1`, [hotelId])).rows as Rows["invoices"],
       payments: (await pick("payments", `id, hotel_id, booking_id, ${ts("paid_at")}, amount, method, kind, reference, note`)) as Rows["payments"],
       care_entries: (await pick("care_entries", `id, hotel_id, booking_id, ${ts("at")}, kind, preset, note`)) as Rows["care_entries"],
+      expenses: (await pick("expenses", `id, hotel_id, ${day("spent_on")}, category, amount, method, vendor, note, recurring`)) as Rows["expenses"],
       reports_sent: (await pick("reports_sent", `hotel_id, booking_id, ${day("report_date")}, ${ts("sent_at")}`)) as Rows["reports_sent"],
     },
   };
@@ -165,8 +166,8 @@ describe("the database refuses what the app refuses", () => {
   const booking = (over: Record<string, unknown>) => {
     const b = { ...rows.bookings[0], id: crypto.randomUUID(), pet_id: rows.pets[nextPet++ % rows.pets.length || 1].id, ...over };
     return sql(
-      "insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status, arrival, notes) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
-      [b.id, b.hotel_id, b.pet_id, b.cage_id, b.check_in, b.check_out, b.status, null, ""],
+      "insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status, cancel_reason, arrival, notes) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+      [b.id, b.hotel_id, b.pet_id, b.cage_id, b.check_in, b.check_out, b.status, b.status === "cancelled" ? (b.cancel_reason ?? "owner") : null, null, ""],
     );
   };
 
@@ -200,13 +201,40 @@ describe("the database refuses what the app refuses", () => {
     expect(await refused(withSource("link"))).toBeNull();
   });
 
+  it("wants a reason on a cancelled stay, and only there", async () => {
+    const raw = (status: string, reason: string | null) =>
+      sql("insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status, cancel_reason) values ($1,$2,$3,$4,'2027-03-01','2027-03-02',$5,$6)", [crypto.randomUUID(), H, rows.pets[2].id, rows.cages[0].id, status, reason]);
+    expect(await refused(raw("cancelled", null))).toMatch(/check/i);
+    expect(await refused(raw("booked", "owner"))).toMatch(/check/i);
+    expect(await refused(raw("cancelled", "flood"))).toMatch(/check/i);
+    expect(await refused(raw("cancelled", "no_show"))).toBeNull();
+  });
+
+  it("takes no new stay in an archived unit, but keeps the old ones", async () => {
+    const unit = rows.cages[0].id;
+    await sql("update cages set archived = true where id = $1", [unit]);
+    expect(await refused(booking({ cage_id: unit, check_in: "2027-04-01", check_out: "2027-04-03" }))).toMatch(/bookings_archived_unit/);
+    expect(((await sql("select count(*)::int as n from bookings where cage_id = $1", [unit])).rows[0] as { n: number }).n).toBeGreaterThan(0);
+    await sql("update cages set archived = false where id = $1", [unit]);
+  });
+
+  it("keeps expenses whole: a known category and method, an amount above zero", async () => {
+    const spend = (category: string, amount: number, method = "cash") =>
+      sql("insert into expenses (id, hotel_id, spent_on, category, amount, method) values ($1,$2,'2026-10-01',$3,$4,$5)", [crypto.randomUUID(), H, category, amount, method]);
+    expect(await refused(spend("food", 250_000))).toBeNull();
+    expect(await refused(spend("staff", 3_000_000, "transfer"))).toBeNull();
+    expect(await refused(spend("food", 0))).toMatch(/check/i);
+    expect(await refused(spend("yacht", 5))).toMatch(/check/i);
+    expect(await refused(spend("rent", 5, "barter"))).toMatch(/check/i);
+  });
+
   it("doesn't count a cancelled or finished stay", async () => {
     expect(await refused(booking({ check_in: "2026-11-11", check_out: "2026-11-13", status: "cancelled" }))).toBeNull();
     expect(await refused(booking({ check_in: "2026-11-11", check_out: "2026-11-13", status: "checked_out" }))).toBeNull();
   });
 
   it("frees the cage once the stay is cancelled", async () => {
-    await sql("update bookings set status = 'cancelled' where id = $1", [rows.bookings[0].id]);
+    await sql("update bookings set status = 'cancelled', cancel_reason = 'no_show' where id = $1", [rows.bookings[0].id]);
     expect(await refused(booking({ check_in: "2026-11-12", check_out: "2026-11-13" }))).toBeNull();
   });
 
@@ -268,7 +296,7 @@ describe("what a stay can carry", () => {
 
   it("won't put a pet in two places at once", async () => {
     const stay = (pet: string, cage: string, from: string, to: string, status = "booked") =>
-      sql("insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status) values ($1,$2,$3,$4,$5,$6,$7)", [crypto.randomUUID(), H, pet, cage, from, to, status]);
+      sql("insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status, cancel_reason) values ($1,$2,$3,$4,$5,$6,$7,$8)", [crypto.randomUUID(), H, pet, cage, from, to, status, status === "cancelled" ? "owner" : null]);
     await stay(rows.pets[1].id, rows.cages[0].id, "2027-01-10", "2027-01-14");
     expect(await refused(stay(rows.pets[1].id, rows.cages[1].id, "2027-01-12", "2027-01-16"))).toMatch(/bookings_pet_in_one_place/);
     expect(await refused(stay(rows.pets[1].id, rows.cages[1].id, "2027-01-14", "2027-01-16"))).toBeNull();

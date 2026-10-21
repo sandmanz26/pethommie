@@ -101,17 +101,20 @@ export const totalPlaces = (data: Pick<HotelData, "cages">) => data.cages.reduce
 
 // ---------- money ----------
 
+/** The rate a stay pays per night (per pet in a shared room): the one agreed when it was booked, or the unit's price. */
+export const nightlyRate = (booking: { rate?: number }, cage: Pick<Cage, "pricePerNight"> | undefined) => (booking.rate && booking.rate > 0 ? booking.rate : (cage?.pricePerNight ?? 0));
+
 /**
  * The price of a stay: the nights at the unit's rate (for each pet in a shared room), plus add-ons and minus
  * discounts. Never below zero.
  */
 export function bookingTotal(
-  booking: Pick<Booking, "checkIn" | "checkOut"> & { charges?: Pick<Charge, "amount">[]; petId?: string; companionIds?: string[] },
+  booking: Pick<Booking, "checkIn" | "checkOut"> & { charges?: Pick<Charge, "amount">[]; petId?: string; companionIds?: string[]; rate?: number },
   cage: Cage | undefined,
 ) {
   if (!cage) return 0;
   const pets = isShared(cage) ? 1 + (booking.companionIds?.length ?? 0) : 1;
-  const base = Math.max(0, nights(booking.checkIn, booking.checkOut)) * cage.pricePerNight * pets;
+  const base = Math.max(0, nights(booking.checkIn, booking.checkOut)) * nightlyRate(booking, cage) * pets;
   const extras = (booking.charges ?? []).reduce((sum, c) => sum + c.amount, 0);
   return Math.max(0, base + extras);
 }
@@ -183,6 +186,7 @@ export function generateCages(spec: Record<CageSize, { count: number; price: num
       name: `${size}-${String(i + 1).padStart(2, "0")}`,
       size,
       pricePerNight: spec[size].price,
+      archived: false,
       capacity: 1,
     })),
   );

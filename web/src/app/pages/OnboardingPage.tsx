@@ -93,7 +93,7 @@ export function OnboardingPage() {
         setErrors({ cages: o.cages.errRooms });
         return;
       }
-      setCages(rooms.map((r) => ({ id: newId(), name: r.name.trim(), size: "M", pricePerNight: r.price, capacity: r.places })));
+      setCages(rooms.map((r) => ({ id: newId(), name: r.name.trim(), size: "M", pricePerNight: r.price, capacity: r.places, archived: false })));
       saveSettings({ ...data.settings, unitTerm: "room" });
     } else {
       if (totalCages === 0) {

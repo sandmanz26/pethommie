@@ -29,7 +29,7 @@ describe("parseStored", () => {
   });
 
   it("flags data from a newer version of the app, without trying to read it", () => {
-    const raw = JSON.stringify({ ...aSmallHotel(), version: 5, somethingNew: true });
+    const raw = JSON.stringify({ ...aSmallHotel(), version: 6, somethingNew: true });
     expect(parseStored(raw)).toEqual({ data: emptyData(), problem: "newer" });
   });
 });
@@ -43,7 +43,7 @@ describe("upgrading a version 1 document", () => {
     const { data, problem, migratedFrom } = parseStored(v1([{ ...old, deposit: 100_000 }]));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(1);
-    expect(data.version).toBe(4);
+    expect(data.version).toBe(5);
     expect(data.bookings[0]).not.toHaveProperty("deposit");
     expect(data.bookings[0].payments).toEqual([expect.objectContaining({ amount: 100_000, at: "2026-09-30T10:00:00.000Z" })]);
     expect(data.bookings[0]).toMatchObject({ arrival: null, notes: "x" });
@@ -74,7 +74,7 @@ describe("upgrading a version 2 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v2()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(2);
-    expect(data.version).toBe(4);
+    expect(data.version).toBe(5);
     expect(data.bookings[0]).toMatchObject({ id: "b1", status: "checked_in", notes: "keep", charges: [], companionIds: [], payments: [expect.objectContaining({ amount: 5 })] });
     expect(data.owners.every((o) => o.language === "id")).toBe(true);
     expect(data.invoices).toEqual([]);
@@ -122,18 +122,63 @@ describe("upgrading a version 3 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v3()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(3);
-    expect(data.version).toBe(4);
+    expect(data.version).toBe(5);
     expect(data.cages.every((c) => c.capacity === 1)).toBe(true);
     expect(data.bookings[0]).toMatchObject({ source: "other", payments: [{ id: "pay", amount: 5, kind: "payment", reference: "" }] });
     expect(data.settings.unitTerm).toBe("cage");
   });
 
   it("does not take a version 4 document without capacities, payment kinds or sources", () => {
+    // (checked as a v5 document: the v4 parts must be there too)
     const ok = JSON.parse(JSON.stringify(aSmallHotel({ bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03" })] })));
     expect(parseStored(JSON.stringify(ok)).problem).toBeNull();
     const noCapacity = { ...ok, cages: ok.cages.map(({ capacity: _c, ...c }: Record<string, unknown>) => c) };
     const noSource = { ...ok, bookings: ok.bookings.map(({ source: _s, ...b }: Record<string, unknown>) => b) };
     for (const bad of [noCapacity, noSource]) expect(parseStored(JSON.stringify(bad)).problem).toBe("corrupt");
+  });
+});
+
+describe("upgrading a version 4 document", () => {
+  const v4 = () => {
+    const doc = JSON.parse(
+      JSON.stringify(
+        aSmallHotel({
+          bookings: [
+            aBooking("b1", { petId: "p1", cageId: "m1", checkIn: "2026-10-01", checkOut: "2026-10-03" }),
+            aBooking("b2", { petId: "p2", cageId: "s1", checkIn: "2026-10-05", checkOut: "2026-10-06", status: "cancelled" }),
+          ],
+        }),
+      ),
+    );
+    doc.version = 4;
+    delete doc.expenses;
+    delete doc.settings.requireVaccine;
+    for (const c of doc.cages) delete c.archived;
+    for (const b of doc.bookings) {
+      delete b.rate;
+      delete b.cancelReason;
+    }
+    return doc;
+  };
+
+  it("keeps each stay at its unit's price, gives a cancelled one a reason, and adds no expenses", () => {
+    const { data, problem, migratedFrom } = parseStored(JSON.stringify(v4()));
+    expect(problem).toBeNull();
+    expect(migratedFrom).toBe(4);
+    expect(data.version).toBe(5);
+    expect(data.bookings.map((b) => [b.id, b.rate, b.cancelReason])).toEqual([["b1", 75_000, null], ["b2", 50_000, "owner"]]);
+    expect(data.cages.every((c) => c.archived === false)).toBe(true);
+    expect(data.settings.requireVaccine).toBe(false);
+    expect(data.expenses).toEqual([]);
+  });
+
+  it("does not take a version 5 document without rates or expenses", () => {
+    const ok = JSON.parse(JSON.stringify(aSmallHotel()));
+    expect(parseStored(JSON.stringify(ok)).problem).toBeNull();
+    expect(parseStored(JSON.stringify({ ...ok, expenses: undefined })).problem).toBe("corrupt");
+    const noRate = JSON.parse(JSON.stringify(aSmallHotel({ bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03" })] })));
+    delete noRate.bookings[0].rate;
+    expect(parseStored(JSON.stringify(noRate)).problem).toBe("corrupt");
   });
 });
 
@@ -184,7 +229,7 @@ describe("createLocalRepository", () => {
   it("keeps the original of an upgraded document, once", () => {
     const raw = JSON.stringify({ version: 1, hotel: null, cages: [], owners: [], pets: [], bookings: [] });
     localStorage.setItem(KEY, raw);
-    expect(repo.load().version).toBe(4);
+    expect(repo.load().version).toBe(5);
     expect(localStorage.getItem(`${KEY}.v1.backup`)).toBe(raw);
     localStorage.setItem(`${KEY}.v1.backup`, "kept");
     repo.load();

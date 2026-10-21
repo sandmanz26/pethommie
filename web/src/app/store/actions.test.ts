@@ -366,3 +366,13 @@ describe("refunds", () => {
     expect(refund(50_000).result).toEqual([]);
   });
 });
+
+describe("a stay's rate when it moves", () => {
+  it("keeps its agreed rate on new dates, and takes the new unit's price when it moves unit", () => {
+    const s = aSmallHotel({ bookings: [aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2099-10-01", checkOut: "2099-10-03", rate: 45_000 })] });
+    const later = editBooking(s, "b1", { checkOut: "2099-10-04" }).state;
+    expect(later.bookings[0].rate).toBe(45_000);
+    const moved = editBooking(s, "b1", { cageId: "m1" }).state;
+    expect(moved.bookings[0].rate).toBe(75_000);
+  });
+});

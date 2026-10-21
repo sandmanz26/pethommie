@@ -80,7 +80,10 @@ export function editBooking(s: HotelData, id: string, patch: BookingPatch): Outc
   if (!current) return { state: s, result: ["locked"] };
   const issues = editIssues(s, current, patch);
   if (issues.length) return { state: s, result: issues };
-  return { state: withBooking(s, id, (b) => ({ ...b, ...patch })), result: [] };
+  // Moving to another unit takes that unit's rate; otherwise the agreed rate stays.
+  const moved = patch.cageId !== undefined && patch.cageId !== current.cageId;
+  const rate = moved ? (s.cages.find((c) => c.id === patch.cageId)?.pricePerNight ?? current.rate) : current.rate;
+  return { state: withBooking(s, id, (b) => ({ ...b, ...patch, rate })), result: [] };
 }
 
 /** Checks a booked pet in, keeping the arrival record if there is one. Refuses anything but booked → checked in. */

@@ -38,7 +38,7 @@ export function CageForm({
     if (shared && !(places >= 2)) err.capacity = c.errCapacity;
     setErrors(err);
     if (Object.keys(err).length) return;
-    onSubmit({ name: name.trim(), size, pricePerNight: p, capacity: shared ? places : 1 });
+    onSubmit({ name: name.trim(), size, pricePerNight: p, capacity: shared ? places : 1, archived: false });
   }
 
   return (

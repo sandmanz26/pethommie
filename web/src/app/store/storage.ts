@@ -17,7 +17,7 @@ export const dataKeyFor = (accountId: string) => `pethommie.app.v1.${accountId}`
  * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
  * one, and a test with an old document. Older documents are upgraded on load, never discarded.
  */
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 export type StoredProblem = "corrupt" | "newer";
 export type Parsed = { data: HotelData; problem: StoredProblem | null; migratedFrom?: number };
@@ -57,7 +57,8 @@ function isV3(x: Record<string, unknown>): boolean {
   );
 }
 
-function isHotelData(x: Record<string, unknown>): boolean {
+/** The shape version 4 had: no rate or cancel reason on stays, no archived units, no expenses. */
+function isV4(x: Record<string, unknown>): boolean {
   const bookings = x.bookings as Record<string, unknown>[];
   return (
     isV3(x) &&
@@ -65,6 +66,18 @@ function isHotelData(x: Record<string, unknown>): boolean {
     typeof x.settings.unitTerm === "string" &&
     (x.cages as Record<string, unknown>[]).every((c) => typeof c.capacity === "number" && c.capacity >= 1) &&
     bookings.every((b) => typeof b.source === "string" && (b.payments as Record<string, unknown>[]).every((p) => typeof p.kind === "string" && typeof p.reference === "string"))
+  );
+}
+
+function isHotelData(x: Record<string, unknown>): boolean {
+  return (
+    isV4(x) &&
+    isObject(x.settings) &&
+    typeof x.settings.requireVaccine === "boolean" &&
+    (x.cages as Record<string, unknown>[]).every((c) => typeof c.archived === "boolean") &&
+    (x.bookings as Record<string, unknown>[]).every((b) => typeof b.rate === "number" && (b.cancelReason === null || typeof b.cancelReason === "string")) &&
+    hasIds(x.expenses) &&
+    (x.expenses as Record<string, unknown>[]).every((e) => typeof e.amount === "number" && typeof e.date === "string" && typeof e.category === "string")
   );
 }
 
@@ -103,6 +116,21 @@ function migrateV3(doc: Record<string, unknown>): Record<string, unknown> {
 }
 
 /**
+ * v5 keeps each stay's nightly rate on the stay (taken from its unit's price today, which is what it was costing),
+ * a reason on cancelled stays (unknown), archived units, the vaccine rule (off) and the hotel's expenses (none).
+ */
+function migrateV4(doc: Record<string, unknown>): Record<string, unknown> {
+  const cagesIn = doc.cages as Record<string, unknown>[];
+  const price = (id: unknown) => {
+    const p = cagesIn.find((c) => c.id === id)?.pricePerNight;
+    return typeof p === "number" ? p : 0;
+  };
+  const bookings = (doc.bookings as Record<string, unknown>[]).map((b) => ({ ...b, rate: price(b.cageId), cancelReason: b.status === "cancelled" ? "owner" : null }));
+  const cages = cagesIn.map((c) => ({ ...c, archived: false }));
+  return { ...doc, version: 5, cages, bookings, expenses: [], settings: { ...(doc.settings as Record<string, unknown>), requireVaccine: false } };
+}
+
+/**
  * Reads what was stored. Never throws: anything unreadable comes back as empty data plus the reason,
  * so the caller can keep the original before it is overwritten. Older versions are upgraded.
  */
@@ -130,6 +158,10 @@ export function parseStored(raw: string | null): Parsed {
   if (doc.version === 3 && isV3(doc)) {
     doc = migrateV3(doc);
     migratedFrom ??= 3;
+  }
+  if (doc.version === 4 && isV4(doc)) {
+    doc = migrateV4(doc);
+    migratedFrom ??= 4;
   }
   if (doc.version !== CURRENT_VERSION || !isHotelData(doc)) return { data: emptyData(), problem: "corrupt" };
   return { data: doc as unknown as HotelData, problem: null, migratedFrom };

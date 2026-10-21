@@ -104,7 +104,7 @@ export function BookingForm({
     const gErr = guestErrors(data, guest, { owner: g.errOwner, ownerName: g.errOwnerName, whatsapp: t.petForm.errWhatsapp, taken: g.errTaken, pets: g.errPets, petName: g.errPetName });
     const issues = [
       ...scheduleIssues(data, { cageId: selectedCageId, checkIn, checkOut, places: isShared(cage) ? party : 1 }),
-      ...(petId ? bookingIssues(data, { id: "", petId, companionIds: chosenCompanions, cageId: selectedCageId, checkIn, checkOut, status: "booked", source, payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion") : []),
+      ...(petId ? bookingIssues(data, { id: "", petId, companionIds: chosenCompanions, cageId: selectedCageId, checkIn, checkOut, rate: cage?.pricePerNight ?? 0, status: "booked", cancelReason: null, source, payments: [], charges: [], arrival: null, notes: "", createdAt: "" }).filter((i) => i === "pet_busy" || i === "companion") : []),
     ];
     if (issues.includes("pet_busy")) gErr.pets = f.errPetBusy;
     if (issues.includes("companion")) err.companions = f.errCompanion;
@@ -122,7 +122,9 @@ export function BookingForm({
         cageId: selectedCageId,
         checkIn,
         checkOut,
+        rate: cage?.pricePerNight ?? 0,
         status: "booked",
+        cancelReason: null,
         source,
         companionIds: chosenCompanions,
         charges: [],

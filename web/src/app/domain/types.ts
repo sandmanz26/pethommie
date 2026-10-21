@@ -24,6 +24,11 @@ export type Cage = {
   pricePerNight: number;
   /** 1 for a cage; the number of pets a shared room takes. */
   capacity: number;
+  /**
+   * Out of use: not offered for new bookings and not counted as a place, but kept so the stays that were in it keep
+   * their unit. A unit with any history is archived instead of deleted.
+   */
+  archived: boolean;
 };
 
 /** What the hotel calls its places, so the screens speak its language: cages, rooms, or spaces. */
@@ -70,6 +75,9 @@ export type Payment = {
   note: string;
 };
 
+/** Why a stay was cancelled: the owner called it off, the pet never came, or the hotel had to. */
+export type CancelReason = "owner" | "no_show" | "hotel";
+
 /** Where a booking came from, for the reports. */
 export type BookingSource = "walk_in" | "whatsapp" | "instagram" | "link" | "referral" | "other";
 
@@ -107,7 +115,15 @@ export type Booking = {
   cageId: string;
   checkIn: ISODate;
   checkOut: ISODate;
+  /**
+   * The nightly rate agreed when it was booked (per pet in a shared room). Kept on the stay, so changing the price
+   * list later never changes what an old stay cost. Moving the stay to another unit takes that unit's rate.
+   * 0 means none was recorded: the unit's current price is used.
+   */
+  rate: number;
   status: BookingStatus;
+  /** Set when cancelled. */
+  cancelReason: CancelReason | null;
   source: BookingSource;
   payments: Payment[];
   charges: Charge[];
@@ -163,6 +179,42 @@ export type HotelSettings = {
   invoiceLanguage: Language;
   tax: TaxProfile;
   unitTerm: UnitTerm;
+  /** Refuse check-in for a pet whose vaccination has run out or isn't on record, unless the card is seen at the door. */
+  requireVaccine: boolean;
+};
+
+/**
+ * What running the hotel costs. Direct costs grow with the guests (food, litter, vet, grooming supplies);
+ * operating costs are there whether the hotel is full or empty (staff, rent, utilities…).
+ */
+export type ExpenseCategory =
+  | "food"
+  | "supplies"
+  | "vet"
+  | "grooming"
+  | "staff"
+  | "rent"
+  | "utilities"
+  | "cleaning"
+  | "marketing"
+  | "maintenance"
+  | "equipment"
+  | "fees"
+  | "other";
+
+/** Money paid out, recorded by hand. */
+export type Expense = {
+  id: string;
+  date: ISODate;
+  category: ExpenseCategory;
+  /** Rupiah, a whole number above zero. */
+  amount: number;
+  method: PaymentMethod;
+  /** Who it was paid to: the shop, the landlord, the staff member. */
+  vendor: string;
+  note: string;
+  /** A cost that comes back every month (rent, salaries), offered again at the start of the next month. */
+  recurring: boolean;
 };
 
 export type InvoiceLine = { label: string; quantity: number; unitPrice: number; amount: number };
@@ -198,7 +250,7 @@ export type Invoice = {
 };
 
 export type HotelData = {
-  version: 4;
+  version: 5;
   hotel: Hotel | null;
   settings: HotelSettings;
   cages: Cage[];
@@ -208,6 +260,7 @@ export type HotelData = {
   careLog: CareEntry[];
   reportsSent: ReportSent[];
   invoices: Invoice[];
+  expenses: Expense[];
 };
 
 export const defaultSettings = (): HotelSettings => ({
@@ -219,10 +272,11 @@ export const defaultSettings = (): HotelSettings => ({
   invoiceLanguage: "id",
   tax: { regime: "none", taxpayer: "individual", basis: "cash", pkp: false, ppnPercent: 11, pricesIncludeTax: false },
   unitTerm: "cage",
+  requireVaccine: false,
 });
 
 export const emptyData = (): HotelData => ({
-  version: 4,
+  version: 5,
   hotel: null,
   settings: defaultSettings(),
   cages: [],
@@ -232,4 +286,5 @@ export const emptyData = (): HotelData => ({
   careLog: [],
   reportsSent: [],
   invoices: [],
+  expenses: [],
 });

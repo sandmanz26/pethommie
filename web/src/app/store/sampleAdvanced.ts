@@ -35,7 +35,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
     return new Date(y, m - 1, d, hour, minute).toISOString();
   };
 
-  const cage = (name: string, size: Cage["size"], pricePerNight: number, capacity = 1): Cage => ({ id: newId(), name, size, pricePerNight, capacity });
+  const cage = (name: string, size: Cage["size"], pricePerNight: number, capacity = 1): Cage => ({ id: newId(), name, size, pricePerNight, capacity, archived: false });
   const cages: Cage[] = [
     ...range(6).map((i) => cage(`S-${pad(i + 1)}`, "S", 60_000)),
     ...range(5).map((i) => cage(`M-${pad(i + 1)}`, "M", 90_000)),
@@ -69,7 +69,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
   });
 
   const data: HotelData = {
-    version: 4,
+    version: 5,
     hotel: { name: "Kandang Ceria Pet Hotel", city: "Jakarta Selatan", whatsapp: "6281399001122", createdAt: at(addDays(today, -400), 9) },
     settings: {
       ...defaultSettings(),
@@ -87,6 +87,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
     careLog: [],
     reportsSent: [],
     invoices: [],
+    expenses: [],
   };
 
   // ---------- stays, day by day ----------
@@ -126,7 +127,9 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
         cageId: "",
         checkIn: day,
         checkOut,
+        rate: 0,
         status: "booked",
+        cancelReason: null,
         source: pickWeighted(rnd, SOURCES),
         payments: [],
         charges: [],
@@ -136,7 +139,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
       };
       const unit = unitsFor(party).find((c) => cageIsFree(data, c.id, day, checkOut, undefined, isShared(c) ? party.length : 1));
       if (!unit) continue;
-      const booking = { ...base, cageId: unit.id };
+      const booking = { ...base, cageId: unit.id, rate: unit.pricePerNight };
       if (bookingIssues(data, booking).length) continue;
       data.bookings.push(booking);
     }
@@ -179,7 +182,9 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
       status === "checked_in" || status === "checked_out"
         ? { at: at(b.checkIn, between(8, 11), between(0, 59)), healthy: chance(0.93), fleaFree: chance(0.95), weightKg: Math.round((2 + rnd() * 20) * 10) / 10, belongings: pick(BELONGINGS), food: pick(FOODS), notes: "" }
         : null;
-    return { ...priced, status, payments, arrival };
+    // A past stay that was cancelled is often a pet that simply never came.
+    const cancelReason: Booking["cancelReason"] = status !== "cancelled" ? null : finished ? (chance(0.6) ? "no_show" : "owner") : chance(0.15) ? "hotel" : "owner";
+    return { ...priced, status, cancelReason, payments, arrival };
   });
 
   // ---------- care log and reports for the pets staying now ----------

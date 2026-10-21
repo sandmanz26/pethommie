@@ -58,7 +58,9 @@ function simpleSample(): HotelData {
     cageId: cages[cageIdx].id,
     checkIn: addDays(today, inOffset),
     checkOut: addDays(today, outOffset),
+    rate: cages[cageIdx].pricePerNight,
     status,
+    cancelReason: status === "cancelled" ? "owner" : null,
     source: (["whatsapp", "instagram", "walk_in", "whatsapp", "referral"] as const)[petIdx % 5],
     companionIds: [],
     charges: [],
@@ -116,7 +118,7 @@ function simpleSample(): HotelData {
   ];
   const reportsSent: ReportSent[] = [{ bookingId: mochi.id, date: yesterday, at: at(yesterday, 18, 0) }];
   const data: HotelData = {
-    version: 4,
+    version: 5,
     hotel: { name: "Rumah Meong Bintaro", city: "South Tangerang", whatsapp: "6281200001111", createdAt: new Date().toISOString() },
     settings: {
       ...defaultSettings(),
@@ -132,6 +134,7 @@ function simpleSample(): HotelData {
     careLog,
     reportsSent,
     invoices: [],
+    expenses: [],
   };
   // The old, finished stay already has its invoice, so the invoice pages have something to show.
   const old = bookings[5];
