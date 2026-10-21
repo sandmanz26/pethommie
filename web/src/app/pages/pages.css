@@ -88,16 +88,19 @@
 .pg-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 34rem; }
 .pg-table th { text-align: left; padding: 10px 12px; font: 800 0.74rem var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 1.5px solid var(--line); white-space: nowrap; }
 .pg-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+/* Invoice and receipt numbers read as one word: the table scrolls sideways before they break. */
+.pg-table td:first-child > a { white-space: nowrap; }
 .pg-table tr:last-child td { border-bottom: 0; }
 .pg-table .num { text-align: right; white-space: nowrap; }
 .pg-table tr.is-void td { color: var(--ink-soft); }
 .pg-table tr.is-void td:first-child a { text-decoration: line-through; }
 .pg-table tfoot td, .pg-table tfoot th { font-weight: 800; border-top: 1.5px solid var(--line); border-bottom: 0; }
-.pg-meter { display: grid; gap: 6px; }
-.pg-meter__bar { height: 10px; border-radius: 99px; background: var(--chip-bg, var(--surface-sunk)); overflow: hidden; }
-.pg-meter__bar i { display: block; height: 100%; background: var(--ok); }
-.pg-meter--near .pg-meter__bar i { background: var(--warn); }
-.pg-meter--over .pg-meter__bar i { background: var(--danger); }
+/* The final-tax turnover ceiling on the tax page (not the small table meter, .pg-meter, further down). */
+.pg-ceiling { display: grid; gap: 6px; }
+.pg-ceiling__bar { height: 10px; border-radius: 99px; background: var(--chip-bg, var(--surface-sunk)); overflow: hidden; }
+.pg-ceiling__bar i { display: block; height: 100%; background: var(--ok); }
+.pg-ceiling--near .pg-ceiling__bar i { background: var(--warn); }
+.pg-ceiling--over .pg-ceiling__bar i { background: var(--danger); }
 
 /* Onboarding, shared rooms: name, places, price per pet, remove. */
 .pg-flow__size.pg-flow__room { grid-template-areas: none; grid-template-columns: 1fr auto; align-items: end; }
@@ -118,6 +121,12 @@
 .pg-panel__head a { font-size: 0.85em; color: var(--info); white-space: nowrap; }
 .pg-panel ul { list-style: none; margin: 0; padding: 0; display: grid; }
 .pg-panel li { display: grid; grid-template-columns: minmax(0, auto) 1fr auto; gap: 4px 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+/* A narrow panel (a phone, or a column beside another): name and amount on top, the detail below at full width. */
+.pg-panel { container-type: inline-size; }
+@container (max-width: 420px) {
+  .pg-panel li { grid-template-columns: minmax(0, 1fr) auto; }
+  .pg-panel li > span:nth-child(2) { grid-column: 1 / -1; grid-row: 2; color: var(--ink-soft); }
+}
 .pg-panel li:first-child { border-top: 0; padding-top: 0; }
 .pg-panel li > a { font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pg-panel li > span { font-size: 0.85em; color: var(--ink-soft); min-width: 0; }

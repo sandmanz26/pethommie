@@ -19,6 +19,7 @@ export function ColumnChart({ title, columns, max, summary, tone = "ok", scale }
   const id = useId();
   const top = Math.max(max, ...columns.map((c) => c.value), 0);
   const shown = active !== null ? columns[active] : null;
+  const marked = columns.flatMap((c, i) => (c.tick ? [i] : []));
   return (
     <figure className={`ds-chart ds-chart--${tone}`} aria-labelledby={id}>
       <figcaption className="ds-chart__head">
@@ -46,8 +47,11 @@ export function ColumnChart({ title, columns, max, summary, tone = "ok", scale }
         </div>
       </div>
       <div className="ds-chart__ticks" aria-hidden="true">
-        {columns.map((c) => (
-          <span key={c.key}>{c.tick}</span>
+        {columns.map((c, i) => (
+          // every other mark steps aside when the chart is too narrow for all of them (see organisms.css)
+          <span key={c.key} className={c.tick && marked.indexOf(i) % 2 === 1 ? "is-minor" : undefined}>
+            {c.tick}
+          </span>
         ))}
       </div>
     </figure>

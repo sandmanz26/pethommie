@@ -14,6 +14,8 @@
 .book__prices { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .book__prices li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--paper); font-variant-numeric: tabular-nums; }
 .book__prices small { font-weight: 400; color: var(--ink-soft); }
+/* The price and its "/ night" stay together; the name wraps instead. */
+.book__prices li > :last-child { white-space: nowrap; }
 .book__takes { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
 .book__note { margin: 0; padding: 10px 12px; border-left: 3px solid var(--seal); background: var(--paper); border-radius: 0 10px 10px 0; }
 .book__lead { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }

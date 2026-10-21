@@ -18,9 +18,9 @@ export function PairChart({ title, items, aLabel, bLabel, summary }: { title: st
         <b id={id}>{title}</b>
         <span className="ds-chart__readout" aria-hidden="true">{active !== null ? items[active].label : summary}</span>
       </figcaption>
-      <div className="ds-legend" aria-hidden="true">
-        <span><i className="ds-legend__a" />{aLabel}</span>
-        <span><i className="ds-legend__b" />{bLabel}</span>
+      <div className="ds-pairlegend" aria-hidden="true">
+        <span><i className="ds-pairlegend__a" />{aLabel}</span>
+        <span><i className="ds-pairlegend__b" />{bLabel}</span>
       </div>
       <div className="ds-chart__plot">
         <div className="ds-chart__bars" role="list" onPointerLeave={() => setActive(null)}>

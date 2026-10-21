@@ -73,9 +73,9 @@ export function TaxPage() {
       </div>
 
       {profile.regime === "final_umkm" && (
-        <section className={`pg-meter pg-meter--${tax.ceiling}`} aria-label={p.ceilingTitle}>
+        <section className={`pg-ceiling pg-ceiling--${tax.ceiling}`} aria-label={p.ceilingTitle}>
           <b>{p.ceilingTitle}</b>
-          <div className="pg-meter__bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(tax.ceilingUsed * 100))} aria-label={p.ceilingTitle}>
+          <div className="pg-ceiling__bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(tax.ceilingUsed * 100))} aria-label={p.ceilingTitle}>
             <i style={{ width: `${Math.min(100, tax.ceilingUsed * 100)}%` }} />
           </div>
           <Muted>

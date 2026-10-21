@@ -183,3 +183,59 @@ test('the app opens without a connection after the first visit, and the website 
   expect(await page.evaluate(() => document.fonts.ready.then(() => [...document.fonts].some((f) => f.family === 'Fredoka' && f.status === 'loaded')))).toBe(true)
   await context.setOffline(false)
 })
+
+test.describe('layout on short and narrow screens', () => {
+  test('on a short laptop screen the sidebar scrolls on its own down to "log out"', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 560 })
+    await signInWithSampleData(page)
+    const sidebar = page.getByRole('complementary')
+    const logout = sidebar.getByRole('button', { name: 'Log out' })
+    expect(await sidebar.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true) // the links don't fit
+    await sidebar.evaluate((el) => el.scrollTo(0, el.scrollHeight))
+    await expect(logout).toBeInViewport()
+    expect(await page.evaluate(() => window.scrollY)).toBe(0) // the page itself stayed put
+  })
+
+  test('the tax page shows how much of the final-tax turnover ceiling is used', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('pethommie.locale', 'en'))
+    await page.goto('/app/login')
+    await page.getByRole('button', { name: /^use$/i }).nth(2).click() // the full hotel, on the final 0.5% tax
+    await page.getByRole('button', { name: /^log in$/i }).click()
+    await page.waitForURL((u) => !u.pathname.endsWith('/login'))
+    await page.goto('/app/tax')
+    const bar = page.getByRole('progressbar')
+    await expect(bar).toBeVisible()
+    expect((await bar.boundingBox())!.width).toBeGreaterThan(200)
+    await expect(page.getByText(/% used/)).toBeVisible()
+  })
+
+  for (const width of [320, 768, 1024]) {
+    test(`at ${width}px no screen scrolls sideways and chart dates never overlap`, async ({ page }) => {
+      test.setTimeout(120_000)
+      await page.setViewportSize({ width, height: 800 })
+      for (const path of ['/', '/privacy', '/terms']) {
+        await page.goto(path)
+        await page.getByRole('heading', { level: 1 }).first().waitFor()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), path).toBeLessThanOrEqual(0)
+      }
+      await signInWithSampleData(page)
+      for (const path of ['/app', '/app/dashboard', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/customers', '/app/transactions',
+        '/app/expenses', '/app/invoices', '/app/finance', '/app/reports', '/app/tax', '/app/pets', '/app/cages', '/app/link', '/app/settings']) {
+        await page.goto(path)
+        await page.getByRole('heading', { level: 1 }).first().waitFor()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), path).toBeLessThanOrEqual(0)
+        // every chart stays inside its card, and the dates under it don't run into each other
+        const problems = await page.evaluate(() => [...document.querySelectorAll('figure')].flatMap((fig) => {
+          const box = fig.getBoundingClientRect()
+          const out = [...fig.querySelectorAll('*')].some((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.right > box.right + 1 })
+          const marks = [...fig.querySelectorAll('[class*="ticks"] span')]
+            .filter((s) => s.textContent!.trim() && getComputedStyle(s).visibility !== 'hidden')
+            .map((s) => { const range = document.createRange(); range.selectNodeContents(s); return range.getBoundingClientRect() })
+          const overlap = marks.some((r, i) => i > 0 && r.left < marks[i - 1].right + 2)
+          return [...(out ? [`${fig.textContent!.slice(0, 30)}: wider than its card`] : []), ...(overlap ? [`${fig.textContent!.slice(0, 30)}: dates overlap`] : [])]
+        }))
+        expect(problems, path).toEqual([])
+      }
+    })
+  }
+})
