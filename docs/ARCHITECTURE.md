@@ -41,9 +41,9 @@ Four layers, each allowed to know only about the ones below it:
 ### Where a rule lives
 
 A business rule (no double booking: no unit holds more than its places; a stay only moves forward; a cage with
-live stays can't be removed) lives in `domain/bookingRules.ts` and is **enforced in `store/actions.ts`**, so nothing
-can put the data in a bad state, whichever screen or future API calls it. Forms use the same
-rule functions only to explain problems early (`scheduleIssues` in `BookingForm`).
+live stays can't be removed, and one with past stays is archived instead; a pet with history can't be deleted) lives
+in `domain/bookingRules.ts` and is **enforced in `store/actions.ts`**, so nothing can put the data
+in a bad state, whichever screen or future API calls it. Forms use the same rule functions only to explain problems early (`scheduleIssues` in `BookingForm`).
 
 To add a rule: write it in `domain/`, call it from the relevant action (which should refuse by
 returning the unchanged state and a reason), surface the reason in the form, add tests.
@@ -84,7 +84,7 @@ the layout shows as a warning.
 ### Persistence
 
 `HotelRepository` (`store/storage.ts`) is the only thing that knows where data lives. Today:
-`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 4`.
+`localStorage`, one document per account under `pethommie.app.v1.<accountId>`, `version: 5`.
 
 - Reads are validated (`parseStored`). Anything unreadable or from a newer app version comes
   back as empty data **and the original is copied to `<key>.backup` first**, because
@@ -99,6 +99,10 @@ the layout shows as a warning.
   (`deposit` / `payment` / `refund`) and `reference` to each payment, and `source` to each booking (walk-in,
   WhatsApp, Instagram, booking link, referral, other). Existing records become a cage of 1, a plain payment, source
   `other` and the term `cage`, so nothing changes meaning (`<key>.v3.backup`).
+- v4 → v5 adds `rate` to each booking (the nightly rate kept on the stay, taken from its unit's price at upgrade; 0
+  means use the unit's price), `cancelReason` (`owner`, `no_show`, `hotel`; cancelled stays become `owner`),
+  `archived` to each cage (false), `requireVaccine` to the settings (off) and `expenses` (none)
+  (`<key>.v4.backup`).
 - When `HotelData` changes shape: bump `CURRENT_VERSION`, add a step that upgrades the previous
   version inside `parseStored`, add tests for old documents (see `storage.test.ts`).
 
@@ -128,6 +132,18 @@ All pure, so the pages and their tests share them.
 - `filters.ts`: the list filters (pets staying or arriving, bookings by payment, unit, source and species, customer
   segments and sorting).
 
+### Money out, and what is left (`domain/finance.ts`)
+
+An `Expense` is a date, one of 13 categories, a whole amount, a method, who it was paid to, a note and whether it
+recurs monthly. Food, supplies, vet and grooming are **direct** costs (they grow with the guests); the rest are
+**operating** costs. `recurringToCopy` offers last month's recurring expenses that aren't in this month yet.
+`profitLoss` takes a list of months and a basis: **cash** (money received less refunds) or **accrual** (stays that
+ended in the month, with add-ons, discounts, and money kept from cancellations). It gives gross profit (less direct
+costs), net profit (less operating costs), the margin, the PPh final estimate from `tax.ts` and what is left after it,
+income and costs per place-night sold, and the break-even: the place-nights a month that cover the month's operating
+costs, and that as occupancy. `expensesCsv` and `profitLossCsv` export them. Like the tax page, it is an estimate for
+the owner, not a set of accounts.
+
 ### The booking link (`shared/lib/bookingLink.ts`, `domain/linkCard.ts`)
 
 A hotel's link carries everything its public page shows (name, WhatsApp, language, the word for its places, a price
@@ -143,7 +159,9 @@ booked, held or paid by the link: deposits and online payment need the backend (
 
 A `Booking` carries its own money and record: `payments[]` (cash / QRIS / transfer / e-wallet / card, each a
 deposit, a payment or a refund, with an optional bank or QRIS reference; entered by hand, nothing talks to a bank),
-`source` (where it came from) and `arrival` (the check-in record). The daily `careLog` and the
+`source` (where it came from), `arrival` (the check-in record), `rate` (the nightly rate agreed when booked, so a
+later price change leaves old stays alone; `logic.nightlyRate` falls back to the unit's price when it is 0, and moving
+the stay to another unit takes that unit's price) and, once cancelled, `cancelReason`. The daily `careLog` and the
 `reportsSent` marks sit at the top level, keyed by booking. A cage holds one stay whatever its pets; a shared room
 (`capacity` > 1) holds pets up to its capacity, each taking a place and paying the nightly rate (`logic.ts`:
 `placesFor`, `cageIsFree`, `totalPlaces`). Rules live in `domain/`:
@@ -151,6 +169,15 @@ deposit, a payment or a refund, with an optional bank or QRIS reference; entered
 `calendar.ts` (where a stay sits on a cage's row), `bookingRules.ts` (`editIssues`: what may change
 once a stay exists), `guest.ts` (the owner and pets of a new booking: one on record or a new one, a WhatsApp number
 already on record offers that owner instead of a duplicate) and `messages.ts` (the WhatsApp texts).
+
+The actions that end a stay: `cancelBooking` takes a reason and a refund (up to what was paid; 0 keeps it as a
+cancellation fee) and voids the stay's issued invoice, so it no longer counts as sold; `checkOutBooking` takes an
+optional `endOn`, so an early pickup shortens the stay and a late one extends it if the unit is free. A cancelled stay
+takes no more money but can still record a refund. `removeCage` returns `removed`, `archived` (the unit had stays: it
+is kept, takes no stays and isn't counted as a place) or `busy`; `restoreCage` puts it back. `removePet` refuses a
+pet with history (`bookingRules.petHasHistory`: a stay that started, a payment or an invoice). With
+`settings.requireVaccine` on, check-in waits until the operator ticks that a valid vaccination card was seen, which is
+written into the check-in notes.
 
 Messages to owners are written in the owner's language (Indonesian unless the owner is set to English) whatever
 language the operator's screen uses, and the words come from the domain, not from the app's i18n. WhatsApp is
@@ -175,7 +202,10 @@ Supabase (Postgres + auth + storage), the app stays local-first and syncs change
 - `backend/supabase/migrations/0001_init.sql`: tables, constraints (no double booking, same-hotel references), row
   level security; `0002_…` adds charges, shared cages and invoices; `0003_shared_rooms_payment_kinds_sources.sql`
   adds unit capacity (a trigger, `keep_unit_within_capacity`, replaces the exclusion constraint), payment kinds,
-  references and the new methods, and booking sources. Run on a real Postgres by `web/src/app/sync/schema.test.ts`.
+  references and the new methods, and booking sources; `0004_rates_cancellations_archive_expenses.sql` adds the
+  booking's `rate`, `cancel_reason` (required exactly when cancelled), `cages.archived` (a trigger refuses new or
+  moved stays in an archived unit) and an `expenses` table with row level security. Run on a real Postgres by
+  `web/src/app/sync/schema.test.ts`.
 - `web/src/app/sync/`: `rows.ts` (data ⇄ rows), `diff.ts` (what changed between two states, applying and
   merging changes), `gateway.ts` (what the app needs from a server, plus an in-memory one), `ids.ts` (UUIDs).
 
@@ -226,12 +256,15 @@ not deployed.
 `npm test` (Vitest, jsdom + Testing Library). What is covered, and why there:
 
 - Domain rules and store actions: the part where a bug costs a customer data.
-- Storage: corrupt, newer-version, full and blocked storage; the upgrades from v1 up to v4.
+- Storage: corrupt, newer-version, full and blocked storage; the upgrades from v1 up to v5.
 - Real flows through the router: first visit → onboarding → saved data; booking with a new pet;
   only free cages offered; an existing hotel skips onboarding; check-in, payments, check-out
   with a balance, the care log, the report link, editing a stay, the calendar (`stay.test.tsx`); shared rooms
   (`cagefree.test.tsx`); picking the owner and pets of a booking (`booking-guest.test.tsx`); receipts, transactions
-  and invoice states (`money.test.tsx`); the booking link and `/book` (`link.test.tsx`, `BookPage.test.tsx`).
+  and invoice states (`money.test.tsx`); the booking link and `/book` (`link.test.tsx`, `BookPage.test.tsx`);
+  cancelling with a refund, early and late pickups (`stay.test.tsx`); archiving and restoring a unit, a pet with
+  history, the vaccination rule, refunds after a cancellation and overpayment, the backup reminder and this week's
+  incidents (`safety.test.tsx`); expenses and the finance report (`finance.test.tsx`, `domain/finance.test.ts`).
 - The rules above were checked by mutation: breaking each one makes a test fail.
 - Site integrity: film frames vs registry, caption timing, copy structure.
 - Error boundary, including the "old tab after a deploy" reload.
@@ -274,3 +307,5 @@ Honest list, roughly by importance:
    phone or Safari yet (see `docs/product/riset.md` §6).
 7. The booking link only sends requests on WhatsApp: no deposit, no online payment, and nothing is held for the owner
    until the hotel confirms (all need a server, §3).
+8. Expenses are typed in by hand, and the finance report and the tax page are estimates from what was recorded, not
+   bookkeeping. The backup reminder only knows about downloads made in the same browser.

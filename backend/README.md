@@ -10,6 +10,9 @@ supabase/migrations/   numbered SQL files, applied in order. Never edit one that
   0003_shared_rooms_payment_kinds_sources.sql    cages.capacity (the trigger keep_unit_within_capacity replaces the
                                                  exclusion constraint), payments.kind and .reference, e-wallet and
                                                  card methods, bookings.source
+  0004_rates_cancellations_archive_expenses.sql  bookings.rate and .cancel_reason (set exactly when cancelled),
+                                                 cages.archived (a trigger refuses stays in an archived unit),
+                                                 the expenses table
 ```
 
 The migrations are tested without any database installed: `cd web && npm test` runs it on PGlite (Postgres compiled to

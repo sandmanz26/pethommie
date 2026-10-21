@@ -12,8 +12,9 @@ What is here now, all generated in the style of the turntable film:
   of pet hotel in the landing page's "who it's for" section. These and `28_app_link.png` were generated with
   Higgsfield `gpt_image_2_5` in the same diorama style.
 - `icons/nav_sheet.png`: the 16 navigation icons on one 4 x 4 sheet, cut by the script into `public/icons/nav/`.
-  `icons/nav_sheet_2.png` (2 x 2: dashboard, link, transactions, upgrade) and `icons/nav_sheet_3.png` (2 x 2: chat,
-  night, grooming, play; made for the film's captions, which also use some of the first sheet) are cut the same way. The sheets and
+  `icons/nav_sheet_2.png` (2 x 2: dashboard, link, transactions, upgrade), `icons/nav_sheet_3.png` (2 x 2: chat,
+  night, grooming, play; made for the film's captions, which also use some of the first sheet) and
+  `icons/nav_sheet_4.png` (2 x 2: expenses, finance, savings, incident) are cut the same way. The sheets and
   their names are in `NAV_SHEETS` in the script, and in `src/app/design-system/atoms/art.ts`; a test checks the files
   exist.
 - `backgrounds/pet_hotel_scene.webp` (register), `backgrounds/login_scene.png` (login), `backgrounds/faq_scene.webp`

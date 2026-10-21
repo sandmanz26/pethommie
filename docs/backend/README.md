@@ -33,6 +33,7 @@ requirement rules it out (see §6).
 | Schema, constraints, row level security | `backend/supabase/migrations/0001_init.sql` | `web/src/app/sync/schema.test.ts` runs it on a real Postgres (PGlite) |
 | Charges, shared cages, invoices (tables `charges`, `booking_pets`, `invoices`; an issued invoice can only be voided) | `backend/supabase/migrations/0002_charges_companions_invoices.sql` | same PGlite tests, incl. the invoice protection trigger |
 | Shared rooms (`cages.capacity`, the trigger `keep_unit_within_capacity` replacing the exclusion constraint), payment `kind` (deposit, payment, refund) and `reference`, e-wallet and card methods, `bookings.source` | `backend/supabase/migrations/0003_shared_rooms_payment_kinds_sources.sql` | same PGlite tests: a shared room takes stays up to its places and no more; only known kinds and methods |
+| A stay keeps its nightly `rate`, `cancel_reason` (owner, no-show, hotel; required exactly when cancelled), `cages.archived` (the trigger `bookings_not_in_archived_unit` refuses new or moved stays there), `expenses` (13 categories, whole amounts above zero, row level security) | `backend/supabase/migrations/0004_rates_cancellations_archive_expenses.sql` | same PGlite tests: a cancelled stay needs a reason and only it; an archived unit takes no new stay but keeps its old ones; expenses refuse 0, unknown categories and methods |
 | Data ⇄ rows | `web/src/app/sync/rows.ts` | round-trips the whole sample hotel through the database |
 | Stable UUIDs for old ids | `web/src/app/sync/ids.ts` | unit tests; `newId()` now always makes a UUID |
 | Diff / apply / merge of changes | `web/src/app/sync/diff.ts` | replays a day's actions: each step's diff rebuilds the next state |
@@ -41,7 +42,7 @@ requirement rules it out (see §6).
 | `AuthService` interface | `web/src/app/auth/AuthService.ts` | the mock implements it; a Supabase one replaces it |
 
 The database tests show, with a real Postgres: a double booking is refused (and a cancelled or finished stay doesn't
-count), and a shared room takes no more stays than its places; check-out must be after check-in; payments are whole rupiah above zero; a record can't point at another
+count), and a shared room takes no more stays than its places; an archived unit takes no new stays; check-out must be after check-in; payments are whole rupiah above zero; a record can't point at another
 hotel's record; a hotel's members see only their hotel, strangers see nothing, staff can work but not manage
 members; the sign-up list takes entries from anyone and can be read by no one through the API. Each of these was
 checked by breaking the rule and seeing the test fail.
@@ -59,7 +60,7 @@ Email and browser notifications are planned in [notifications.md](notifications.
    sync engine ──push/pull──►  Supabase
                                  ├─ Auth            accounts, sessions
                                  ├─ Postgres + RLS  hotels, members, cages, owners, pets, bookings, payments,
-                                 │                  care_entries, reports_sent, join_requests
+                                 │                  care_entries, reports_sent, expenses, join_requests
                                  ├─ Storage         vaccine cards, pet photos (later)
                                  └─ Edge Functions  booking link with a deposit, sign-up intake (later)
 ```
@@ -88,7 +89,7 @@ app: `deleted_at` marks them, so a device that was offline hears about it when i
 
 | Phase | Deliverable | Done when |
 |---|---|---|
-| 0 | Supabase project, apply the migrations (`0001` to `0003`), env vars on Vercel, CSP `connect-src` extended | schema tests green in CI against the real project's migrations |
+| 0 | Supabase project, apply the migrations (`0001` to `0004`), env vars on Vercel, CSP `connect-src` extended | schema tests green in CI against the real project's migrations |
 | 1 | `supabaseAuthService`; register creates account + hotel (`hotels` insert makes the creator the owner); `createSyncedRepository` (local + outbox + pull); first sign-in on a device with local data offers to upload it | sign up on phone A, see the same hotel on phone B; airplane-mode day ends with everything synced |
 | 2 | Sign-up form writes `join_requests` (anon insert); owner reads them in the Supabase dashboard | a landing sign-up appears for the owner |
 | 3 | Staff invites (`hotel_members`), Realtime pull | a second person logs in to the same hotel |

@@ -25,6 +25,8 @@ Dua pertanyaan: (1) apakah operator bisa menjalankan satu hari kerja di aplikasi
 | H10 | Hotel tanpa kandang: ruang bersama dengan kapasitas, sebutan tempat (kandang, kamar, tempat) | Tinggi | Sedang | Tidak | ✅ |
 | H11 | Setiap booking menyebut pemiliknya: cari atau tambah pemilik, centang anabul yang menginap | Sedang | Rendah | Tidak | ✅ |
 | H12 | Kartu naik ke mode Lengkap di Pengaturan (mode Sederhana) | Sedang | Rendah | Tidak | ✅ |
+| H13 | Kasus negatif dan pengaman data: batal dengan alasan (pemilik, tidak datang, hotel) dan refund, jemput lebih awal atau terlambat, tarif tersimpan di booking, unit diarsipkan bukan dihapus, anabul dengan riwayat tidak bisa dihapus, aturan vaksin saat check-in (opsional), peringatan kelebihan bayar, pengingat unduh cadangan | Tinggi | Sedang | Tidak | ✅ ([analisis-kasus-negatif.md](analisis-kasus-negatif.md)) |
+| H14 | Modul keuangan (mode Lengkap): Beban (13 kategori, beban bulanan disalin ke bulan berikutnya, CSV) dan Keuangan (laba rugi berbasis kas atau akrual, laba kotor dan bersih, margin, perkiraan PPh final, angka per malam, titik impas, grafik, CSV dan cetak) | Tinggi | Sedang | Tidak | ✅ |
 | I0 | Link booking tanpa DP: halaman publik, permintaan ke WhatsApp hotel, satu ketukan menjadi booking | Tinggi (janji utama landing) | Sedang | Tidak (semua ada di dalam link) | ✅ |
 | I | DP atau pembayaran lewat link booking | Tinggi | Tinggi | **Ya** | Berikutnya |
 | J | Foto di rapor dan kartu vaksin | Tinggi | Sedang | **Ya** (penyimpanan file) | Setelah I |
@@ -82,7 +84,7 @@ Dua kebiasaan hidup berdampingan di operator: yang sibuk dan ingin sesedikit mun
 
 | | Sederhana | Lengkap |
 |---|---|---|
-| Menu | Hari ini, Dashboard, Booking, Kalender, Laporan, Anabul, Kandang, Link booking, Pengaturan, Bantuan | + Pelanggan, Tagihan, Transaksi, Invoice, Pajak |
+| Menu | Hari ini, Dashboard, Booking, Kalender, Laporan, Anabul, Kandang, Link booking, Pengaturan, Bantuan | + Pelanggan, Tagihan, Transaksi, Beban, Invoice, Keuangan, Pajak |
 | Check-in | dua centang dan berat | catatan lengkap: bawaan, makanan, catatan, atau lewati |
 | Pembayaran | satu ketukan "Tandai lunas" | jumlah sebagian, jenis (DP, pembayaran, refund), referensi, catatan |
 | Log harian | ketukan saja; kata-kata hanya untuk catatan/obat/kejadian | + jam bisa diubah, keterangan |

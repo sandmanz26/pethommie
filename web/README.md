@@ -158,36 +158,49 @@ backend replaces one file.
 
 Two modes, switched in the sidebar, on the More page or in Settings (kept per account, and only changing what is
 shown): **Simple** is the everyday core with fewer fields (quick check-in, one-tap "paid in full", a care log you fill
-in with taps); **Advanced** adds Customers, Payments, Transactions, Invoices, Tax and every option. On Simple,
+in with taps); **Advanced** adds Customers, Payments, Transactions, Expenses, Invoices, Finance, Tax and every option. On Simple,
 Settings opens with a card of what Advanced adds and one button that switches (the data stays as it is). On a phone
 the tab bar has the four everyday pages plus More.
 
 Pages: Today (arrivals, departures, who is staying and whether their report went out,
-vaccine alerts, a "getting started" list for new hotels), Dashboard (`/app/dashboard`: tonight's places, this month
+vaccine alerts, a "getting started" list for new hotels, a No-show button on late arrivals, a reminder to download a
+backup when there is none or the last is a week old), Dashboard (`/app/dashboard`: tonight's places, this month
 against last, money per month, the next 14 nights, what is owed, arrivals this week, vaccine alerts, overdue invoices,
-this month's tax estimate), Bookings (upcoming / staying / past, with filters by payment, unit, source and species),
+this week's incidents, this month's tax estimate), Bookings (upcoming / staying / past, with filters by payment, unit, source and species),
 the booking page (check-in record, payments, daily care log, the report for the owner,
-ready-made WhatsApp messages, change dates or cage, cancel), Calendar (14 days by cage or room; tap a
+ready-made WhatsApp messages, change dates or cage, cancel: why (owner, no-show, the hotel) and how much of what was
+paid to give back; the stay's invoice is voided), Calendar (14 days by cage or room; tap a
 free day to book it), New booking (starts with the owner: search by name, WhatsApp or a pet's name, pick them and
 tick which of their pets are staying, or add a new owner and pet; only free places are offered, so a unit can't be
 overbooked), Pets (who is staying or arriving, filters by stay, species and vaccine), Cages (tonight's status, cages
-and shared rooms, add/edit; called cages, rooms or spaces, as the hotel chooses in Settings), Customers and a
+and shared rooms, add/edit; a unit with past stays is archived instead of deleted and can be restored from the
+Archived list; called cages, rooms or spaces, as the hotel chooses in Settings), Customers and a
 customer's page (advanced; segments: owes, regular, new, inactive), Payments: what is owed, grouped by urgency, with a
 WhatsApp reminder ready (advanced), Transactions (`/app/transactions`, advanced: every payment and refund in a period
-as a cash book, filtered by method and kind, totals per method, CSV), Receipts
+as a cash book, filtered by method and kind, totals per method, CSV), Expenses (`/app/expenses`, advanced: what the
+hotel spends, by month, in 13 categories split into direct and operating costs; marked monthly ones brought into the
+next month in one tap; search, totals, CSV), Finance (`/app/finance`, advanced: profit and loss for this month, last
+month, 3 months, this year or 12 months, on money received or on stays completed; gross and net profit, margin, the
+PPh final estimate, income vs expenses and profit by month as charts, income and cost per night sold, the break-even
+in nights a month and as occupancy; CSV and print/PDF), Receipts
 (`/app/receipts/:bookingId/:paymentId`: one per payment, numbered `KW-YYYYMMDD-NN`, the amount in words, to print,
 save as PDF or send on WhatsApp), Invoices (advanced: the register by month or all, each one paid / partly paid /
 unpaid / overdue / void, CSV) and an invoice's page (a WhatsApp reminder once it is overdue), Tax (advanced, an
 estimate), Reports (periods: this month, last month, 30 or 90 days, this year or your own dates; filters by unit and
-species; occupancy by places, money in, average rate, lead time, repeat stays and cancellations against the previous
+species; occupancy by places, money in, average rate, lead time, repeat stays, cancellations and no-shows against the previous
 period; busy weekdays; breakdowns by source, method, species, unit and top customers; CSV export), Booking link
 (`/app/link`: language, price list on or off, the pets taken, a note; a live preview, copy, share on WhatsApp, open;
-see `/book` above), Help, and Settings (hotel profile, what the hotel calls its places, mode, language, download and
-restore a JSON backup, reset).
+see `/book` above), Help, and Settings (hotel profile, what the hotel calls its places, an optional rule that holds check-in until a valid
+vaccination card is seen, mode, language, download and restore a JSON backup, reset).
 
-Check-out asks first when money is still owed. Payments are recorded by hand (cash, QRIS,
+Check-out asks first when money is still owed, and when the pet leaves on another day than booked: an early pickup
+can end the stay today (fewer nights), a late one adds the extra nights if the unit is free; the balance shown follows
+the choice. A stay keeps the nightly rate it was booked at, so a later price change doesn't change old stays (moving
+it to another unit takes that unit's price). A pet whose stays started, were paid or invoiced can't be deleted.
+Payments are recorded by hand (cash, QRIS,
 transfer, e-wallet, card; as a deposit, a payment or a refund, with an optional bank or QRIS reference); nothing here
-talks to a bank. WhatsApp messages open the operator's own WhatsApp with
+talks to a bank. Paying more than the total is pointed out, with a one-tap refund; a cancelled stay can still give
+money back. WhatsApp messages open the operator's own WhatsApp with
 the text filled in (a `wa.me` link); nothing is sent until they press send, and they are written in the owner's
 language (Indonesian unless the owner is set to English). Every dropdown is our own `Select` (`shared/ui/Select.tsx`),
 not the browser's: same `<option>` children and `onChange`, keyboard like a native select. The app works offline after
@@ -198,18 +211,20 @@ More in [`docs/product`](../docs/product/README.md): audit, research, roadmap, m
 ```
 src/app/
   domain/          types.ts (Hotel, Cage with capacity, Owner, Pet, Booking with payments,
-                   source and arrival, care log), logic.ts (pure: dates, availability, totals,
-                   vaccine state), bookingRules.ts (what makes a booking valid, how a stay
-                   moves, what may change), payments.ts, careLog.ts, calendar.ts, messages.ts,
+                   rate, source and arrival, care log, Expense), logic.ts (pure: dates,
+                   availability, totals, vaccine state), bookingRules.ts (what makes a booking
+                   valid, how a stay moves, what may change, which pets have history),
+                   payments.ts, careLog.ts, calendar.ts, messages.ts,
                    charges.ts, invoices.ts, tax.ts, customers.ts, csv.ts, reports.ts (periods,
                    filters, breakdowns), dashboard.ts, ledger.ts (transactions, receipt numbers,
                    invoice states), words.ts (amounts in words), filters.ts (list filters),
                    guest.ts (owner and pets of a booking), linkCard.ts (what the booking link
-                   carries). No React.
+                   carries), finance.ts (expenses, profit and loss, break-even, CSVs). No React.
   store/           actions.ts (pure state changes that enforce the rules), AppStore.tsx
                    (React wiring, autosave), storage.ts (HotelRepository: validated
-                   localStorage with a backup; swap for an API later), sampleData.ts (small
-                   hotel) and sampleAdvanced.ts (big hotel, from a fixed seed)
+                   localStorage with a backup; swap for an API later), backupNote.ts (when a
+                   backup was last downloaded), sampleData.ts (small hotel) and
+                   sampleAdvanced.ts (big hotel, from a fixed seed)
   testing/         test fixtures
   i18n/            en.ts (default) / id.ts app copy; follows the site's EN/ID switch
   design-system/   Atomic design
@@ -221,10 +236,11 @@ src/app/
                    CageForm, CheckInForm, ArrivalSummary, PaymentsPanel, CareLogPanel,
                    ReportPanel, MessagesPanel, BookingEditForm, CalendarGrid, StayingRow,
                    FirstSteps, GuestPicker, ReceiptDocument, InvoiceDocument, BarList,
-                   ColumnChart, UpgradeCard
+                   ColumnChart, PairChart, SignedChart, UpgradeCard
     templates/     AppLayout (sidebar / phone tab bar), FocusLayout (sign in, sign up, setup)
     tokens.css     app tokens incl. semantic status colours
-  pages/           one file per route + AppRoutes.tsx
+  pages/           one file per route + AppRoutes.tsx; useCheckOut and useCancelBooking
+                   (the check-out and cancel dialogs)
 ```
 
 ### Demo accounts and mock data
