@@ -124,458 +124,25 @@
   color: var(--ink-soft);
 }
 
-/* ---------- The app screen that goes with a moment ---------- */
-/* Colours of the app itself (app/design-system/tokens.css), so the sample reads as the real screen. */
-.moment {
-  --m-ok: #2f6e46;
-  --m-ok-bg: #e2efe3;
-  --m-warn: #8a5a0b;
-  --m-warn-bg: #f7e9c9;
-  --m-danger: #a3271a;
-  --m-danger-bg: #f8e1dc;
-  --m-info: #24507a;
-  --m-info-bg: #dde8f2;
-  --m-line: color-mix(in srgb, var(--ink) 9%, transparent);
-  /* Hangs under the caption's words, not under its icon: one column, read top to bottom. */
-  margin-left: calc(18px + 56px + 16px);
-  display: grid;
-  gap: 12px;
-  padding: 12px 16px 16px;
-  border-radius: 16px;
-  background: #fffdf8;
-  color: var(--ink);
-  font-size: 0.88rem;
-  line-height: 1.4;
-  font-variant-numeric: tabular-nums;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent),
-    0 22px 44px -26px rgba(27, 26, 23, 0.55);
-}
-/* The screen's name, as the app's top bar would show it. */
-.moment__screen {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 -16px;
-  padding: 0 16px 10px;
-  border-bottom: 1px solid var(--m-line);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.moment__screen i {
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  background: var(--seal);
-  transform: rotate(-4deg);
-}
-.moment ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 6px;
-}
-.moment small {
-  display: block;
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-}
-.moment__badge {
-  justify-self: start;
-  font-style: normal;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 2px 9px;
-  border-radius: 99px;
-  white-space: nowrap;
-}
-.moment__badge--ok {
-  background: var(--m-ok-bg);
-  color: var(--m-ok);
-}
-.moment__badge--info {
-  background: var(--m-info-bg);
-  color: var(--m-info);
-}
-.moment__alert {
-  margin: 0;
-  padding: 7px 10px;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-.moment__alert::before {
-  margin-right: 6px;
-}
-.moment__alert--danger {
-  background: var(--m-danger-bg);
-  color: var(--m-danger);
-}
-.moment__alert--danger::before {
-  content: "✕";
-}
-.moment__alert--warn {
-  background: var(--m-warn-bg);
-  color: var(--m-warn);
-}
-.moment__alert--warn::before {
-  content: "⚠";
-}
-
-/* Pet profile */
-.moment__who {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-}
-.moment__who b {
-  display: block;
-  font-size: 1.05rem;
-}
-.moment__avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  color: var(--seal);
-  background: var(--paper);
-}
-.moment__avatar--small {
-  width: 26px;
-  height: 26px;
-  font-size: 0.75rem;
-}
-.moment__facts {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.moment__facts div {
-  padding: 7px 10px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--paper) 55%, #fff);
-}
-.moment__facts dt {
-  font-size: 0.72rem;
-  color: var(--ink-soft);
-}
-.moment__facts dd {
-  margin: 0;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.moment__facts dd.is-ok {
-  color: var(--m-ok);
-}
-/* Check-in: label on the left, what was found on the right. */
-.moment__facts--rows {
-  grid-template-columns: 1fr;
-  gap: 0;
-}
-.moment__facts--rows div {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 0;
-  border-radius: 0;
-  background: none;
-  border-bottom: 1px solid var(--m-line);
-}
-.moment__facts--rows dt {
-  font-size: 0.85rem;
-}
-
-/* Cage calendar: a week of columns; bookings snap to them. */
-.moment__cal {
-  display: grid;
-  grid-template-columns: 2.6rem 1fr;
-  gap: 6px 8px;
-  align-items: center;
-}
-.moment__week,
-.moment__days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-.moment__week span {
-  text-align: center;
-  font-size: 0.78rem;
-  font-weight: 800;
-  line-height: 1.15;
-}
-.moment__week small {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.moment__calrow {
-  display: contents;
-}
-.moment__cage {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--ink-soft);
-}
-.moment__days {
+/* ---------- The drawn phone that goes with a caption ---------- */
+.chapter {
   position: relative;
-  height: 28px;
-  border-radius: 8px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 calc(100% / 7 - 1px), var(--m-line) calc(100% / 7 - 1px) calc(100% / 7)),
-    color-mix(in srgb, var(--paper) 40%, #fff);
 }
-.moment__bar {
-  grid-row: 1;
-  margin: 3px 2px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  padding-inline: 8px;
-  border-radius: 6px;
-  font-style: normal;
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
+/* Tucked against the caption's lower right corner, a little tilted, like a sticker. */
+.chapter__art {
+  position: absolute;
+  right: -18px;
+  top: calc(100% - 14px);
+  width: clamp(120px, 11vw, 168px);
+  height: auto;
+  rotate: 5deg;
+  filter: drop-shadow(0 14px 18px rgba(27, 26, 23, 0.18));
+  pointer-events: none;
 }
-.moment__bar--booked {
-  background: var(--m-info);
-}
-.moment__bar--staying {
-  background: var(--m-ok);
-}
-.moment__bar.is-cut {
-  margin-left: 0;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-/* The second booking for a taken cage: shown, and refused. */
-.moment__bar--clash {
-  color: var(--m-danger);
-  background: color-mix(in srgb, var(--m-danger-bg) 85%, transparent);
-  outline: 1.5px dashed var(--m-danger);
-  outline-offset: -1.5px;
-  /* dragged onto the taken cage and held there: it hangs below the row instead of covering the booking */
-  transform: translate(6px, 17px) rotate(-2deg);
-  box-shadow: 0 8px 14px -8px rgba(163, 39, 26, 0.7);
-  z-index: 1;
-}
-
-/* Care log: the one-tap buttons, then what was logged. */
-.moment__taps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.moment__taps i {
-  font-style: normal;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 99px;
-  border: 1px solid var(--wash);
-  background: #fff;
-}
-.moment__taps i.is-on {
-  color: #fff;
-  border-color: var(--ink);
-  background: var(--ink);
-}
-.moment__log li {
-  display: grid;
-  grid-template-columns: 2.8rem auto 1fr;
-  gap: 8px;
-  align-items: center;
-  padding-top: 6px;
-  border-top: 1px solid var(--m-line);
-}
-.moment__log time {
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-}
-
-/* A bill: lines, an extra being added, the total. */
-.moment__sum {
-  margin: 0;
-  display: grid;
-  gap: 8px;
-}
-.moment__sum div {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-}
-.moment__sum dt {
-  font-weight: 700;
-}
-.moment__sum dd {
-  margin: 0;
-  font-weight: 700;
-}
-.moment__add dt {
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: 1.5px dashed var(--wash);
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-}
-.moment__total {
-  padding-top: 8px;
-  border-top: 1px solid var(--ink);
-}
-.moment__total dt,
-.moment__total dd {
-  font-weight: 800;
-  font-size: 1rem;
-}
-
-/* Tonight: the app's stat cards, and the cages as dots. */
-.moment__stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.moment__stat {
-  display: grid;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border-top: 3px solid;
-  background: color-mix(in srgb, var(--paper) 45%, #fff);
-}
-.moment__stat b {
-  font-size: 1.25rem;
-  line-height: 1.15;
-}
-.moment__stat--ok {
-  border-top-color: var(--m-ok);
-}
-.moment__stat--info {
-  border-top-color: var(--m-info);
-}
-.moment__stat--warn {
-  border-top-color: #d79a2b;
-}
-.moment__stat--danger {
-  border-top-color: var(--m-danger);
-}
-.moment__cages {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.moment__cages > span {
-  display: flex;
-  gap: 4px;
-}
-.moment__cages i {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  border: 1.5px solid var(--wash);
-}
-.moment__cages i.is-taken {
-  border-color: var(--m-info);
-  background: var(--m-info);
-}
-
-/* WhatsApp: the report goes out with a photo; the owner answers. */
-.moment__chat {
-  display: grid;
-  gap: 8px;
-  margin: -4px -8px 0;
-  padding: 10px;
-  border-radius: 12px;
-  background: #efe7dc;
-}
-.moment__contact {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 0.82rem;
-}
-.moment__bubble {
-  display: grid;
-  gap: 3px;
-  max-width: 78%;
-  padding: 6px 8px;
-  border-radius: 10px;
-  box-shadow: 0 1px 0 rgba(27, 26, 23, 0.12);
-}
-.moment__bubble--out {
-  justify-self: end;
-  border-top-right-radius: 2px;
-  background: #dcf8c6;
-}
-.moment__bubble--in {
-  justify-self: start;
-  border-top-left-radius: 2px;
-  background: #fff;
-}
-.moment__bubble img {
-  width: 100%;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 7px;
-  background: var(--paper);
-}
-.moment__bubble ul {
-  gap: 0;
-}
-.moment__bubble li::before {
-  content: "• ";
-}
-.moment__bubble small {
-  justify-self: end;
-  font-size: 0.68rem;
-}
-.moment__ticks {
-  color: #34b7f1;
-  letter-spacing: -0.2em;
-}
-
-/* Invoice: paid, and the next stay a tap away. */
-.moment__invoice {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.moment__actions {
-  display: flex;
-  gap: 8px;
-}
-.moment__actions i {
-  flex: 1;
-  text-align: center;
-  font-style: normal;
-  font-size: 0.8rem;
-  font-weight: 800;
-  padding: 7px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--wash);
-  background: #fff;
-}
-.moment__actions i.is-primary {
-  color: #fff;
-  border-color: var(--ink);
-  background: var(--ink);
+.chapter__art--booking,
+.chapter__art--care,
+.chapter__art--report {
+  rotate: -5deg;
 }
 
 /* ---------- Story clock ---------- */
@@ -688,39 +255,19 @@
     font-size: 0.95rem;
     line-height: 1.5;
   }
-  .moment {
-    margin-left: 0;
-    padding: 10px 12px 12px;
-    gap: 8px;
-    font-size: 0.82rem;
+  /* The drawn phone sits small on the caption's upper right corner, and the words make room for it. */
+  .chapter .inscription {
+    padding-right: 64px;
   }
-  .moment__screen {
-    margin: 0 -12px;
-    padding: 0 12px 8px;
+  .chapter__art {
+    top: auto;
+    bottom: calc(100% - 30px);
+    right: -6px;
+    width: 76px;
   }
 }
 
 @media (max-width: 720px) {
-  /* Phones: the chat keeps only the report itself, and the cage dots shrink to fit beside their label. */
-  .moment__contact,
-  .moment__bubble--in {
-    display: none;
-  }
-  .moment__bubble img {
-    height: 48px;
-  }
-  .moment__cages small {
-    white-space: nowrap;
-  }
-  .moment__cages > span {
-    gap: 3px;
-  }
-  .moment__cages i {
-    width: 11px;
-    height: 11px;
-    border-radius: 3px;
-  }
-  /* The app screen tells the rest; keep the scene in view. */
   /* The deck says where in the stay it is, so the clock and the chapter marks make way for a longer rail. */
   .inscription p {
     display: -webkit-box;
@@ -736,17 +283,13 @@
   }
 }
 
-/* Short phones: a smaller app screen. */
+/* Short phones: no room for the drawn phone; the caption and the scene come first. */
 @media (max-width: 720px) and (max-height: 700px) {
-  .moment__screen,
-  .moment__alert,
-  .moment__taps,
-  .moment__add,
-  .moment__cages,
-  .moment__actions,
-  .moment__bubble img,
-  .moment__bubble--in {
+  .chapter__art {
     display: none;
+  }
+  .chapter .inscription {
+    padding-right: 16px;
   }
 }
 

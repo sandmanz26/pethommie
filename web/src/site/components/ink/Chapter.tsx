@@ -1,5 +1,4 @@
 import type { Chapter as ChapterData, MomentKind } from "@/site/i18n/en";
-import { Moment } from "./Moment";
 
 /** The illustrated icon for each moment of the stay (public/icons/nav, shared with the app). */
 const ICON: Record<MomentKind, string> = {
@@ -26,12 +25,15 @@ export function Inscription({ chapter }: { chapter: ChapterData }) {
   );
 }
 
-/** One moment of the stay as shown beside the film: the caption, and the app screen that goes with it. */
+/**
+ * One moment of the stay as shown beside the film: the caption, with a drawn phone showing that part of the app
+ * tucked against its corner (an illustration in the film's style, not a screenshot).
+ */
 export function Chapter({ chapter }: { chapter: ChapterData }) {
   return (
-    <>
+    <div className="chapter">
       <Inscription chapter={chapter} />
-      <Moment kind={chapter.moment} />
-    </>
+      <img className={`chapter__art chapter__art--${chapter.moment}`} src={`/illustrations/moment-${chapter.moment}.webp`} alt="" width="200" height="260" loading="lazy" decoding="async" />
+    </div>
   );
 }

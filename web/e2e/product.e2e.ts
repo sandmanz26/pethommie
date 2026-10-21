@@ -168,22 +168,18 @@ test('the landing page shows each tour screen and every feature picture, and the
 })
 
 test.describe('after the film', () => {
-  test('the leaks add up as they scroll past, and the bar turns to ink over them', async ({ page }) => {
+  test('the film is followed by what it costs, then the same desk before and after, all drawn', async ({ page }) => {
     await page.goto('/')
-    const meter = page.locator('.cost__amount')
-    const top = await page.locator('#cost').evaluate((el) => el.getBoundingClientRect().top + scrollY)
-    await page.evaluate((y) => scrollTo(0, y - innerHeight), top) // the section is just below the screen
-    await expect(meter).toHaveText('Rp 0')
-    await page.locator('.cost__leak').nth(3).scrollIntoViewIfNeeded()
-    await page.evaluate(() => scrollBy(0, 200))
-    await expect(meter).toHaveText('Rp 1.710.000')
-    await expect(page.locator('.topbar')).toHaveClass(/topbar--dark/)
-
-    // the calculator makes it the visitor's own hotel
-    await page.getByRole('slider', { name: 'Cages or places' }).fill('24')
-    await expect(page.locator('.cost__result')).toContainText('Rp 3.420.000')
-    await page.locator('#tour').scrollIntoViewIfNeeded()
-    await expect(page.locator('.topbar')).not.toHaveClass(/topbar--dark/)
+    const order = await page.evaluate(() => [...document.querySelectorAll('main > section, main > .film')].map((el) => el.id || el.className))
+    expect(order.slice(0, 3)).toEqual(['film', 'problem', 'compare'])
+    await expect(page.locator('#problem')).toContainText('Rp 1.710.000')
+    for (const img of await page.locator('#problem img, #compare img').all()) {
+      await img.scrollIntoViewIfNeeded()
+      await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true)
+    }
+    // the captions carry drawn phones, not screenshots
+    await expect(page.locator('.film__deck img[src^="/screens/"]')).toHaveCount(0)
+    await expect(page.locator('.chapter__art')).toHaveCount(8)
   })
 
   test('nothing on the page leads to a demo', async ({ page }) => {

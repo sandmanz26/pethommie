@@ -42,7 +42,7 @@ src/
     i18n/      en.ts (default) and id.ts: all copy, caption and clock timings, prices; useSiteT
     content/   film registry: frame count, duration, paper colour, focus box (one film: the turntable)
     components/  ink (the scroll film), layout (TopBar, Footer), ui
-    sections/  Hero, ProductTour, Features, Kinds, Insights, Compare, LinkSpot, Pricing, Faq,
+    sections/  Hero, Problem, BeforeAfter, Features, Kinds, LinkSpot, ProductTour, Pricing, Faq,
                FinalCta (with WaitlistForm)
     pages/     LandingPage, BookPage (/book, a hotel's public booking page), LegalPage, NotFoundPage
     hooks/ lib/ styles/
@@ -113,14 +113,16 @@ note. When an API exists, add a store that calls it and export it as
 
 ## Website
 
-Sections of the landing page (`src/site/sections`, in order): the film (the story of one stay,
-with the hero as its opening), Product tour (real screens behind tabs, laptop and phone), Features (an
-illustration in the film's style and the real app screen for each, one line of words), Kinds (who it's for: cages,
-cage-free and daycare, home boarding, cattery, each with an illustration and how Pethommie counts it), Insights (the
-real dashboard of the advanced sample hotel, and three points), Compare (before and after: five everyday questions,
-from notebook and chats to one screen; a real table for screen readers), LinkSpot (the booking link in three steps,
-saying plainly that nothing is paid on the page), Pricing, FAQ (with a puzzled dog and cat in the corners), and a last
-call to action with an optional "help me set up" form. Kept short on purpose; plus `/privacy` and `/terms`
+Sections of the landing page (`src/site/sections`, in order): the film (the story of one stay, with the hero as its
+opening; each caption has a drawn phone in the film's style, not a screenshot), Problem (what running without a system
+costs, as three numbers for an example hotel, each with its assumption, from `site/lib/leaks.ts`), BeforeAfter (the same
+front desk in a mess and calm, with four changes), Features (an illustration for each and one line of words; the real app
+is only in the tour), Kinds (who it's for: cages, cage-free and daycare, home boarding, cattery), LinkSpot (the booking link in
+three steps, saying plainly that nothing is paid on the page), Product tour (the real app up close: screens behind
+tabs, three numbered points marked on each, and the ask beside them), Pricing, FAQ (with a puzzled dog and cat in the
+corners), and a last call to action on a paper scene, with an optional "help me set up" form. After the film the page
+keeps moving with the scroll (`site/hooks/useScrollEffects.ts`: pictures drift, blocks rise into place; nothing moves
+with reduced motion). There is no demo to link to, and the site never links to one. Kept short on purpose; plus `/privacy` and `/terms`
 (`site/pages/LegalPage.tsx`, words in the site copy, written to describe what the product does today). Nothing on it
 is invented: there are no testimonials or customer numbers, and what isn't built is marked **Coming soon**.
 
@@ -132,12 +134,10 @@ language; it ends with a link that opens a new booking in the app with the dates
 link" filled in. Nothing is booked or paid on the page.
 
 Screens are captured from the running app: `npm run build && npx vite preview --port 4173`, then
-`node scripts/capture-screens.mjs` (the tour's laptop JPEGs), `node scripts/capture-features.mjs` (the feature
-cards and the tour's phone views) and
-`node scripts/capture-dashboard.mjs` (the dashboard of `pro@pethommie.id`, in both languages, as
-`wide-dashboard-<locale>`); set `PW_CHROMIUM` if needed. Then `python3 scripts/prepare-resources.py --screens` turns
-the PNGs into WebP (phone shots up to 520 px wide, `wide-` shots up to 1200 px, the rest 640 px); commit
-`public/screens/`. Run them again when the app's look changes.
+`node scripts/capture-screens.mjs` (the tour's laptop and phone views, and where its numbered points sit, written to
+`src/site/content/tourSpots.ts`); set `PW_CHROMIUM` if needed. Then `python3 scripts/prepare-resources.py --screens` turns the PNGs into WebP (phone shots up to 520 px wide,
+the tour's laptop views 1600 px, the rest 640 px); commit `public/screens/`. Run them again when the app's look
+changes.
 
 Company name, contact email and WhatsApp for the footer, legal pages and Help come from environment variables
 (`web/.env.example`); anything unset is not shown.

@@ -17,6 +17,12 @@ What is here now, all generated in the style of the turntable film:
   `icons/nav_sheet_4.png` (2 x 2: expenses, finance, savings, incident) are cut the same way. The sheets and
   their names are in `NAV_SHEETS` in the script, and in `src/app/design-system/atoms/art.ts`; a test checks the files
   exist.
+- `sheets/moments_1.png`, `sheets/moments_2.png`: eight drawn phones on two 2 x 2 sheets, one per caption of the film
+  (profile, booking, check-in, care; extras, night, report, pickup), cut by `ILLUSTRATION_SHEETS` in the script into
+  `public/illustrations/moment-<name>.webp`.
+- `illustrations/4*_problem_*.png` (the three numbers of the "without a system" section), `50_before.png` and
+  `51_after.png` (the same front desk in a mess and calm); `backgrounds/cta_scene.png`, the paper scene behind the
+  last call to action (its middle is empty for the card).
 - `backgrounds/pet_hotel_scene.webp` (register), `backgrounds/login_scene.png` (login), `backgrounds/faq_scene.webp`
   (only its two bottom corners are used, see `CORNERS`).
 
@@ -40,9 +46,9 @@ python3 scripts/prepare-resources.py setup-store # just one
 python3 scripts/prepare-resources.py --screens   # app screens captured into public/screens (see web/README.md)
 ```
 
-`--screens` turns the PNGs that `scripts/capture-features.mjs` and `scripts/capture-dashboard.mjs` leave in
-`public/screens/` into WebP and removes the PNG: phone views up to 520 px wide, `wide-` screens (the dashboard,
-`wide-dashboard-<locale>`) up to 1200 px, the rest up to 640 px.
+`--screens` turns the PNGs that `scripts/capture-screens.mjs` leaves in
+`public/screens/` into WebP and removes the PNG: phone views up to 520 px wide, the tour's laptop views 1600 px, the
+rest up to 640 px.
 
 For illustrations the script removes stray slivers left by a crop, trims the empty margin and
 keeps the alpha channel. To show an icon in the app, add a line to `ICONS` in the script, add the

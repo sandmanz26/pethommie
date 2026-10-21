@@ -52,7 +52,7 @@ for (const locale of ['en', 'id']) {
   spots[locale] = {}
   for (const phone of [false, true]) {
     const { context, page } = await open(browser, locale, { phone, scale: 2 })
-    await signIn(page, 'sample')
+    await signIn(page)
     const { width, height } = page.viewportSize()
     for (const s of SCREENS) {
       await show(page, s.path)

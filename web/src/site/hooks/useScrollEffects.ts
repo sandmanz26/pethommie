@@ -3,27 +3,30 @@ import { useEffect, type RefObject } from "react";
 /** Pictures and backgrounds that drift with the scroll, and how much: a share of their distance from the screen's middle. */
 const PARALLAX: [selector: string, speed: number][] = [
   ["[data-parallax]", NaN], // speed from the attribute
-  ["#tour .tour__screen", -0.05],
+  [".problem__fact img", -0.08],
+  [".ba__side img", 0.07],
   [".feature__art", 0.08],
   ["#for-you .kind img", 0.07],
-  ["#insights .insights__shot, #insights img", -0.05],
   [".linkspot__art", -0.12],
+  ["#tour .tour__screen", -0.05],
   [".plan__art", 0.1],
   [".faq__corner", 0.16],
+  [".cta__scene", 0.12],
 ];
 
 /** What fades and rises into place the first time it scrolls into view; siblings follow one another. */
 const REVEAL = [
+  "#problem .section-head",
+  ".problem__fact",
+  ".problem__total",
+  "#compare .section-head",
+  ".ba__side",
   "#tour .section-head",
   ".tour__pitch",
   "#features .section-head",
   ".feature",
   "#for-you .section-head",
   "#for-you .kind",
-  "#insights .section-head",
-  "#insights li",
-  "#compare .section-head",
-  ".compare__row",
   "#link .section-head",
   "#link li",
   "#pricing .section-head",
@@ -31,10 +34,6 @@ const REVEAL = [
   "#faq .section-head",
   "#faq details",
   ".cta__card",
-  ".cost .section-head",
-  ".cost__also",
-  ".cost__calc",
-  ".cost__bridge",
 ].join(",");
 
 /**

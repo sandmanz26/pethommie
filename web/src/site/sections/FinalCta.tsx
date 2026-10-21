@@ -21,6 +21,7 @@ export function FinalCta() {
 
   return (
     <section className="cta" id="join">
+      <div className="cta__scene" aria-hidden="true" />
       <div className="cta__card">
         <h2>{cta.title}</h2>
         <p>{cta.lead}</p>

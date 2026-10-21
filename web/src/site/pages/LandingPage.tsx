@@ -7,20 +7,19 @@ import { Footer } from "@/site/components/layout/Footer";
 import { InkFilm } from "@/site/components/ink/InkFilm";
 import { film } from "@/site/content/film";
 import { Hero } from "@/site/sections/Hero";
-import { Cost } from "@/site/sections/Cost";
+import { Problem } from "@/site/sections/Problem";
+import { BeforeAfter } from "@/site/sections/BeforeAfter";
 import { ProductTour } from "@/site/sections/ProductTour";
 import { Features } from "@/site/sections/Features";
 import { Kinds } from "@/site/sections/Kinds";
 import { LinkSpot } from "@/site/sections/LinkSpot";
-import { Compare } from "@/site/sections/Compare";
-import { Insights } from "@/site/sections/Insights";
 import { Pricing } from "@/site/sections/Pricing";
 import { Faq } from "@/site/sections/Faq";
 import { FinalCta } from "@/site/sections/FinalCta";
 
 /**
- * The story first (one stay, scrubbed by scroll), then what running without it costs (the leaks, in money), the proof
- * (real screens), who it is for, what it does, what changes, the numbers, the booking link, what it costs, the
+ * The story first (one stay, scrubbed by scroll), then what running without a system costs (three numbers), the same
+ * desk before and after, what it does, who it is for, the booking link, the real app up close, what it costs, the
  * questions people ask, and one last ask. After the film, the page keeps moving with the scroll (useScrollEffects).
  */
 export function LandingPage() {
@@ -33,13 +32,12 @@ export function LandingPage() {
       <TopBar />
       <main id="top" ref={main}>
         <InkFilm film={film} intro={<Hero />} />
-        <Cost />
-        <ProductTour />
+        <Problem />
+        <BeforeAfter />
         <Features />
         <Kinds />
-        <Insights />
-        <Compare />
         <LinkSpot />
+        <ProductTour />
         <Pricing />
         <Faq />
         <FinalCta />

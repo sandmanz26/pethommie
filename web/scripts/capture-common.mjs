@@ -28,23 +28,12 @@ export async function open(browser, locale, { phone = false, viewport = { width:
   return { context, page }
 }
 
-/**
- * Signs in to a sample hotel:
- *   'sample' the small hotel as it comes (demo@pethommie.id, filled with sample data, simple mode)
- *   'small'  a fresh account filled with the same sample data, in advanced mode (every feature on)
- *   'big'    the big hotel, months of history
- */
-export async function signIn(page, hotel = 'small') {
+/** Signs in to the small sample hotel as it comes (demo@pethommie.id, filled with sample data, simple mode). */
+export async function signIn(page) {
   await page.goto(`${base}/app/login`)
-  await page.getByRole('button', { name: /^(use|pakai)$/i }).nth({ sample: 0, small: 1, big: 2 }[hotel]).click()
+  await page.getByRole('button', { name: /^(use|pakai)$/i }).first().click()
   await page.getByRole('button', { name: /^(log in|masuk)$/i }).click()
   await page.waitForURL((u) => !u.pathname.includes('login'))
-  if (hotel === 'small') {
-    await page.getByRole('button', { name: /sample data|data contoh/i }).click()
-    await page.getByRole('heading', { level: 1 }).first().waitFor()
-    await page.goto(`${base}/app/more`)
-    await page.getByRole('tab', { name: /^(advanced|lengkap)$/i }).first().click()
-  }
 }
 
 /** Goes to a screen and waits until it has drawn, without the demo line under it. */

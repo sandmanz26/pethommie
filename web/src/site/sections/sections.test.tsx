@@ -8,8 +8,8 @@ import { Pricing } from "./Pricing";
 import { tourSpots } from "@/site/content/tourSpots";
 import { ProductTour } from "./ProductTour";
 import { Kinds } from "./Kinds";
-import { Compare } from "./Compare";
-import { Insights } from "./Insights";
+import { BeforeAfter } from "./BeforeAfter";
+import { Problem } from "./Problem";
 import { LinkSpot } from "./LinkSpot";
 
 const wrap = (node: React.ReactNode) => render(<LocaleProvider>{node}</LocaleProvider>);
@@ -33,7 +33,7 @@ describe("landing sections", () => {
     expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.webp");
     expect(screen.getByRole("img", { name: "Pethommie on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
     // a benefit, three numbered points, and the ask beside them
-    expect(screen.getByRole("heading", { name: /know your day/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /your day, before the first owner/i })).toBeInTheDocument();
     expect(within(screen.getByRole("list", { name: /what this screen does/i })).getAllByRole("listitem")).toHaveLength(3);
     expect(screen.getByRole("link", { name: "Try free for 30 days" })).toHaveAttribute("href", "/app/register");
     expect(screen.getByRole("link", { name: /see the prices/i })).toHaveAttribute("href", "#pricing");
@@ -95,23 +95,33 @@ describe("landing sections", () => {
     expect(items[1].querySelector("img")).toHaveAttribute("src", "/illustrations/kind-rooms.webp");
   });
 
-  it("sets the day before and after side by side, as a table", () => {
-    wrap(<Compare />);
-    const table = screen.getByRole("table", { name: /from notebook and chats/i });
-    const rows = within(table).getAllByRole("row");
-    expect(rows).toHaveLength(6);
-    expect(within(rows[2]).getByRole("rowheader")).toHaveTextContent("Who still owes us?");
-    expect(within(rows[2]).getAllByRole("cell")[1]).toHaveTextContent(/reminder ready to send/);
+  it("puts the cost of no system in three numbers, each with its assumption, and says it is an example", () => {
+    wrap(<Problem />);
+    expect(screen.getByRole("heading", { name: "A full hotel can still lose money." })).toBeInTheDocument();
+    expect(screen.getByText(/12 places, Rp 75\.000 a night, 60% full/)).toBeInTheDocument();
+    const facts = screen.getAllByRole("listitem");
+    expect(facts).toHaveLength(3);
+    // 12 lost nights at Rp 75.000; 5% of Rp 16.200.000 billed; 1 hour a day
+    expect(facts[0]).toHaveTextContent(/Rp 900\.000 a month.*free places nobody saw.*1 night per place/);
+    expect(facts[1]).toHaveTextContent(/Rp 810\.000 a month.*never collected.*5% of what you bill/);
+    expect(facts[2]).toHaveTextContent(/30 hours a month.*chats.*1 hour a day/);
+    expect(facts.map((f) => f.querySelector("img")?.getAttribute("src"))).toEqual(["/illustrations/problem-empty.webp", "/illustrations/problem-money.webp", "/illustrations/problem-time.webp"]);
+    expect(screen.getByText("That's about Rp 1.710.000 a month, or Rp 20.520.000 a year.")).toBeInTheDocument();
+    expect(screen.getByText(/an example, not a promise/i)).toBeInTheDocument();
   });
 
-  it("shows the real dashboard in the visitor's language, and says the booking link takes no payment", () => {
-    wrap(
-      <>
-        <Insights />
-        <LinkSpot />
-      </>,
-    );
-    expect(screen.getByRole("img", { name: /the pethommie dashboard/i })).toHaveAttribute("src", "/screens/wide-dashboard-en.webp");
+  it("shows the same desk before and after, in pictures, with what changes", () => {
+    wrap(<BeforeAfter />);
+    const before = screen.getByRole("article", { name: "Without Pethommie" });
+    const after = screen.getByRole("article", { name: "With Pethommie" });
+    expect(before.querySelector("img")).toHaveAttribute("src", "/illustrations/before.webp");
+    expect(after.querySelector("img")).toHaveAttribute("src", "/illustrations/after.webp");
+    expect(within(before).getAllByRole("listitem")).toHaveLength(4);
+    expect(within(after).getAllByRole("listitem")[0]).toHaveTextContent("Free places show on the calendar");
+  });
+
+  it("says the booking link takes no payment", () => {
+    wrap(<LinkSpot />);
     expect(screen.getByText(/no payment on the page yet/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Make my link" })).toHaveAttribute("href", "/app/register");
   });

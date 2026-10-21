@@ -1,9 +1,9 @@
 /**
  * The money a pet hotel run from a notebook and chats loses each month, by the landing page's stated assumptions.
- * An illustration the visitor can adjust, not a measurement: every assumption is shown next to its number.
+ * An example, not a measurement: every assumption is shown next to its number on the page.
  */
 export const LEAK_ASSUMPTIONS = {
-  /** Nights a month, per cage, that were free but weren't sold (never more than the nights actually free). */
+  /** Nights a month, per place, that were free but weren't sold (never more than the nights actually free). */
   lostNightsPerCage: 1,
   /** Share of what is billed that is never collected: balances left at a rushed pickup. */
   unpaidShare: 0.03,

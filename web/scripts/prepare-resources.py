@@ -59,12 +59,24 @@ NAV_SHEETS = [
 ]
 NAV_SIZE = 96  # shown at 24 to 28 CSS px
 
+# Several illustrations generated on one sheet (resources/sheets/), cut like the icon sheets but kept full size:
+# (file, columns, names in reading order) -> public/illustrations/<name>.webp
+ILLUSTRATION_SHEETS = [
+    ("sheets/moments_1.png", 2, ["moment-profile", "moment-booking", "moment-checkin", "moment-care"]),
+    ("sheets/moments_2.png", 2, ["moment-extra", "moment-night", "moment-report", "moment-pickup"]),
+]
+
 # Corners cut from a background, shown at a fixed size instead of stretching the whole scene over a section:
 # public name -> (source slug, (left, top, right, bottom), fade in px on (left, top, right) edges).
 CORNERS = {
     "faq-dog": ("faq-scene", (0, 400, 560, 941), (0, 90, 200)),
     "faq-cat": ("faq-scene", (1240, 360, 1672, 941), (140, 90, 0)),
+    # the last call to action on phones, where the whole scene is too wide: its two sleeping corners
+    "cta-left": ("cta-scene", (0, 420, 420, 1140), (0, 80, 90)),
+    "cta-right": ("cta-scene", (2240, 470, 2688, 1180), (90, 80, 0)),
 }
+# Backgrounds used only through their corners; the others are also made into a full scene.
+CORNERS_ONLY = {"faq-scene"}
 ICON_PAD = 2
 ICON_CROPS: dict[str, tuple[int, int, int, int]] = {}  # name -> keep only this box of the tile (left, top, right, bottom)
 
@@ -163,7 +175,7 @@ def save_webp(img: Image.Image, path: Path, quality: int) -> None:
 
 
 def screens() -> None:
-    """PNG captures from scripts/capture-features.mjs -> WebP sized for the landing page; the PNG is removed."""
+    """PNG captures from scripts/capture-screens.mjs -> WebP sized for the landing page; the PNG is removed."""
     for src in sorted((ROOT / "public" / "screens").glob("*.png")):
         shot = Image.open(src).convert("RGB")
         # phone views 520 wide; the tour's laptop views 1600 (shown up to ~800 CSS px); the wide dashboard 1200; feature crops 640
@@ -205,7 +217,7 @@ def main() -> None:
     for src in sorted((ROOT / "resources" / "backgrounds").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"} or (only and slug(src) not in only):
             continue
-        if slug(src) in {source for source, _, _ in CORNERS.values()}:
+        if slug(src) in CORNERS_ONLY:
             continue  # only its corners are used
         scene = Image.open(src)
         # A scene that fades out (an alpha channel) keeps it, so the page shows through the faded part.
@@ -246,6 +258,20 @@ def main() -> None:
             square.paste(icon, ((side - icon.width) // 2, (side - icon.height) // 2))
             square = square.resize((NAV_SIZE, NAV_SIZE), Image.LANCZOS)
             save_webp(square, ROOT / "public" / "icons" / "nav" / f"{name}.webp", 90)
+    for sheet_file, columns, names in ILLUSTRATION_SHEETS:
+        sheet_path = ROOT / "resources" / sheet_file
+        if not sheet_path.exists() or (only and not only & set(names)):
+            continue
+        sheet = Image.open(sheet_path).convert("RGBA")
+        cell = sheet.width // columns
+        for i, name in enumerate(names):
+            if only and name not in only:
+                continue
+            tile = sheet.crop(((i % columns) * cell, (i // columns) * cell, (i % columns + 1) * cell, (i // columns + 1) * cell))
+            art = trim(clean_cutout(tile))
+            art.thumbnail((ILLUSTRATION_MAX, ILLUSTRATION_MAX), Image.LANCZOS)
+            print(f"{sheet_file} -> {name}:")
+            save_webp(art, ROOT / "public" / "illustrations" / f"{name}.webp", 82)
     for src in sorted((ROOT / "resources" / "photos").glob("*")):
         if src.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
             continue

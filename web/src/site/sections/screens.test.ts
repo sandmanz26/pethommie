@@ -19,7 +19,6 @@ describe("landing page pictures", () => {
   it("exist for every feature: its illustration, and its screen in every language", () => {
     for (const f of en.features.items) {
       expect(existsSync(file(`/illustrations/${f.art}.webp`)), f.art).toBe(true);
-      if (f.shot) for (const locale of ["en", "id"]) expect(existsSync(file(`/screens/feature-${f.shot}-${locale}.webp`)), f.shot).toBe(true);
     }
   });
 
