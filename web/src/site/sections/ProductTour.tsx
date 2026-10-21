@@ -2,15 +2,14 @@ import { useState } from "react";
 import { useSiteT } from "@/site/i18n/useSiteT";
 import { Button } from "@/site/components/ui/Button";
 import { tourSpots } from "@/site/content/tourSpots";
-import { demoHref } from "@/site/lib/demo";
 import "./sections.css";
 
-/** The screens are captured from the demo hotel (scripts/capture-screens.mjs), per language, with the points on them. */
+/** The screens are captured from the sample hotel (scripts/capture-screens.mjs), per language, with the points on them. */
 const SCREEN_SIZE = { width: 1600, height: 1000 };
 const PHONE_SIZE = { width: 520, height: 1125 };
 
 /**
- * Three real screens behind a tab bar, each with what it does for the owner beside it and a way straight into it.
+ * Three real screens behind a tab bar, each with what it does for the owner beside it and the ask to try it.
  * The numbered points in the list are marked on the screen; pointing at either lights up both. A laptop view on wide
  * screens; on a phone, the phone view, which is the one that reads at that size.
  */
@@ -103,12 +102,12 @@ export function ProductTour() {
                   ))}
                 </ol>
                 <div className="tour__cta">
-                  <Button href={demoHref(it.demo)} variant="seal">
-                    {it.cta}
+                  <Button href={tour.cta.href} variant="seal">
+                    {tour.cta.label}
                   </Button>
                   <small>{tour.ctaNote}</small>
-                  <a className="tour__trial" href={tour.trial.href}>
-                    {tour.trial.label} →
+                  <a className="tour__trial" href={tour.prices.href}>
+                    {tour.prices.label} →
                   </a>
                 </div>
               </div>

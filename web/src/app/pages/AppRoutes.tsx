@@ -12,7 +12,6 @@ import { AppLayout } from "@/app/design-system/templates/AppLayout";
 import "@/app/design-system/tokens.css";
 import { AccountData } from "./AccountData";
 import { LoginPage } from "./LoginPage";
-import { DemoEntry } from "./DemoEntry";
 import { CurrentStay } from "./CurrentStay";
 import { OnboardingPage } from "./OnboardingPage";
 import { RegisterPage } from "./RegisterPage";
@@ -82,7 +81,6 @@ function Workspace() {
 
 /**
  * Everything under /app. Mounted from the top-level router.
- *   /app/demo                   one click into the demo, on the screen asked for (?to=/app/calendar)
  *   /app/login, /app/register   for people who are signed out
  *   everything else             needs an account; its data is that account's own
  */
@@ -92,7 +90,6 @@ export default function AppRoutes() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="demo" element={<DemoEntry />} />
         <Route element={<GuestOnly />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />

@@ -26,9 +26,6 @@ export function Footer() {
                 <a href={`/${l.href}`}>{l.label}</a>
               </li>
             ))}
-            <li>
-              <a href="/app/demo">{f.demo}</a>
-            </li>
           </ul>
         </nav>
         <nav aria-label={f.legal}>

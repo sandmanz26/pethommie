@@ -16,6 +16,14 @@ describe("site copy", () => {
     expect(times(id)).toEqual(times(en));
   });
 
+  it("never links to a demo: there is none to offer", () => {
+    for (const copy of [en, id]) {
+      const text = JSON.stringify(copy);
+      expect(text).not.toMatch(/\/app\/demo/);
+      expect(text).not.toMatch(/open the demo|buka demo/i);
+    }
+  });
+
   it("has no empty strings", () => {
     const empty: string[] = [];
     const walk = (v: unknown, path: string) => {

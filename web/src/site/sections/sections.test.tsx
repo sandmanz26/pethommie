@@ -25,18 +25,19 @@ describe("landing sections", () => {
     expect(faq.getByText(/free for 30 days/i)).toBeVisible();
   });
 
-  it("shows real screens behind tabs, says what each does for the owner, and opens it in the demo in one click", async () => {
+  it("shows real screens behind tabs, says what each does for the owner, and asks for the free trial beside it", async () => {
     wrap(<ProductTour />);
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((t) => t.textContent)).toEqual(["Today", "One stay", "Calendar"]);
     expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
     expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.webp");
     expect(screen.getByRole("img", { name: "Pethommie on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
-    // a benefit, three numbered points, and the way in beside them
+    // a benefit, three numbered points, and the ask beside them
     expect(screen.getByRole("heading", { name: /know your day/i })).toBeInTheDocument();
     expect(within(screen.getByRole("list", { name: /what this screen does/i })).getAllByRole("listitem")).toHaveLength(3);
-    expect(screen.getByRole("link", { name: "Open Today in the demo" })).toHaveAttribute("href", "/app/demo");
-    expect(screen.getByRole("link", { name: /start your free 30 days/i })).toHaveAttribute("href", "/app/register");
+    expect(screen.getByRole("link", { name: "Try free for 30 days" })).toHaveAttribute("href", "/app/register");
+    expect(screen.getByRole("link", { name: /see the prices/i })).toHaveAttribute("href", "#pricing");
+    expect(screen.queryByRole("link", { name: /demo/i })).not.toBeInTheDocument();
 
     await userEvent.click(tabs[2]);
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
@@ -45,14 +46,10 @@ describe("landing sections", () => {
     expect(img).toHaveAttribute("width");
     expect(img).toHaveAttribute("height");
     expect(screen.getByText(/tap an empty day to book it/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open the calendar in the demo" })).toHaveAttribute("href", "/app/demo?to=%2Fapp%2Fcalendar");
-
-    await userEvent.click(tabs[1]);
-    expect(screen.getByRole("link", { name: "Open a stay in the demo" })).toHaveAttribute("href", "/app/demo?to=%2Fapp%2Fbookings%2Fcurrent");
 
     // arrow keys move between tabs
-    tabs[1].focus();
-    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    tabs[2].focus();
+    await userEvent.keyboard("{ArrowRight}");
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(tabs[0]).toHaveFocus();
   });

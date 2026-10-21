@@ -28,12 +28,12 @@ describe("Footer", () => {
     expect(foot.getByText(new RegExp(`© ${copyrightYears().replace("–", ".")} ${company.name}\\. All rights reserved\\.`))).toBeInTheDocument();
   });
 
-  it("links the legal pages and the demo, and the page sections from anywhere", () => {
+  it("links the legal pages and the page sections from anywhere, and no demo", () => {
     renderFooter();
     const foot = within(screen.getByRole("contentinfo"));
     expect(foot.getByRole("link", { name: "Privacy policy" })).toHaveAttribute("href", "/privacy");
     expect(foot.getByRole("link", { name: "Terms of use" })).toHaveAttribute("href", "/terms");
-    expect(foot.getByRole("link", { name: "Open the demo" })).toHaveAttribute("href", "/app/demo");
+    expect(foot.queryByRole("link", { name: /demo/i })).not.toBeInTheDocument();
     expect(foot.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/#faq");
   });
 

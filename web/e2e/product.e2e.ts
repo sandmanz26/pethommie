@@ -167,19 +167,58 @@ test('the landing page shows each tour screen and every feature picture, and the
   await expect(page.getByRole('contentinfo')).toContainText('All rights reserved')
 })
 
-test('from the tour, one click opens that very screen in the demo: no login form, sample data in it', async ({ page }) => {
-  await page.goto('/')
-  await page.locator('#tour').scrollIntoViewIfNeeded()
-  await page.getByRole('tab', { name: 'One stay' }).click()
-  await page.getByRole('link', { name: 'Open a stay in the demo' }).click()
-  await expect(page).toHaveURL(/\/app\/bookings\/(?!current)[^/]+$/)
-  await expect(page.getByRole('heading', { name: 'Daily care log' })).toBeVisible()
+test.describe('after the film', () => {
+  test('the leaks add up as they scroll past, and the bar turns to ink over them', async ({ page }) => {
+    await page.goto('/')
+    const meter = page.locator('.cost__amount')
+    const top = await page.locator('#cost').evaluate((el) => el.getBoundingClientRect().top + scrollY)
+    await page.evaluate((y) => scrollTo(0, y - innerHeight), top) // the section is just below the screen
+    await expect(meter).toHaveText('Rp 0')
+    await page.locator('.cost__leak').nth(3).scrollIntoViewIfNeeded()
+    await page.evaluate(() => scrollBy(0, 200))
+    await expect(meter).toHaveText('Rp 1.710.000')
+    await expect(page.locator('.topbar')).toHaveClass(/topbar--dark/)
 
-  await page.goto('/')
-  await page.getByRole('tab', { name: 'Calendar' }).click()
-  await page.getByRole('link', { name: 'Open the calendar in the demo' }).click()
-  await expect(page).toHaveURL(/\/app\/calendar$/)
-  await expect(page.getByRole('heading', { name: 'Cage calendar', level: 1 })).toBeVisible()
+    // the calculator makes it the visitor's own hotel
+    await page.getByRole('slider', { name: 'Cages or places' }).fill('24')
+    await expect(page.locator('.cost__result')).toContainText('Rp 3.420.000')
+    await page.locator('#tour').scrollIntoViewIfNeeded()
+    await expect(page.locator('.topbar')).not.toHaveClass(/topbar--dark/)
+  })
+
+  test('nothing on the page leads to a demo', async ({ page }) => {
+    for (const locale of ['en', 'id']) {
+      await page.addInitScript((l) => localStorage.setItem('pethommie.locale', l), locale)
+      await page.goto('/')
+      await expect(page.locator('a[href*="demo"]')).toHaveCount(0)
+    }
+  })
+
+  test.describe('with motion allowed', () => {
+    test.use({ contextOptions: { reducedMotion: 'no-preference' } })
+
+    test('pictures drift with the scroll and blocks rise into place as they arrive', async ({ page }) => {
+      await page.goto('/')
+      const card = page.locator('.feature').first()
+      await expect(card).toHaveClass(/rises/)
+      await expect(card).not.toHaveClass(/is-in/)
+      await card.scrollIntoViewIfNeeded()
+      await expect(card).toHaveClass(/is-in/)
+      await expect.poll(() => card.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+
+      const art = page.locator('.feature__art').first()
+      const at = () => art.evaluate((el) => parseFloat(getComputedStyle(el).getPropertyValue('--parallax')) || 0)
+      const before = await at()
+      await page.evaluate(() => scrollBy(0, 300))
+      await expect.poll(at).not.toBe(before)
+    })
+  })
+
+  test('with less motion asked for, nothing waits to appear', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('.rises')).toHaveCount(0)
+    await expect(page.locator('.drifts')).toHaveCount(0)
+  })
 })
 
 test('the app opens without a connection after the first visit, and the website is not touched', async ({ page, context }) => {

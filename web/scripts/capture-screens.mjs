@@ -1,5 +1,4 @@
-// Captures the screens in the landing page's product tour from the demo hotel a visitor lands in (/app/demo), so the
-// picture is what the "open in the demo" button opens, in both languages:
+// Captures the screens in the landing page's product tour from the small sample hotel as it comes, in both languages:
 //   public/screens/<today|booking|calendar>-<locale>.png        laptop view, 1280x800 at 2x
 //   public/screens/<today|booking|calendar>-phone-<locale>.png  phone view, 390x844 at 2x
 //   src/site/content/tourSpots.ts                                where each numbered point sits on the laptop view
@@ -53,7 +52,7 @@ for (const locale of ['en', 'id']) {
   spots[locale] = {}
   for (const phone of [false, true]) {
     const { context, page } = await open(browser, locale, { phone, scale: 2 })
-    await signIn(page, 'demo')
+    await signIn(page, 'sample')
     const { width, height } = page.viewportSize()
     for (const s of SCREENS) {
       await show(page, s.path)

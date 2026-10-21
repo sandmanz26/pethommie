@@ -1,14 +1,44 @@
+import { useEffect, useState } from "react";
 import { useSiteT } from "@/site/i18n/useSiteT";
 import { Button } from "@/site/components/ui/Button";
 import { Hanko } from "@/shared/ui/Hanko";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
 import "./layout.css";
 
+/** True while a section marked `data-dark` (an ink section) is under the bar, so the bar can turn dark with it. */
+function useOverDark() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      const line = 32;
+      setDark([...document.querySelectorAll("[data-dark]")].some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top <= line && r.bottom >= line;
+      }));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+  return dark;
+}
+
 /** On the landing page the links jump within it; on other pages they lead back to it. */
 export function TopBar({ onLanding = true }: { onLanding?: boolean }) {
   const { t } = useSiteT();
+  const dark = useOverDark();
   return (
-    <header className="topbar">
+    <header className={`topbar${dark ? " topbar--dark" : ""}`}>
       <a className="topbar__brand" href={onLanding ? "#top" : "/"}>
         <Hanko />
         <span className="topbar__name">{t.brand.name}</span>

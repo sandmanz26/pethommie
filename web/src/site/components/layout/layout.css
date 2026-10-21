@@ -37,6 +37,25 @@
     display: none;
   }
 }
+/* Over an ink section the bar turns to ink too, instead of a strip of paper across it. */
+.topbar--dark {
+  color: var(--paper);
+  background: linear-gradient(var(--ink) 40%, transparent);
+  --lang-border: color-mix(in srgb, var(--paper) 30%, transparent);
+}
+.topbar--dark .topbar__nav a,
+.topbar--dark .lang__option {
+  color: color-mix(in srgb, var(--paper) 72%, var(--ink));
+}
+.topbar--dark .topbar__nav a:hover,
+.topbar--dark .lang__option:hover {
+  color: var(--paper);
+}
+.topbar--dark .lang__option[aria-pressed="true"],
+.topbar--dark .btn--solid {
+  background: var(--paper);
+  color: var(--ink);
+}
 
 .footer {
   padding-inline: var(--gutter);
@@ -100,4 +119,8 @@
   .topbar__actions .btn {
     padding-inline: 14px;
   }
+}
+.topbar--dark .topbar__brand,
+.topbar--dark .topbar__login {
+  color: var(--paper);
 }

@@ -28,9 +28,6 @@ export function FinalCta() {
           <Button href={cta.primary.href} variant="seal">
             {cta.primary.label}
           </Button>
-          <Button href={cta.secondary.href} variant="ghost">
-            {cta.secondary.label}
-          </Button>
         </div>
         <ul className="cta__chips">
           {cta.chips.map((c) => (
