@@ -118,7 +118,10 @@ const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath
   const context = await browser.newContext({ viewport: { width: 1280, height: 960 }, deviceScaleFactor: 1.25 })
   await context.addInitScript(() => localStorage.setItem('pethommie.locale', 'en'))
   const page = await context.newPage()
-  await shot(page, '20-login', '/app/login')
+  await shot(page, '20-login', '/app/login', {
+    // the sign-in accounts for testers are not part of the product
+    before: (p) => p.addStyleTag({ content: '.ds-demo { display: none !important; }' }),
+  })
   await context.close()
 }
 
