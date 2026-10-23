@@ -440,3 +440,4 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-pool__empty { color: var(--ink-faint); }
 .ds-pool__book { align-self: flex-end; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 700; text-decoration: none; }
 .ds-pool__book:hover, .ds-pool__book:focus-visible { background: var(--ok); color: var(--surface); }
+.ds-form__row--dates { align-items: start; }

@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
@@ -37,6 +37,22 @@ async function book(data = hotel()) {
 }
 
 const save = (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: /save booking/i }));
+
+describe("dates", () => {
+  it("sets check-out from a number of nights, and keeps the nights when check-in moves", async () => {
+    const user = await book();
+    fireEvent.change(screen.getByRole("textbox", { name: "Nights" }), { target: { value: "5" } });
+    const checkIn = (screen.getByLabelText("Check-in") as HTMLInputElement).value;
+    const plus = (iso: string, k: number) => new Date(Date.parse(iso) + k * 86_400_000).toISOString().slice(0, 10);
+    expect(screen.getByLabelText("Check-out")).toHaveValue(plus(checkIn, 5));
+    await user.click(screen.getByRole("button", { name: "Nights +1" }));
+    expect(screen.getByLabelText("Check-out")).toHaveValue(plus(checkIn, 6));
+    const later = plus(checkIn, 3);
+    // a date input is set whole, as a picker would
+    fireEvent.change(screen.getByLabelText("Check-in"), { target: { value: later } });
+    expect(screen.getByLabelText("Check-out")).toHaveValue(plus(later, 6));
+  });
+});
 
 describe("who a booking is for", () => {
   it("lists the owners who book most often first, with how many stays, before anything is typed", async () => {

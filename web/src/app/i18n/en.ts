@@ -286,6 +286,7 @@ export const appEn = {
     errPetName: "Enter the pet's name.",
   },
   bookingForm: {
+    nights: "Nights",
     source: "Booked via",
     sources: { walk_in: "Walk-in", whatsapp: "WhatsApp", instagram: "Instagram", link: "Booking link", referral: "Referral", other: "Other" },
     title: "New booking",

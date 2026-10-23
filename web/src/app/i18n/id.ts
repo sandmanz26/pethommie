@@ -287,6 +287,7 @@ export const appId: AppMessages = {
     errPetName: "Isi nama anabul.",
   },
   bookingForm: {
+    nights: "Jumlah malam",
     source: "Booking lewat",
     sources: { walk_in: "Datang langsung", whatsapp: "WhatsApp", instagram: "Instagram", link: "Link booking", referral: "Rekomendasi", other: "Lainnya" },
     title: "Booking baru",

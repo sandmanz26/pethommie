@@ -21,6 +21,7 @@ import {
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { Alert } from "@/app/design-system/molecules/Alert";
+import { Stepper } from "@/app/design-system/molecules/Stepper";
 import { Field } from "@/app/design-system/molecules/Field";
 import { GuestPicker } from "./GuestPicker";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -33,6 +34,9 @@ import "./organisms.css";
  * Create a booking in one screen: who it is for (an owner on record, or a new one, and the pets staying), the
  * dates, and a unit. Only free units for the chosen dates are offered, so a double booking can't be entered.
  */
+/** Longest stay the nights stepper offers; longer stays still come from the check-out date. */
+const MAX_NIGHTS = 90;
+
 export function BookingForm({
   data,
   initialPetId,
@@ -172,10 +176,24 @@ export function BookingForm({
       {vState && <Alert tone={vState === "expired" ? "danger" : "warn"}>{f.vaccineWarn[vState]}</Alert>}
 
       <fieldset className="ds-form__section">
-        <div className="ds-form__row">
+        {/* Check-in, then how many nights: the check-out date follows. Picking a check-out date sets the nights. */}
+        <div className="ds-form__row ds-form__row--dates">
           <Field label={f.checkIn} error={errors.checkIn}>
-            <Input type="date" value={checkIn} onChange={(e) => (setCheckIn(e.target.value), clear("checkIn", "dates"))} />
+            <Input
+              type="date"
+              value={checkIn}
+              onChange={(e) => {
+                const next = e.target.value;
+                setCheckIn(next);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(next)) setCheckOut(addDays(next, Math.max(1, n)));
+                clear("checkIn", "dates");
+              }}
+            />
           </Field>
+          <div className="ds-field">
+            <span className="ds-field__label" aria-hidden="true">{f.nights}</span>
+            <Stepper label={f.nights} value={Math.max(1, n)} min={1} max={MAX_NIGHTS} onChange={(k) => (setCheckOut(addDays(checkIn, k)), clear("dates"))} />
+          </div>
           <Field label={f.checkOut} error={errors.dates ?? (!validDates ? f.errDates : undefined)}>
             <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), clear("dates"))} />
           </Field>
