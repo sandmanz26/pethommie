@@ -263,6 +263,8 @@ export const appId: AppMessages = {
     findHint: "Ketik nama, nomor WhatsApp, atau nama anabulnya.",
     findPh: "mis. Rina, 0812…, Mochi",
     results: "Pemilik yang tercatat",
+    frequent: "Paling sering menginap",
+    stays: (n) => `${n}× menginap`,
     noNumber: "Belum ada WhatsApp",
     noMatch: (q: string) => `Belum ada yang bernama "${q}".`,
     newOwner: "Pemilik baru",

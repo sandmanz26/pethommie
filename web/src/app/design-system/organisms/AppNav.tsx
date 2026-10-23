@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import { Hanko } from "@/shared/ui/Hanko";
 import { NavIcon } from "@/app/design-system/atoms/NavIcon";
 import { Button } from "@/app/design-system/atoms/Button";
-import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
 import { sideItems, tabItems, type NavKey } from "./navItems";
@@ -34,7 +33,6 @@ export function AppNav({ hotelName, onLogout, labels = {} }: { hotelName: string
           ))}
         </nav>
         <div className="ds-sidenav__foot">
-          <ModeSwitch />
           <NavLink to="/" className="ds-sidenav__link">
             <NavIcon name="website" />
             {t.nav.backToSite}

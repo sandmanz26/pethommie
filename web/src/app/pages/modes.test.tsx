@@ -36,12 +36,19 @@ async function open(path: string, mode?: Mode, bookings = [stay()], extra = {}) 
 
 const sidebar = () => within(screen.getByRole("complementary"));
 
+/** Switches to Advanced the way a person would on a wide screen: from Settings. */
+async function toAdvanced(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(sidebar().getByRole("link", { name: "Settings" }));
+  await user.click(within(await screen.findByRole("main")).getByRole("tab", { name: "Advanced" }));
+}
+
 describe("simple and advanced mode", () => {
   it("starts simple, and says nothing about it until asked", async () => {
     await open("/app");
     await screen.findByRole("heading", { name: "Today", level: 1 });
     expect(readMode("acct-test")).toBe("simple");
-    expect(sidebar().getByRole("tab", { name: "Simple", selected: true })).toBeInTheDocument();
+    // the switch lives in Settings (and More on a phone), not in the sidebar
+    expect(sidebar().queryByRole("tab", { name: "Simple" })).toBeNull();
   });
 
   it("offers the everyday pages, the dashboard and reports in simple mode and adds customers, payments, invoices and tax in advanced", async () => {
@@ -50,14 +57,14 @@ describe("simple and advanced mode", () => {
     for (const hidden of ["Customers", "Payments", "Invoices", "Tax"]) expect(sidebar().queryByRole("link", { name: hidden })).not.toBeInTheDocument();
     for (const shown of ["Today", "Dashboard", "Bookings", "Calendar", "Reports", "Pets", "Cages", "Settings", "Help"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
 
-    await user.click(sidebar().getByRole("tab", { name: "Advanced" }));
+    await toAdvanced(user);
     for (const shown of ["Customers", "Payments", "Invoices", "Reports", "Tax"]) expect(sidebar().getByRole("link", { name: shown })).toBeInTheDocument();
   });
 
   it("remembers the choice for this account, and only this account", async () => {
     const user = await open("/app");
     await screen.findByRole("complementary");
-    await user.click(sidebar().getByRole("tab", { name: "Advanced" }));
+    await toAdvanced(user);
     expect(localStorage.getItem(modeKeyFor("acct-test"))).toBe("advanced");
     expect(readMode("someone-else")).toBe("simple");
   });

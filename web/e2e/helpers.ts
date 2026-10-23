@@ -14,8 +14,8 @@ export async function signInWithSampleData(page: Page, locale: 'en' | 'id' = 'en
   await page.getByRole('button', { name: /sample data|data contoh/i }).click()
   await page.getByRole('heading', { level: 1 }).first().waitFor()
   if (mode === 'advanced') {
-    // The switch is in the sidebar on a wide screen and on the More page on a phone.
-    if (!(await page.getByRole('complementary').isVisible())) await page.goto('/app/more')
+    // The switch is in Settings (on a phone also under More).
+    await page.goto('/app/settings')
     await page.getByRole('tab', { name: /^(advanced|lengkap)$/i }).first().click()
   }
 }

@@ -6,7 +6,7 @@ import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { choose } from "@/shared/testing/select";
 import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
-import { aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
+import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import type { HotelData } from "@/app/domain/types";
 import AppRoutes from "./AppRoutes";
 
@@ -39,6 +39,18 @@ async function book(data = hotel()) {
 const save = (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: /save booking/i }));
 
 describe("who a booking is for", () => {
+  it("lists the owners who book most often first, with how many stays, before anything is typed", async () => {
+    const stay = (id: string, petId: string, status: "checked_out" | "cancelled" = "checked_out") =>
+      aBooking(id, { petId, cageId: "s1", checkIn: "2026-01-01", checkOut: "2026-01-02", status });
+    // Budi (o2) has two stays, Rina (o1) one; a cancelled stay doesn't count.
+    await book({ ...hotel(), bookings: [stay("b1", "p3"), stay("b2", "p3"), stay("b3", "p1"), stay("b4", "p1", "cancelled"), stay("b5", "p2", "cancelled")] });
+    const list = within(screen.getByRole("list", { name: "Book most often" }));
+    const names = list.getAllByRole("button").map((b) => b.textContent);
+    expect(names[0]).toMatch(/^BBudi Santoso.*2 stays$/);
+    expect(names[1]).toMatch(/Owner o1.*1 stay$/);
+  });
+
+
   it("finds the owner by a pet's name or a number, then books the pets that are staying together", async () => {
     const user = await book();
     await user.type(screen.getByLabelText("Find the owner"), "kopi");

@@ -374,7 +374,11 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 @media (max-width: 520px) { .ds-receipt__rows { grid-template-columns: 1fr; gap: 2px 0; } .ds-receipt__rows dd { margin-bottom: 8px; } }
 
 /* ---------- Who a booking is for ---------- */
-.ds-guest__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+/* Three across where the form is wide, so the list stays short; one on a phone. */
+.ds-guest__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.ds-guest__results > li, .ds-guest__results .ds-guest__result { height: 100%; }
+.ds-guest__frequent { margin: 4px 0 -2px; font-size: 0.78em; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.ds-guest__stays { color: var(--seal) !important; font-weight: 700; }
 .ds-guest__result, .ds-guest__owner {
   display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; width: 100%;
   padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--radius); background: var(--surface);

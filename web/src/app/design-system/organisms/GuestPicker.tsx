@@ -28,10 +28,22 @@ export function GuestPicker({ data, value, onChange, errors, on }: { data: Hotel
   const petsOf = (id: string) => data.pets.filter((p) => p.ownerId === id).sort((a, b) => a.name.localeCompare(b.name));
   const set = (patch: Partial<GuestDraft>) => onChange({ ...value, ...patch });
 
+  // Stays per owner (cancelled ones don't count): regulars come first, so most bookings are one tap.
+  const stays = useMemo(() => {
+    const ownerOf = new Map(data.pets.map((p) => [p.id, p.ownerId]));
+    const count = new Map<string, number>();
+    for (const b of data.bookings) {
+      if (b.status === "cancelled") continue;
+      const o = ownerOf.get(b.petId);
+      if (o) count.set(o, (count.get(o) ?? 0) + 1);
+    }
+    return count;
+  }, [data.bookings, data.pets]);
+
   const matches = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const digits = q.replace(/\D/g, "");
-    const all = [...data.owners].sort((a, b) => a.name.localeCompare(b.name));
+    const all = [...data.owners].sort((a, b) => (stays.get(b.id) ?? 0) - (stays.get(a.id) ?? 0) || a.name.localeCompare(b.name));
     if (!needle) return all.slice(0, 6);
     return all
       .filter(
@@ -41,7 +53,7 @@ export function GuestPicker({ data, value, onChange, errors, on }: { data: Hotel
           data.pets.some((p) => p.ownerId === o.id && p.name.toLowerCase().includes(needle)),
       )
       .slice(0, 8);
-  }, [data, q]);
+  }, [data, q, stays]);
 
   const pickOwner = (id: string) => onChange({ ownerId: id, newOwner: null, petIds: petsOf(id).length === 1 ? [petsOf(id)[0].id] : [], newPet: petsOf(id).length ? null : { name: "", species: "cat" } });
   // "Add <what was typed>" fills it in; the plain "New owner" button (shown when there are matches) starts blank.
@@ -93,8 +105,9 @@ export function GuestPicker({ data, value, onChange, errors, on }: { data: Hotel
           <Field label={g.find} hint={g.findHint} error={errors.owner}>
             <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={g.findPh} autoComplete="off" />
           </Field>
+          {matches.length > 0 && !q.trim() && <p className="ds-guest__frequent">{g.frequent}</p>}
           {matches.length > 0 && (
-            <ul className="ds-guest__results" aria-label={g.results}>
+            <ul className="ds-guest__results" aria-label={q.trim() ? g.results : g.frequent}>
               {matches.map((o) => {
                 const pets = petsOf(o.id);
                 return (
@@ -104,6 +117,7 @@ export function GuestPicker({ data, value, onChange, errors, on }: { data: Hotel
                       <span>
                         <b>{o.name}</b>
                         <small>{[o.whatsapp ? formatWhatsapp(o.whatsapp) : g.noNumber, pets.map((p) => p.name).join(", ")].filter(Boolean).join(" · ")}</small>
+                        {(stays.get(o.id) ?? 0) > 0 && <small className="ds-guest__stays">{g.stays(stays.get(o.id) ?? 0)}</small>}
                       </span>
                     </button>
                   </li>

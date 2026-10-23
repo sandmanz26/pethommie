@@ -29,20 +29,36 @@ body.has-demobar .ds-sidenav { top: var(--demobar-h); height: calc(100dvh - var(
 .demo-offer {
   position: fixed; right: 20px; bottom: 20px; z-index: 35;
   display: flex; align-items: center; gap: 14px;
-  max-width: min(460px, calc(100vw - 40px));
+  max-width: min(480px, calc(100vw - 40px));
   padding: 12px 12px 12px 14px; border-radius: var(--radius-lg);
-  background: var(--surface); border: 1px solid var(--line);
-  box-shadow: 0 2px 0 rgba(27, 26, 23, 0.04), 0 22px 44px -18px rgba(27, 26, 23, 0.45);
+  background: var(--seal); color: var(--seal-ink);
+  box-shadow: 0 22px 44px -18px rgba(120, 24, 12, 0.6), 0 0 0 0 rgba(184, 50, 31, 0.5);
+  animation: demo-offer-pulse 2.4s ease-in-out infinite;
+}
+/* A soft glow that breathes out from the card, so the eye keeps finding it. */
+@keyframes demo-offer-pulse {
+  0%, 100% { box-shadow: 0 22px 44px -18px rgba(120, 24, 12, 0.6), 0 0 0 0 rgba(184, 50, 31, 0.45); }
+  50% { box-shadow: 0 22px 44px -18px rgba(120, 24, 12, 0.6), 0 0 0 10px rgba(184, 50, 31, 0); }
 }
 .demo-offer__badge {
   flex: none; display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 9px; border-radius: 8px;
-  background: var(--seal); color: var(--seal-ink); font-weight: 800; font-size: 0.8rem; white-space: nowrap;
+  background: var(--seal-ink); color: var(--seal); font-weight: 800; font-size: 0.8rem; white-space: nowrap;
 }
 .demo-offer__body { display: grid; gap: 2px; min-width: 0; font-size: 0.875rem; }
-.demo-offer__body small { color: var(--ink-soft); }
-.demo-offer__time { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--seal); }
-.demo-offer .ds-btn { flex: none; }
+.demo-offer__body small { color: rgba(255, 252, 246, 0.85); }
+.demo-offer__time { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--seal-ink); animation: demo-offer-blink 1.2s ease-in-out infinite; }
+/* The seconds tick with a gentle fade, not a hard flash. */
+@keyframes demo-offer-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.demo-offer .ds-btn { flex: none; background: var(--seal-ink); color: var(--seal); border-color: var(--seal-ink); }
+.demo-offer .ds-btn:hover { background: #fff; color: var(--ink); }
+.demo-offer .ds-btn:focus-visible { outline: 2px solid var(--seal-ink); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .demo-offer, .demo-offer__time { animation: none; }
+}
 
 /* Room at the bottom of the page, so the offer never hides the last row. */
 body.has-demobar .tpl-app__main { padding-bottom: 120px; }

@@ -262,6 +262,8 @@ export const appEn = {
     findHint: "Type a name, a WhatsApp number or a pet's name.",
     findPh: "e.g. Rina, 0812…, Mochi",
     results: "Owners on record",
+    frequent: "Book most often",
+    stays: (n: number) => `${n} ${n === 1 ? "stay" : "stays"}`,
     noNumber: "No WhatsApp yet",
     noMatch: (q: string) => `Nobody called "${q}" yet.`,
     newOwner: "New owner",
