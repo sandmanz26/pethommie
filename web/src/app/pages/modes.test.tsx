@@ -9,6 +9,7 @@ import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCareEntry, aSmallHotel } from "@/app/testing/fixtures";
 import AppRoutes from "./AppRoutes";
+import { openNavGroups } from "@/app/testing/nav";
 
 function renderApp(path: string) {
   return render(
@@ -34,13 +35,31 @@ async function open(path: string, mode?: Mode, bookings = [stay()], extra = {}) 
   return user;
 }
 
-const sidebar = () => within(screen.getByRole("complementary"));
+const sidebar = () => {
+  openNavGroups();
+  return within(screen.getByRole("complementary"));
+};
 
 /** Switches to Advanced the way a person would on a wide screen: from Settings. */
 async function toAdvanced(user: ReturnType<typeof userEvent.setup>) {
   await user.click(sidebar().getByRole("link", { name: "Settings" }));
   await user.click(within(await screen.findByRole("main")).getByRole("button", { name: "Switch to Advanced" }));
 }
+
+describe("the sidebar", () => {
+  it("keeps the everyday pages on top and folds the rest into groups, open where you are", async () => {
+    const user = await open("/app/invoices", "advanced");
+    const side = within(await screen.findByRole("complementary"));
+    for (const top of ["Today", "Calendar", "Bookings"]) expect(side.getByRole("link", { name: top })).toBeInTheDocument();
+    expect(side.getByRole("button", { name: "Money" })).toHaveAttribute("aria-expanded", "true");
+    expect(side.getByRole("link", { name: "Invoices" })).toBeInTheDocument();
+    const setup = side.getByRole("button", { name: "Hotel setup" });
+    expect(setup).toHaveAttribute("aria-expanded", "false");
+    expect(side.queryByRole("link", { name: "Settings" })).toBeNull();
+    await user.click(setup);
+    expect(side.getByRole("link", { name: "Settings" })).toBeInTheDocument();
+  });
+});
 
 describe("simple and advanced mode", () => {
   it("starts simple, and says nothing about it until asked", async () => {

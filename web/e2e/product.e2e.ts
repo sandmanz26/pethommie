@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
-import { signInWithSampleData } from './helpers'
+import { openNav, signInWithSampleData } from './helpers'
 
 test('a day at the hotel: check in, get paid, log care, send the report', async ({ page }) => {
   await signInWithSampleData(page)
@@ -50,23 +50,29 @@ test('simple mode: a day with fewer fields', async ({ page }) => {
 
 test('advanced mode adds customers, payments and reports', async ({ page }) => {
   await signInWithSampleData(page)
+  await openNav(page)
   await page.getByRole('link', { name: 'Payments' }).click()
   await expect(page.getByRole('heading', { name: 'Payments', level: 1 })).toBeVisible()
   await expect(page.getByRole('link', { name: /send reminder/i }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/62/)
+  await openNav(page)
   await page.getByRole('link', { name: 'Reports' }).click()
   await expect(page.getByRole('figure', { name: /places in use/i })).toBeVisible()
+  await openNav(page)
   await page.getByRole('link', { name: 'Dashboard' }).click()
   await expect(page.getByRole('figure', { name: /next 14 nights/i })).toBeVisible()
+  await openNav(page)
   await page.getByRole('link', { name: 'Customers' }).click()
   await expect(page.getByRole('link', { name: /Rina|Sari|Budi|Andi/ }).first()).toBeVisible()
 })
 
 test('an invoice for a stay shows up in the register and in the tax estimate', async ({ page }) => {
   await signInWithSampleData(page)
+  await openNav(page)
   await page.getByRole('link', { name: 'Invoices' }).click()
   await expect(page.getByRole('link', { name: /^INV-\d{4}-0001$/ })).toBeVisible()
   await page.getByRole('link', { name: /^INV-\d{4}-0001$/ }).click()
   await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeVisible()
+  await openNav(page)
   await page.getByRole('link', { name: 'Tax' }).click()
   await expect(page.getByText('An estimate, not a filing.')).toBeVisible()
   await expect(page.getByRole('button', { name: /Download for the accountant/ })).toBeVisible()
@@ -239,6 +245,7 @@ test.describe('layout on short and narrow screens', () => {
   test('on a short laptop screen the sidebar scrolls on its own down to "log out"', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 560 })
     await signInWithSampleData(page)
+    await openNav(page) // every group open: the longest the sidebar gets
     const sidebar = page.getByRole('complementary')
     const logout = sidebar.getByRole('button', { name: 'Log out' })
     expect(await sidebar.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true) // the links don't fit

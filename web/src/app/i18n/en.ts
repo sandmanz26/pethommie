@@ -22,6 +22,7 @@ export const appEn = {
     perNight: "per night",
   },
   nav: {
+    groups: { customers: "Customers", money: "Money", insights: "Insights", setup: "Hotel setup" },
     today: "Today",
     bookings: "Bookings",
     pets: "Pets",

@@ -11,6 +11,7 @@ import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtu
 import type { HotelData, Payment } from "@/app/domain/types";
 import AppRoutes from "./AppRoutes";
 import { choose } from "@/shared/testing/select";
+import { openNavGroups } from "@/app/testing/nav";
 
 function renderApp(path: string) {
   return render(
@@ -200,7 +201,9 @@ describe("dashboard", () => {
     localStorage.setItem(modeKeyFor("acct-test"), "simple");
     const user = userEvent.setup();
     renderApp("/app");
-    await user.click(within(await screen.findByRole("complementary")).getByRole("link", { name: "Dashboard" }));
+    await screen.findByRole("complementary");
+    openNavGroups();
+    await user.click(within(screen.getByRole("complementary")).getByRole("link", { name: "Dashboard" }));
     const main = within(await screen.findByRole("main"));
     expect(await main.findByRole("heading", { name: "Dashboard", level: 1 })).toBeInTheDocument();
     expect(main.getByText("Full tonight").closest(".ds-stat")).toHaveTextContent("1 of 2 places");

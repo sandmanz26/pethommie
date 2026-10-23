@@ -26,6 +26,24 @@ const help: NavItem = { to: "/app/help", key: "help", art: "help" };
 export const sideItems = (advanced: boolean): NavItem[] =>
   [today, dashboard, bookings, calendar, customers, payments, transactions, expenses, invoices, finance, reports, tax, pets, cages, link, settings, bookingSettings, help].filter((i) => advanced || !i.advanced);
 
+export type NavGroupKey = "customers" | "money" | "insights" | "setup";
+export type NavGroup = { key: NavGroupKey; art: NavArt; items: NavItem[] };
+
+/**
+ * The sidebar, kept short: the three pages used all day sit on top, everything else folds into a few groups.
+ * A group left with one page (simple mode) shows that page on its own; an empty group isn't shown.
+ */
+export function sideNav(advanced: boolean): { top: NavItem[]; groups: NavGroup[] } {
+  const keep = (items: NavItem[]) => items.filter((i) => advanced || !i.advanced);
+  const groups: NavGroup[] = [
+    { key: "customers", art: "customers", items: keep([customers, pets]) },
+    { key: "money", art: "payments", items: keep([payments, transactions, invoices, expenses, finance, tax]) },
+    { key: "insights", art: "reports", items: keep([dashboard, reports]) },
+    { key: "setup", art: "settings", items: keep([cages, link, settings, bookingSettings, help]) },
+  ];
+  return { top: [today, calendar, bookings], groups: groups.filter((g) => g.items.length) };
+}
+
 /** The four things used all day sit on the phone's tab bar; the rest are one tap away under "More". */
 export const tabItems: NavItem[] = [today, bookings, calendar, pets, { to: "/app/more", key: "more", art: "more" }];
 

@@ -11,6 +11,7 @@ import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtu
 import { defaultSettings, type HotelData, type Payment } from "@/app/domain/types";
 import AppRoutes from "./AppRoutes";
 import { choose } from "@/shared/testing/select";
+import { openNavGroups } from "@/app/testing/nav";
 
 function renderApp(path: string) {
   return render(
@@ -111,6 +112,7 @@ describe("invoices", () => {
     expect(stored().invoices[0]).toMatchObject({ number: `RM-${year}-0001`, total: 100_000, status: "issued" });
 
     // register
+    openNavGroups();
     await user.click(screen.getByRole("link", { name: "Invoices" }));
     const main = within(await screen.findByRole("main"));
     expect(main.getByRole("link", { name: `RM-${year}-0001` })).toBeInTheDocument();

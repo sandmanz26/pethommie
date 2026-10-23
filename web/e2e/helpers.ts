@@ -21,3 +21,9 @@ export async function signInWithSampleData(page: Page, locale: 'en' | 'id' = 'en
     await page.getByRole('heading', { level: 1 }).first().waitFor()
   }
 }
+
+/** Unfolds every group in the sidebar, so any page's link can be clicked. */
+export async function openNav(page: Page) {
+  const closed = page.locator('.ds-sidenav__toggle[aria-expanded="false"]')
+  while ((await closed.count()) > 0) await closed.first().click()
+}

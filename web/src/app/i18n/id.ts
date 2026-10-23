@@ -23,6 +23,7 @@ export const appId: AppMessages = {
     perNight: "per malam",
   },
   nav: {
+    groups: { customers: "Pelanggan", money: "Uang", insights: "Laporan", setup: "Pengaturan hotel" },
     today: "Hari ini",
     bookings: "Booking",
     pets: "Anabul",

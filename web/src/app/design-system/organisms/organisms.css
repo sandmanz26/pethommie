@@ -18,8 +18,17 @@
 .ds-sidenav > * { flex-shrink: 0; }
 .ds-sidenav__brand { display: flex; gap: 10px; align-items: center; padding: 0 6px; color: inherit; text-decoration: none; }
 .ds-sidenav__brand b { display: block; font-family: var(--font-display); font-size: 1.1em; }
-.ds-sidenav__brand span { display: block; font-size: 0.82em; color: var(--ink-soft); max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-sidenav__brand div span { display: block; font-size: 0.82em; color: var(--ink-soft); max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-sidenav__links { display: grid; gap: 2px; }
+/* Groups fold away; their pages sit indented under the group's name. */
+.ds-sidenav__toggle { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.ds-sidenav__toggle > span { flex: 1; }
+.ds-sidenav__chevron { flex: none; color: var(--ink-soft); transition: transform 0.15s ease; }
+.ds-sidenav__toggle[aria-expanded="true"] .ds-sidenav__chevron { transform: rotate(90deg); }
+.ds-sidenav__group.is-here > .ds-sidenav__toggle { color: var(--ink); font-weight: 700; }
+.ds-sidenav__sub { display: grid; gap: 2px; margin: 2px 0 4px 18px; padding-left: 10px; border-left: 1.5px solid var(--line); }
+.ds-sidenav__sub[hidden] { display: none; }
+.ds-sidenav__sub .ds-sidenav__link { font-size: 0.95em; }
 .ds-sidenav__link {
   display: flex; align-items: center; gap: 12px;
   min-height: var(--tap); padding: 0 12px; border-radius: var(--radius-sm);
@@ -440,4 +449,10 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-pool__empty { color: var(--ink-faint); }
 .ds-pool__book { align-self: flex-end; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 700; text-decoration: none; }
 .ds-pool__book:hover, .ds-pool__book:focus-visible { background: var(--ok); color: var(--surface); }
+/* Check-in · nights · check-out on one line: the stepper sits between the dates, at their height. */
 .ds-form__row--dates { align-items: start; }
+@media (min-width: 640px) {
+  .ds-form__row--dates { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+}
+.ds-form__row--dates .ds-stepper { grid-template-columns: 47px 56px 47px; }
+.ds-form__row--dates .ds-stepper > * { min-height: 47px; height: 47px; }
