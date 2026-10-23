@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cageIssues, hasIssues, hotelIssues, roomIssues } from "./onboardingRules";
+import { cageIssues, hasIssues, hotelIssues, poolIssues, roomIssues } from "./onboardingRules";
 
 const spec = (S: [number, number], M: [number, number] = [0, 75_000], L: [number, number] = [0, 120_000]) => ({
   S: { count: S[0], price: S[1] },
@@ -31,5 +31,17 @@ describe("setup rules", () => {
     expect(roomIssues([ok, { ...ok, name: " cat ROOM " }]).rooms[1]).toEqual({ name: "duplicate" });
     expect(roomIssues([{ name: "", places: 1, price: 0 }]).rooms[0]).toEqual({ name: "required", places: "range", price: "low" });
     expect(roomIssues([{ ...ok, places: 51 }]).rooms[0]).toEqual({ places: "range" });
+  });
+});
+
+describe("setup rules for a hotel without cages or rooms", () => {
+  it("needs 2 to 500 pets at once, a believable price, and no fewer places than are already booked", () => {
+    expect(poolIssues({ capacity: 10, price: 60_000 })).toEqual({});
+    expect(poolIssues({ capacity: 1, price: 60_000 })).toEqual({ capacity: "range" });
+    expect(poolIssues({ capacity: 501, price: 60_000 })).toEqual({ capacity: "range" });
+    expect(poolIssues({ capacity: 2.5, price: 60_000 })).toEqual({ capacity: "range" });
+    expect(poolIssues({ capacity: 10, price: 60 })).toEqual({ price: "low" });
+    expect(poolIssues({ capacity: 4, price: 60_000 }, 5)).toEqual({ capacity: "booked" });
+    expect(poolIssues({ capacity: 5, price: 60_000 }, 5)).toEqual({});
   });
 });

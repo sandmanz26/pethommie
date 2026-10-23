@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Booking, BookingSource } from "@/app/domain/types";
 import { filterBookings, NO_BOOKING_FILTER, type BookingFilter } from "@/app/domain/filters";
-import { todayISO } from "@/app/domain/logic";
+import { hasNoUnits, todayISO, unitLabel } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -71,7 +71,7 @@ export function BookingsPage() {
                   ))}
                 </Select>
               </Field>
-              <Field label={units.one}>
+              {!hasNoUnits(data) && <Field label={units.one}>
                 <Select value={f.unitId} onChange={(e) => set({ unitId: e.target.value })}>
                   <option value="all">{t.filters.any}</option>
                   {[...data.cages]
@@ -82,7 +82,7 @@ export function BookingsPage() {
                       </option>
                     ))}
                 </Select>
-              </Field>
+              </Field>}
               <Field label={t.filters.source}>
                 <Select value={f.source} onChange={(e) => set({ source: e.target.value as BookingFilter["source"] })}>
                   <option value="all">{t.filters.any}</option>
@@ -129,6 +129,7 @@ export function BookingsPage() {
                 names={petNames(data, b)}
                 owner={data.owners.find((o) => o.id === pet?.ownerId)}
                 cage={data.cages.find((c) => c.id === b.cageId)}
+                unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))}
                 checkInTo={b.status === "booked" && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}
                 onCheckOut={b.status === "checked_in" ? () => checkOut.request(b) : undefined}
                 onCancel={b.status === "booked" ? () => cancel.request(b) : undefined}

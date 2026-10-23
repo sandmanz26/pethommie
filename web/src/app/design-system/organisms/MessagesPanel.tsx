@@ -9,7 +9,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 /** The other messages an operator keeps typing by hand: confirmation, arrival, pickup, vaccine. */
-export function MessagesPanel({ hotel, booking, pet, owner, cage, petName }: { hotel: Hotel; booking: Booking; pet: Pet; owner: Owner | undefined; cage: Cage | undefined; petName?: string }) {
+export function MessagesPanel({ hotel, booking, pet, owner, cage, unitName, petName }: { hotel: Hotel; booking: Booking; pet: Pet; owner: Owner | undefined; cage: Cage | undefined; /** The unit as the owner reads it; empty leaves it out (a hotel without cages or rooms). */ unitName?: string; petName?: string }) {
   const { t } = useAppT();
   const m = t.messages;
   const base = { hotelName: hotel.name, ownerName: owner?.name ?? "", petName: petName ?? pet.name, language: owner?.language };
@@ -19,7 +19,7 @@ export function MessagesPanel({ hotel, booking, pet, owner, cage, petName }: { h
     {
       key: "confirmation",
       label: m.confirmation,
-      text: bookingConfirmation({ ...base, checkIn: booking.checkIn, checkOut: booking.checkOut, cageName: cage?.name ?? "-", total: bookingTotal(booking, cage), paid: paidAmount(booking) }),
+      text: bookingConfirmation({ ...base, checkIn: booking.checkIn, checkOut: booking.checkOut, cageName: unitName ?? cage?.name ?? "-", total: bookingTotal(booking, cage), paid: paidAmount(booking) }),
     },
     ...(booking.arrival ? [{ key: "arrival", label: m.arrival, text: arrivalNotice({ ...base, arrival: booking.arrival }) }] : []),
     { key: "pickup", label: m.pickup, text: pickupReminder({ ...base, checkOut: booking.checkOut, balance: balanceDue(booking, cage) }) },

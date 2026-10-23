@@ -425,3 +425,18 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 .ds-signed__col i { position: absolute; left: 15%; right: 15%; min-height: 2px; }
 .ds-signed__col i.is-gain { background: var(--ok); border-radius: 4px 4px 0 0; }
 .ds-signed__col i.is-loss { background: var(--danger); border-radius: 0 0 4px 4px; }
+
+/* Calendar of a hotel without cages or rooms: a card per day with places taken and who is staying. */
+.ds-pool { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.ds-pool__day { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 10px 12px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); }
+.ds-pool__day.is-today { box-shadow: inset 0 0 0 2px var(--info), var(--shadow); }
+.ds-pool__head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.ds-pool__count { font-variant-numeric: tabular-nums; padding: 1px 8px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); }
+.ds-pool__day.is-some .ds-pool__count { background: var(--info-bg); color: var(--info); }
+.ds-pool__day.is-full .ds-pool__count { background: var(--danger-bg); color: var(--danger); }
+.ds-pool__pets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-pool__pet { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; color: var(--ink); }
+.ds-pool__pet--booked { color: var(--info); }
+.ds-pool__empty { color: var(--ink-faint); }
+.ds-pool__book { align-self: flex-end; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 700; text-decoration: none; }
+.ds-pool__book:hover, .ds-pool__book:focus-visible { background: var(--ok); color: var(--surface); }

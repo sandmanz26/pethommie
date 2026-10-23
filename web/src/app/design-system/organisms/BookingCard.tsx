@@ -20,6 +20,7 @@ export function BookingCard({
   names,
   owner,
   cage,
+  unitLabel,
   checkInTo,
   onCheckOut,
   onCancel,
@@ -31,6 +32,8 @@ export function BookingCard({
   names?: string;
   owner?: Owner;
   cage?: Cage;
+  /** What to call the unit; empty hides it (a hotel without cages or rooms). Defaults to the unit's name. */
+  unitLabel?: string;
   /** Where to do the check-in (the booking page, where the arrival record is filled). */
   checkInTo?: string;
   onCheckOut?: () => void;
@@ -57,7 +60,7 @@ export function BookingCard({
           {owner?.whatsapp && ` · ${formatWhatsapp(owner.whatsapp)}`}
         </span>
         <span className="ds-booking__meta">
-          <b>{cage?.name ?? "—"}</b> · {shortDate(booking.checkIn, locale)} → {shortDate(booking.checkOut, locale)} · {t.common.nights(n)}
+          {(unitLabel ?? cage?.name ?? "—") && <><b>{unitLabel ?? cage?.name ?? "—"}</b> · </>}{shortDate(booking.checkIn, locale)} → {shortDate(booking.checkOut, locale)} · {t.common.nights(n)}
         </span>
       </div>
       <div className="ds-booking__money">

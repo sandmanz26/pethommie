@@ -31,8 +31,13 @@ export type Cage = {
   archived: boolean;
 };
 
-/** What the hotel calls its places, so the screens speak its language: cages, rooms, or spaces. */
-export type UnitTerm = "cage" | "room" | "space";
+/**
+ * What the hotel calls its places, so the screens speak its language: cages, rooms, or spaces. "none": the hotel
+ * has no cages or rooms at all, just a total number of pets it takes at once. It then keeps exactly one hidden
+ * shared unit holding that capacity and the price per pet, so availability and billing work as for a shared room,
+ * but no screen shows a unit.
+ */
+export type UnitTerm = "cage" | "room" | "space" | "none";
 
 /** The language a person reads: the operator's screen, an owner's messages, an invoice. */
 export type Language = "id" | "en";

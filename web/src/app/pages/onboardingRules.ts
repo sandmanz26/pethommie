@@ -8,6 +8,8 @@ export const SETUP_LIMITS = {
   city: 60,
   roomName: [2, 40],
   places: [2, 50],
+  /** Pets at once for a hotel without cages or rooms: 2 makes it shared (each pet pays), 500 is surely a typo. */
+  capacity: [2, 500],
   /** Rupiah per night: below this is surely a typo (a missing "000"), above it too. */
   price: [1_000, 10_000_000],
 } as const;
@@ -73,6 +75,23 @@ export function roomIssues(rooms: RoomDraft[]): { none?: true; rooms: RoomIssue[
     return issue;
   });
   return { ...(rooms.length ? {} : { none: true as const }), rooms: list };
+}
+
+export type PoolDraft = { capacity: number; price: number };
+export type PoolIssues = { capacity?: "range" | "booked"; price?: PriceIssue };
+
+/**
+ * A hotel without cages or rooms: a believable number of pets at once and price per pet. `booked` is the most pets
+ * already booked on one night from today; the capacity can't go below it, or those stays would no longer fit.
+ */
+export function poolIssues({ capacity, price }: PoolDraft, booked = 0): PoolIssues {
+  const issues: PoolIssues = {};
+  const [min, max] = SETUP_LIMITS.capacity;
+  if (!(Number.isInteger(capacity) && capacity >= min && capacity <= max)) issues.capacity = "range";
+  else if (capacity < booked) issues.capacity = "booked";
+  const p = priceIssue(price);
+  if (p) issues.price = p;
+  return issues;
 }
 
 export const hasIssues = (x: object): boolean =>

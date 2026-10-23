@@ -104,6 +104,48 @@ export const activeCages = (data: Pick<HotelData, "cages">) => data.cages.filter
 
 export const totalPlaces = (data: Pick<HotelData, "cages">) => activeCages(data).reduce((n, c) => n + Math.max(1, c.capacity), 0);
 
+// ---------- hotels without cages or rooms ----------
+
+/** The hotel has no units on screen: just a total capacity (see UnitTerm "none"). */
+export const hasNoUnits = (data: Pick<HotelData, "settings">) => data.settings.unitTerm === "none";
+
+/** A no-unit hotel's one hidden unit, holding its capacity and price per pet. */
+export const poolUnit = (data: Pick<HotelData, "cages">): Cage | undefined => activeCages(data)[0];
+
+/** A unit's name for screens and messages: empty for a hotel without units, where it means nothing to anyone. */
+export const unitLabel = (data: Pick<HotelData, "settings">, cage: Pick<Cage, "name"> | undefined) => (hasNoUnits(data) ? "" : (cage?.name ?? "—"));
+
+/** Places still free in a unit on every night of [checkIn, checkOut): its capacity less the fullest night. */
+export function freePlaces(data: HotelData, cageId: string, checkIn: ISODate, checkOut: ISODate, ignoreBookingId?: string) {
+  const cage = data.cages.find((c) => c.id === cageId);
+  if (!cage || cage.archived) return 0;
+  let fullest = 0;
+  for (let night = checkIn; night < checkOut; night = addDays(night, 1)) fullest = Math.max(fullest, placesUsed(data, cageId, night, ignoreBookingId));
+  return Math.max(0, Math.max(1, cage.capacity) - fullest);
+}
+
+/**
+ * Whether the hotel can drop its cages and rooms: only when what it has fits one hidden unit, that is no unit in use
+ * yet, or a single shared room (its stays then simply stop showing a unit).
+ */
+export function canGoUnitless(data: Pick<HotelData, "cages">) {
+  const active = activeCages(data);
+  return active.length === 0 || (active.length === 1 && isShared(active[0]));
+}
+
+/** The most places a unit has taken on any night from `from` on, by stays that hold their place. */
+export function busiestNight(data: HotelData, cageId: string, from: ISODate) {
+  const nightsAhead = data.bookings
+    .filter((b) => b.cageId === cageId && holdsCage(b) && b.checkOut > from)
+    .flatMap((b) => Array.from({ length: Math.max(0, nights(b.checkIn < from ? from : b.checkIn, b.checkOut)) }, (_, i) => addDays(b.checkIn < from ? from : b.checkIn, i)));
+  return [...new Set(nightsAhead)].reduce((most, night) => Math.max(most, placesUsed(data, cageId, night)), 0);
+}
+
+/** The hidden unit a no-unit hotel is set up with. Shared (capacity at least 2), so each pet pays and takes a place. */
+export function poolCage(capacity: number, pricePerPet: number, name: string, id = newId()): Cage {
+  return { id, name, size: "M", pricePerNight: pricePerPet, capacity: Math.max(2, Math.round(capacity)), archived: false };
+}
+
 // ---------- money ----------
 
 /** The rate a stay pays per night (per pet in a shared room): the one agreed when it was booked, or the unit's price. */

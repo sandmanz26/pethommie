@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { dayOf, formatDate, nights, stayPetIds, todayISO, vaccineState } from "@/app/domain/logic";
+import { dayOf, formatDate, hasNoUnits, unitLabel, nights, stayPetIds, todayISO, vaccineState } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
 import { entriesOn, reportWasSent } from "@/app/domain/careLog";
 import { useMode } from "@/app/mode/ModeProvider";
@@ -90,7 +90,7 @@ export function BookingDetailPage() {
       <section className="pg-summary" aria-label={d.stay}>
         <Badge tone={statusTone[booking.status]}>{t.bookings.status[booking.status]}</Badge>
         <span>
-          <b>{cage?.name ?? "—"}</b> · {formatDate(booking.checkIn, locale, { day: "numeric", month: "short" })} → {formatDate(booking.checkOut, locale, { day: "numeric", month: "short", year: "numeric" })} · {t.common.nights(nights(booking.checkIn, booking.checkOut))}
+          {!hasNoUnits(data) && <><b>{cage?.name ?? "—"}</b> · </>}{formatDate(booking.checkIn, locale, { day: "numeric", month: "short" })} → {formatDate(booking.checkOut, locale, { day: "numeric", month: "short", year: "numeric" })} · {t.common.nights(nights(booking.checkIn, booking.checkOut))}
         </span>
         {booking.notes && <Muted>{booking.notes}</Muted>}
       </section>
@@ -136,7 +136,7 @@ export function BookingDetailPage() {
             onRemove={booking.status === "cancelled" ? undefined : (paymentId) => store.removePayment(booking.id, paymentId)}
           />
           {advanced && booking.status !== "cancelled" && <InvoicePanel data={data} booking={booking} onIssue={(request) => store.issueInvoice(booking.id, request)} />}
-          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} petName={names} owner={owner} cage={cage} />}
+          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} petName={names} owner={owner} cage={cage} unitName={unitLabel(data, cage)} />}
         </div>
 
         {(staying || booking.status === "checked_out") && (

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { staysCsv } from "@/app/domain/csv";
-import { addDays, formatDate, formatRupiah, todayISO } from "@/app/domain/logic";
+import { addDays, formatDate, formatRupiah, hasNoUnits, todayISO } from "@/app/domain/logic";
 import { customPeriod, matchesFilter, NO_REPORT_FILTER, PERIOD_KINDS, periodRange, previousPeriod, reportFor, type PeriodKind, type ReportFilter } from "@/app/domain/reports";
 import type { PaymentKind, PaymentMethod, Species } from "@/app/domain/types";
 import { useStore } from "@/app/store/AppStore";
@@ -52,6 +52,8 @@ export function ReportsPage() {
   };
 
   const unitName = (id: string) => data.cages.find((c) => c.id === id)?.name ?? "—";
+  // A hotel without cages or rooms has one hidden unit: nothing to filter by or break down.
+  const noUnits = hasNoUnits(data);
   const inPeriod = data.bookings.filter((b) => b.checkIn >= period.from && b.checkIn < period.to && matchesFilter(data, b, filter));
 
   return (
@@ -71,7 +73,7 @@ export function ReportsPage() {
               </Field>
             </>
           )}
-          <Field label={r.unit}>
+          {!noUnits && <Field label={r.unit}>
             <Select value={filter.unitId} onChange={(e) => setFilter((f) => ({ ...f, unitId: e.target.value }))}>
               <option value="all">{r.allUnits}</option>
               {data.cages.filter((c) => !c.archived).map((c) => (
@@ -80,7 +82,7 @@ export function ReportsPage() {
                 </option>
               ))}
             </Select>
-          </Field>
+          </Field>}
           <Field label={r.species}>
             <Select value={filter.species} onChange={(e) => setFilter((f) => ({ ...f, species: e.target.value as ReportFilter["species"] }))}>
               <option value="all">{r.allSpecies}</option>
@@ -167,7 +169,7 @@ export function ReportsPage() {
             />
           </div>
 
-          <section className="pg-section">
+          {!noUnits && <section className="pg-section">
             <Heading level={2} size="md">{r.unitTitle}</Heading>
             <div className="pg-tablewrap" role="region" tabIndex={0} aria-label={r.unitTitle}>
               <table className="pg-table">
@@ -202,7 +204,7 @@ export function ReportsPage() {
                 </tbody>
               </table>
             </div>
-          </section>
+          </section>}
         </>
       )}
 

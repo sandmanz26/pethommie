@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Cage, CageSize, Pet } from "@/app/domain/types";
-import { holdsCage, isShared, newId, occupantOn, placesUsed, SIZE_ORDER, stayPetIds, todayISO } from "@/app/domain/logic";
+import { hasNoUnits, holdsCage, isShared, newId, occupantOn, placesUsed, SIZE_ORDER, stayPetIds, todayISO } from "@/app/domain/logic";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -10,6 +10,7 @@ import { EmptyState } from "@/app/design-system/molecules/EmptyState";
 import { CageForm } from "@/app/design-system/organisms/CageForm";
 import { CageTile } from "@/app/design-system/organisms/CageTile";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { CapacityPage } from "./CapacityPage";
 import "./pages.css";
 import { useUnitWords } from "@/app/i18n/useUnitWords";
 
@@ -27,6 +28,9 @@ export function CagesPage() {
   const archived = data.cages.filter((c) => c.archived);
   const guestsTonight = (cageId: string) =>
     data.bookings.filter((b) => b.cageId === cageId && holdsCage(b) && b.checkIn <= today && today < b.checkOut).flatMap((b) => stayPetIds(b).map((id) => data.pets.find((p) => p.id === id)).filter((p): p is Pet => Boolean(p)));
+
+  // No cages or rooms: this menu is the hotel's capacity and price per pet instead.
+  if (hasNoUnits(data)) return <CapacityPage />;
 
   return (
     <>

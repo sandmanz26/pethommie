@@ -1,4 +1,4 @@
-import { addDays, nights, placesUsed } from "./logic";
+import { addDays, holdsCage, nights, placesUsed, totalPlaces } from "./logic";
 import type { Booking, HotelData, ISODate } from "./types";
 
 /** The cage calendar: for a window of days, where each stay sits on each cage's row. */
@@ -38,4 +38,20 @@ export function calendarBars(data: HotelData, cageId: string, from: ISODate, day
 /** Places taken on a night across the hotel (a cage counts one), for "how full are we" along the top of the calendar. */
 export function occupiedCount(data: HotelData, night: ISODate): number {
   return data.cages.filter((c) => !c.archived).reduce((n, c) => n + Math.min(Math.max(1, c.capacity), placesUsed(data, c.id, night)), 0);
+}
+
+/** One day of a hotel without cages or rooms: how many of its places are taken, and by which stays. */
+export type PoolDay = { date: ISODate; used: number; total: number; stays: Booking[] };
+
+/**
+ * The calendar of a hotel without units: for each day in [from, from + days), the places taken that night against
+ * the total capacity, and the stays (booked or staying) holding them.
+ */
+export function poolDays(data: HotelData, from: ISODate, days: number): PoolDay[] {
+  const total = totalPlaces(data);
+  return Array.from({ length: days }, (_, i) => {
+    const date = addDays(from, i);
+    const stays = data.bookings.filter((b) => holdsCage(b) && b.checkIn <= date && date < b.checkOut);
+    return { date, used: occupiedCount(data, date), total, stays };
+  });
 }

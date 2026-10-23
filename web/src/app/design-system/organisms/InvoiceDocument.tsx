@@ -60,9 +60,11 @@ export function InvoiceDocument({ invoice, language, paid }: { invoice: Invoice;
           <p>
             {day(invoice.stay.checkIn)} → {day(invoice.stay.checkOut)} · {d.nights(invoice.stay.nights)}
           </p>
-          <p>
-            {d.cage} {invoice.stay.cageName}
-          </p>
+          {invoice.stay.cageName && (
+            <p>
+              {d.cage} {invoice.stay.cageName}
+            </p>
+          )}
         </div>
       </section>
 

@@ -1,4 +1,4 @@
-import { addDays, cageIsFree, newId, placesFor } from "@/app/domain/logic";
+import { addDays, cageIsFree, canGoUnitless, newId, placesFor } from "@/app/domain/logic";
 import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, petHasHistory, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
 import { careIssues, type CareIssue } from "@/app/domain/careLog";
 import { isValidAmount, paidAmount, type PaymentIssue } from "@/app/domain/payments";
@@ -202,7 +202,8 @@ export const removeCharge = (s: HotelData, bookingId: string, chargeId: string):
   withBooking(s, bookingId, (b) => ({ ...b, charges: b.charges.filter((c) => c.id !== chargeId) }));
 
 /** What can be wrong with the hotel's business and tax settings. */
-export type SettingsIssue = "ppn" | "prefix";
+/** layout: dropping cages and rooms while the hotel has more than one unit in use (see canGoUnitless). */
+export type SettingsIssue = "ppn" | "prefix" | "layout";
 
 export function settingsIssues(settings: HotelSettings): SettingsIssue[] {
   const issues: SettingsIssue[] = [];
@@ -214,6 +215,7 @@ export function settingsIssues(settings: HotelSettings): SettingsIssue[] {
 
 export function saveSettings(s: HotelData, settings: HotelSettings): Outcome<SettingsIssue[]> {
   const issues = settingsIssues(settings);
+  if (settings.unitTerm === "none" && s.settings.unitTerm !== "none" && !canGoUnitless(s)) issues.push("layout");
   if (issues.length) return { state: s, result: issues };
   const clean: HotelSettings = {
     ...settings,

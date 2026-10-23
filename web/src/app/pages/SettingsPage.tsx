@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { canGoUnitless, poolUnit } from "@/app/domain/logic";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { markBackedUp } from "@/app/store/backupNote";
@@ -39,7 +40,7 @@ export function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [draft, setDraft] = useState<HotelSettings>(data.settings);
   const [ppnText, setPpnText] = useState(String(data.settings.tax.ppnPercent));
-  const [bizErrors, setBizErrors] = useState<{ prefix?: string; ppn?: string; legalName?: string; address?: string; npwp?: string; payment?: string }>({});
+  const [bizErrors, setBizErrors] = useState<{ prefix?: string; ppn?: string; legalName?: string; address?: string; npwp?: string; payment?: string; layout?: string }>({});
   const v = t.validation;
   const hotelForm = useFocusInvalid();
   const bizForm = useFocusInvalid();
@@ -96,6 +97,7 @@ export function SettingsPage() {
     setBizErrors({
       prefix: issues.includes("prefix") ? t.settingsBiz.errPrefix : undefined,
       ppn: issues.includes("ppn") ? t.settingsTax.errPpn : undefined,
+      layout: issues.includes("layout") ? t.pool.errLayout : undefined,
     });
     setBizSaved(issues.length === 0);
     if (issues.length) bizForm.focusInvalid();
@@ -166,13 +168,19 @@ export function SettingsPage() {
         <Field label={t.settingsBiz.payment} error={bizErrors.payment} optional={t.common.optional}>
           <Textarea rows={3} value={draft.paymentInstructions} placeholder={t.settingsBiz.paymentPh} onChange={(e) => (edit({ paymentInstructions: e.target.value }), clearBiz("payment"))} />
         </Field>
-        <Field label={t.unitTerm.label} hint={t.unitTerm.hint}>
+        <Field label={t.unitTerm.label} hint={t.unitTerm.hint} error={bizErrors.layout}>
           <Select value={draft.unitTerm} onChange={(e) => edit({ unitTerm: e.target.value as HotelSettings["unitTerm"] })}>
-            {(["cage", "room", "space"] as const).map((u) => (
+            {(["cage", "room", "space", ...(data.settings.unitTerm === "none" || canGoUnitless(data) ? (["none"] as const) : [])] as const).map((u) => (
               <option key={u} value={u}>{t.unitTerm.options[u]}</option>
             ))}
           </Select>
         </Field>
+        {draft.unitTerm === "none" && (
+          <Muted>
+            {poolUnit(data) ? `${t.pool.settingsNote(poolUnit(data)!.capacity)} ` : ""}
+            <Link to="/app/cages">{t.pool.editCapacity}</Link>
+          </Muted>
+        )}
         <Checkbox label={t.vaccineRule.label} checked={draft.requireVaccine} onChange={(e) => edit({ requireVaccine: e.target.checked })} />
         <Muted>{t.vaccineRule.hint}</Muted>
         <Field label={t.settingsBiz.language}>

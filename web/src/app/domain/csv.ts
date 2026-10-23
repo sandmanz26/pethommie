@@ -1,4 +1,4 @@
-import { bookingTotal, nights } from "./logic";
+import { bookingTotal, hasNoUnits, nights } from "./logic";
 import { balanceDue, paidAmount } from "./payments";
 import { invoicePayment } from "./invoices";
 import type { Booking, HotelData, Invoice } from "./types";
@@ -30,7 +30,7 @@ export function staysCsv(data: HotelData, bookings: Booking[] = data.bookings): 
         pet?.name ?? "",
         owner?.name ?? "",
         owner?.whatsapp ?? "",
-        cage?.name ?? "",
+        hasNoUnits(data) ? "" : (cage?.name ?? ""),
         String(bookingTotal(b, cage)),
         String(paidAmount(b)),
         String(b.status === "cancelled" ? 0 : balanceDue(b, cage)),

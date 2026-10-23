@@ -1,5 +1,5 @@
 import type { Booking, HotelData, Language, Owner, Payment } from "@/app/domain/types";
-import { dayOf, formatDate, formatRupiah, timeOf } from "@/app/domain/logic";
+import { dayOf, formatDate, formatRupiah, timeOf, unitLabel } from "@/app/domain/logic";
 import { standingAfter } from "@/app/domain/ledger";
 import { amountInWords } from "@/app/domain/words";
 import { formatWhatsapp } from "@/shared/lib/phone";
@@ -51,7 +51,7 @@ export function ReceiptDocument({ data, booking, payment, owner, pets, number, l
         <dd className="ds-receipt__words">{amountInWords(payment.amount, language)}</dd>
         <dt>{d.for}</dt>
         <dd>
-          {d.kinds[payment.kind]} · {d.stayLine(pets, cage?.name ?? "—", day(booking.checkIn), day(booking.checkOut))}
+          {d.kinds[payment.kind]} · {d.stayLine(pets, unitLabel(data, cage), day(booking.checkIn), day(booking.checkOut))}
         </dd>
         <dt>{d.method}</dt>
         <dd>

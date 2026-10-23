@@ -16,7 +16,7 @@ import { StatCard } from "@/app/design-system/molecules/StatCard";
 import { BookingCard } from "@/app/design-system/organisms/BookingCard";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { PetRow } from "@/app/design-system/organisms/PetRow";
-import { involvesPet, todayISO } from "@/app/domain/logic";
+import { involvesPet, todayISO, unitLabel } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
 import { textError } from "@/app/forms/messages";
 import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
@@ -139,7 +139,7 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
           {stays.length ? (
             stays.map((b) => {
               const pet = data.pets.find((p) => p.id === b.petId);
-              return <BookingCard key={b.id} booking={b} pet={pet} names={petNames(data, b)} owner={owner} cage={data.cages.find((x) => x.id === b.cageId)} />;
+              return <BookingCard key={b.id} booking={b} pet={pet} names={petNames(data, b)} owner={owner} cage={data.cages.find((x) => x.id === b.cageId)} unitLabel={unitLabel(data, data.cages.find((x) => x.id === b.cageId))} />;
             })
           ) : (
             <Muted>{c.noStays}</Muted>

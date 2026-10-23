@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { dashboardFor } from "@/app/domain/dashboard";
 import { petNames } from "@/app/domain/invoices";
-import { dayOf, formatDate, formatRupiah, todayISO, vaccineState } from "@/app/domain/logic";
+import { dayOf, formatDate, formatRupiah, todayISO, unitLabel, vaccineState } from "@/app/domain/logic";
 import { receivables } from "@/app/domain/payments";
 import type { PaymentMethod } from "@/app/domain/types";
 import { useStore } from "@/app/store/AppStore";
@@ -48,7 +48,7 @@ export function DashboardPage() {
   const booked = dash.forecast.reduce((n, f) => n + f.occupied, 0);
   const forecastAvg = dash.places ? booked / (dash.places * dash.forecast.length) : 0;
   const pet = (id: string) => data.pets.find((p) => p.id === id);
-  const unit = (id: string) => data.cages.find((c) => c.id === id)?.name ?? "—";
+  const unit = (id: string) => unitLabel(data, data.cages.find((c) => c.id === id));
 
   return (
     <>
@@ -105,7 +105,7 @@ export function DashboardPage() {
           {dash.arrivingSoon.slice(0, 6).map((b) => (
             <li key={b.id}>
               <Link to={`/app/bookings/${b.id}`}>{petNames(data, b) || "—"}</Link>
-              <span>{weekday(b.checkIn)} {day(b.checkIn)} · {unit(b.cageId)}</span>
+              <span>{weekday(b.checkIn)} {day(b.checkIn)}{unit(b.cageId) && ` · ${unit(b.cageId)}`}</span>
             </li>
           ))}
         </Panel>

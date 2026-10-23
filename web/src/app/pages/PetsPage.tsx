@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { formatDate, involvesPet, todayISO } from "@/app/domain/logic";
+import { formatDate, involvesPet, todayISO, unitLabel } from "@/app/domain/logic";
 import { filterPets, NO_PET_FILTER, petStay, type PetFilter } from "@/app/domain/filters";
 import type { Species } from "@/app/domain/types";
 import { useStore } from "@/app/store/AppStore";
@@ -76,7 +76,7 @@ export function PetsPage() {
         {pets.length ? (
           pets.map((pet) => {
             const stay = petStay(data, pet.id, today);
-            const unit = stay.kind !== "none" ? data.cages.find((c) => c.id === stay.booking.cageId)?.name ?? "—" : "";
+            const unit = stay.kind !== "none" ? unitLabel(data, data.cages.find((c) => c.id === stay.booking.cageId)) : "";
             return (
               <PetRow
                 key={pet.id}

@@ -7,10 +7,13 @@ import {
   bookingTotal,
   cageIsFree,
   formatRupiah,
+  freePlaces,
+  hasNoUnits,
   isShared,
   newId,
   nights,
   placesUsed,
+  poolUnit,
   SIZE_ORDER,
   todayISO,
   vaccineState,
@@ -92,8 +95,11 @@ export function BookingForm({
     () => (validDates ? data.cages.filter((c) => (!size || c.size === size) && cageIsFree(data, c.id, checkIn, checkOut, undefined, isShared(c) ? party : 1)) : []),
     [data, checkIn, checkOut, size, validDates, party],
   );
+  // A hotel without cages or rooms: every stay goes in its one hidden unit, and the form shows places left instead.
+  const pool = hasNoUnits(data) ? poolUnit(data) : undefined;
+  const poolFree = pool && validDates ? freePlaces(data, pool.id, checkIn, checkOut) : 0;
   // Drop a chosen cage that is no longer free for the new dates/size.
-  const selectedCageId = options.some((c) => c.id === cageId) ? cageId : "";
+  const selectedCageId = pool ? pool.id : options.some((c) => c.id === cageId) ? cageId : "";
   const cage = data.cages.find((c) => c.id === selectedCageId);
   const n = validDates ? nights(checkIn, checkOut) : 0;
   // Priced for the whole party: in a shared room each pet pays, including one not saved yet.
@@ -116,7 +122,7 @@ export function BookingForm({
     if (issues.includes("companion")) err.companions = f.errCompanion;
     if (issues.includes("dates")) err.dates = f.errDates;
     if (issues.includes("cage")) err.cage = f.errCage;
-    if (issues.includes("cage_taken")) err.cage = f.errTaken;
+    if (issues.includes("cage_taken")) err.cage = pool ? t.pool.full : f.errTaken;
     // Lengths of what is typed for a new owner or pet, once the basics are there.
     if (guest.newOwner && !gErr.ownerName) {
       const m = textError(v, guest.newOwner.name, LIMITS.personName);
@@ -174,6 +180,16 @@ export function BookingForm({
             <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), clear("dates"))} />
           </Field>
         </div>
+        {pool ? (
+          validDates && (
+            <Field label={t.pool.capacity} error={errors.cage}>
+              <p className="ds-summary" aria-live="polite">
+                <span>{t.pool.free(poolFree, pool.capacity)}</span>
+                <b>{formatRupiah(pool.pricePerNight, locale)}</b>
+              </p>
+            </Field>
+          )
+        ) : (
         <div className="ds-form__row">
           {!simple && (
             <Field label={f.size}>
@@ -200,7 +216,8 @@ export function BookingForm({
             </Select>
           </Field>
         </div>
-        {validDates && options.length === 0 && <Alert tone="info">{f.noCage}</Alert>}
+        )}
+        {validDates && (pool ? poolFree < party : options.length === 0) && <Alert tone="info">{pool ? t.pool.full : f.noCage}</Alert>}
       </fieldset>
 
       <fieldset className="ds-form__section">

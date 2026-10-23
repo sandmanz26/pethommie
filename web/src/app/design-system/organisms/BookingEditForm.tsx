@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
 import type { Booking, HotelData } from "@/app/domain/types";
 import type { BookingIssue, BookingPatch } from "@/app/domain/bookingRules";
-import { addDays, cageIsFree, formatRupiah, SIZE_ORDER } from "@/app/domain/logic";
+import { addDays, cageIsFree, hasNoUnits, formatRupiah, SIZE_ORDER } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { CompanionPicker } from "@/app/design-system/molecules/CompanionPicker";
 import { Field } from "@/app/design-system/molecules/Field";
+import { Alert } from "@/app/design-system/molecules/Alert";
 import { useAppT } from "@/app/i18n/useAppT";
 import { compact, dateError, textError } from "@/app/forms/messages";
 import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
@@ -43,6 +44,8 @@ export function BookingEditForm({
   const chosenCompanions = companions.filter((id) => siblings.some((s) => s.id === id));
 
   const validDates = checkOut > checkIn;
+  // A hotel without cages or rooms: the stay keeps its hidden unit, so only dates and pets change.
+  const noUnits = hasNoUnits(data);
   const cages = data.cages
     .filter((c) => c.id === cageId || !validDates || cageIsFree(data, c.id, checkIn, checkOut, booking.id))
     .sort((a, b) => SIZE_ORDER.indexOf(a.size) - SIZE_ORDER.indexOf(b.size) || a.name.localeCompare(b.name));
@@ -60,7 +63,7 @@ export function BookingEditForm({
     const err: Record<string, string> = {};
     if (issues.includes("dates")) err.dates = f.errDates;
     if (issues.includes("cage")) err.cage = f.errCage;
-    if (issues.includes("cage_taken")) err.cage = f.errTaken;
+    if (issues.includes("cage_taken")) err.cage = noUnits ? t.pool.full : f.errTaken;
     if (issues.includes("companion") || issues.includes("pet_busy")) err.companions = issues.includes("pet_busy") ? f.errPetBusy : f.errCompanion;
     if (issues.includes("locked")) err.dates = inFixed ? d.errCheckInFixed : d.errLocked;
     setErrors(err);
@@ -77,6 +80,9 @@ export function BookingEditForm({
           <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), setErrors((x) => ({ ...x, dates: undefined })))} />
         </Field>
       </div>
+      {noUnits ? (
+        errors.cage && <Alert tone="danger">{errors.cage}</Alert>
+      ) : (
       <Field label={t.units[data.settings.unitTerm].one} error={errors.cage}>
         <Select value={cageId} onChange={(e) => setCageId(e.target.value)}>
           {cages.map((c) => (
@@ -86,6 +92,7 @@ export function BookingEditForm({
           ))}
         </Select>
       </Field>
+      )}
       {siblings.length > 0 && <CompanionPicker pets={siblings} value={chosenCompanions} onChange={setCompanions} error={errors.companions} />}
       <Field label={f.notes} error={errors.notes} optional={t.common.optional}>
         <Textarea value={notes} onChange={(e) => (setNotes(e.target.value), setErrors((x) => ({ ...x, notes: undefined })))} placeholder={f.notesPh} />

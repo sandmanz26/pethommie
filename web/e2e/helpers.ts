@@ -17,5 +17,7 @@ export async function signInWithSampleData(page: Page, locale: 'en' | 'id' = 'en
     // The switch is in Settings (on a phone also under More).
     await page.goto('/app/settings')
     await page.getByRole('tab', { name: /^(advanced|lengkap)$/i }).first().click()
+    await page.goto('/app')
+    await page.getByRole('heading', { level: 1 }).first().waitFor()
   }
 }

@@ -1,9 +1,9 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import type { CageSize } from "@/app/domain/types";
-import { formatRupiah, generateCages, newId, SIZE_ORDER } from "@/app/domain/logic";
+import { formatRupiah, generateCages, newId, poolCage, SIZE_ORDER } from "@/app/domain/logic";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
-import { cageIssues, hasIssues, hotelIssues, roomIssues, SETUP_LIMITS, type LengthIssue, type PriceIssue, type RoomDraft } from "./onboardingRules";
+import { cageIssues, hasIssues, hotelIssues, poolIssues, roomIssues, SETUP_LIMITS, type LengthIssue, type PriceIssue, type RoomDraft } from "./onboardingRules";
 import { useAccount } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useMode } from "@/app/mode/ModeProvider";
@@ -56,7 +56,9 @@ export function OnboardingPage() {
   const [wa, setWa] = useState(formatWhatsapp(account.whatsapp));
   const [spec, setSpec] = useState<CageSpec>(DEFAULT_SPEC);
   // Cage-free hotels (home boarding, play rooms) set up shared rooms instead: a name, places, a price per pet.
-  const [layout, setLayout] = useState<"cages" | "rooms">("cages");
+  // No cages or rooms at all ("none"): just how many pets at once and a price per pet.
+  const [layout, setLayout] = useState<"cages" | "rooms" | "none">("cages");
+  const [pool, setPool] = useState({ capacity: 10, price: 60_000 });
   const [rooms, setRooms] = useState<RoomDraft[]>(() => [
     { name: o.cages.defaultRooms[0], places: 8, price: 60_000 },
     { name: o.cages.defaultRooms[1], places: 6, price: 85_000 },
@@ -71,7 +73,7 @@ export function OnboardingPage() {
 
   const totalCages = SIZE_ORDER.reduce((n, s) => n + spec[s].count, 0);
   const totalPlacesInRooms = rooms.reduce((n, r) => n + r.places, 0);
-  const prices = layout === "rooms" ? rooms.map((r) => r.price) : SIZE_ORDER.filter((s) => spec[s].count > 0).map((s) => spec[s].price);
+  const prices = layout === "none" ? [pool.price] : layout === "rooms" ? rooms.map((r) => r.price) : SIZE_ORDER.filter((s) => spec[s].count > 0).map((s) => spec[s].price);
   const fromPrice = prices.length ? Math.min(...prices) : 0;
   const preset = matchPreset(spec);
 
@@ -97,6 +99,7 @@ export function OnboardingPage() {
     : {};
   const cageCheck = cageIssues(spec);
   const roomCheck = roomIssues(rooms);
+  const poolCheck = poolIssues(pool);
   const showCages = !!tried.cages;
   const roomNameText = (issue: LengthIssue | "duplicate" | undefined) => {
     if (issue === "duplicate") return o.cages.errRoomDuplicate;
@@ -116,7 +119,11 @@ export function OnboardingPage() {
   function submitCages(e: FormEvent) {
     e.preventDefault();
     setTried((x) => ({ ...x, cages: true }));
-    if (layout === "rooms") {
+    if (layout === "none") {
+      if (hasIssues(poolCheck)) return focus(poolCheck.capacity ? "pool-capacity" : "pool-price");
+      setCages([poolCage(pool.capacity, pool.price, t.pool.unitName)]);
+      saveSettings({ ...data.settings, unitTerm: "none" });
+    } else if (layout === "rooms") {
       if (hasIssues(roomCheck)) {
         const i = roomCheck.rooms.findIndex((r) => hasIssues(r));
         const r = roomCheck.rooms[i];
@@ -218,9 +225,24 @@ export function OnboardingPage() {
             options={[
               { value: "cages", label: o.cages.layout.cages },
               { value: "rooms", label: o.cages.layout.rooms },
+              { value: "none", label: o.cages.layout.none },
             ]}
           />
-          {layout === "rooms" ? (
+          {layout === "none" ? (
+            <>
+              <Muted>{o.cages.noneLead}</Muted>
+              <div className="pg-flow__sizes">
+                <div className="pg-flow__size pg-flow__room">
+                  <Field label={o.cages.capacity} error={showCages && poolCheck.capacity ? o.cages.errPlaces(...SETUP_LIMITS.capacity) : undefined}>
+                    <Input name="pool-capacity" inputMode="numeric" value={pool.capacity || ""} onChange={(e) => setPool({ ...pool, capacity: digits(e.target.value) })} />
+                  </Field>
+                  <Field label={o.cages.pricePerPet} hint={formatRupiah(pool.price, locale)} error={showCages ? priceText(poolCheck.price) : undefined}>
+                    <Input name="pool-price" inputMode="numeric" value={pool.price || ""} onChange={(e) => setPool({ ...pool, price: digits(e.target.value) })} />
+                  </Field>
+                </div>
+              </div>
+            </>
+          ) : layout === "rooms" ? (
             <>
               <Muted>{o.cages.roomsLead}</Muted>
               <div className="pg-flow__sizes">
@@ -293,7 +315,7 @@ export function OnboardingPage() {
               <p className="pg-flow__total">{o.cages.total(totalCages)}</p>
             </>
           )}
-          {showCages && (layout === "rooms" ? roomCheck.none || hasIssues(roomCheck) : hasIssues(cageCheck)) && (
+          {showCages && (layout === "none" ? hasIssues(poolCheck) : layout === "rooms" ? roomCheck.none || hasIssues(roomCheck) : hasIssues(cageCheck)) && (
             <Alert tone="danger">{layout === "cages" && cageCheck.none ? o.cages.errNone : o.cages.errFix}</Alert>
           )}
           <div className="pg-flow__actions">
@@ -313,7 +335,7 @@ export function OnboardingPage() {
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.done.title(name.trim())}</Heading>
             <p className="pg-flow__summary">
-              <Icon name="check" size={16} /> {layout === "rooms" ? o.done.summaryRooms(totalPlacesInRooms, formatRupiah(fromPrice, locale)) : o.done.summary(totalCages, formatRupiah(fromPrice, locale))}
+              <Icon name="check" size={16} /> {layout === "none" ? o.done.summaryNone(pool.capacity, formatRupiah(pool.price, locale)) : layout === "rooms" ? o.done.summaryRooms(totalPlacesInRooms, formatRupiah(fromPrice, locale)) : o.done.summary(totalCages, formatRupiah(fromPrice, locale))}
             </p>
             <Muted>{o.done.lead}</Muted>
           </div>

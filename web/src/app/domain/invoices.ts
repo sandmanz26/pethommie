@@ -1,4 +1,4 @@
-import { addDays, isShared, nightlyRate, nights, stayPetIds } from "./logic";
+import { addDays, hasNoUnits, isShared, nightlyRate, nights, stayPetIds, unitLabel } from "./logic";
 import { paidAmount } from "./payments";
 import type { Booking, HotelData, ISODate, Invoice, InvoiceLine, Language, TaxProfile } from "./types";
 
@@ -45,8 +45,8 @@ export type InvoiceIssue = "booking" | "cancelled" | "exists" | "cage" | "hotel"
 export type InvoiceRequest = { id: string; issuedOn: ISODate; language?: Language; dueOn?: ISODate | null };
 
 const WORDS = {
-  id: { boarding: (pets: string, cage: string) => `Penitipan ${pets} · kandang ${cage}` },
-  en: { boarding: (pets: string, cage: string) => `Boarding ${pets} · cage ${cage}` },
+  id: { boarding: (pets: string, cage: string) => (cage ? `Penitipan ${pets} · kandang ${cage}` : `Penitipan ${pets}`) },
+  en: { boarding: (pets: string, cage: string) => (cage ? `Boarding ${pets} · cage ${cage}` : `Boarding ${pets}`) },
 } as const;
 
 /** The lines of a stay's invoice: the nights, then each add-on and discount as typed. */
@@ -56,7 +56,7 @@ export function invoiceLines(data: HotelData, booking: Booking, language: Langua
   const n = Math.max(0, nights(booking.checkIn, booking.checkOut)) * (isShared(cage) ? stayPetIds(booking).length : 1);
   const names = petNames(data, booking);
   return [
-    { label: WORDS[language].boarding(names, cage?.name ?? "-"), quantity: n, unitPrice: nightlyRate(booking, cage), amount: n * nightlyRate(booking, cage) },
+    { label: WORDS[language].boarding(names, hasNoUnits(data) ? "" : (cage?.name ?? "-")), quantity: n, unitPrice: nightlyRate(booking, cage), amount: n * nightlyRate(booking, cage) },
     ...booking.charges.map((c) => ({ label: c.label, quantity: 1, unitPrice: c.amount, amount: c.amount })),
   ];
 }
@@ -102,7 +102,7 @@ export function buildInvoice(data: HotelData, bookingId: string, req: InvoiceReq
       },
       customer: { name: owner?.name ?? "", whatsapp: owner?.whatsapp ?? "" },
       petNames: petNames(data, booking),
-      stay: { checkIn: booking.checkIn, checkOut: booking.checkOut, nights: nights(booking.checkIn, booking.checkOut), cageName: cage.name },
+      stay: { checkIn: booking.checkIn, checkOut: booking.checkOut, nights: nights(booking.checkIn, booking.checkOut), cageName: unitLabel(data, cage) },
       lines,
       ...totals,
       pricesIncludeTax: data.settings.tax.pkp && data.settings.tax.pricesIncludeTax,
