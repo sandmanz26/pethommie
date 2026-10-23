@@ -1,4 +1,4 @@
-import { emptyData, type Booking, type Cage, type CageSize, type CareEntry, type HotelData, type Owner, type Pet } from "@/app/domain/types";
+import { defaultStayRules, emptyData, type Booking, type Cage, type CageSize, type CareEntry, type HotelData, type Owner, type Pet } from "@/app/domain/types";
 
 /** Small builders for tests: just enough fields, with sensible defaults. */
 export const aCage = (id: string, size: CageSize = "S", pricePerNight = 50_000, capacity = 1): Cage => ({ id, name: id.toUpperCase(), size, pricePerNight, capacity, archived: false });
@@ -31,8 +31,10 @@ export const aBooking = (id: string, over: Pick<Booking, "petId" | "cageId" | "c
   ...over,
 });
 
+/** A set-up hotel: its stay rules are set (per night, no late fee), so bookings can be made. */
 export const aHotel = (parts: Partial<HotelData> = {}): HotelData => ({
   ...emptyData(),
+  settings: { ...emptyData().settings, stayRules: defaultStayRules(true) },
   hotel: { name: "Rumah Meong", city: "Bintaro", whatsapp: "6281234567890", createdAt: "2026-10-01T00:00:00.000Z" },
   ...parts,
 });

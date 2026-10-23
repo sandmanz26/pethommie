@@ -1,4 +1,4 @@
-import { addDays, bookingTotal, dayOf, nights, placesFor, stayPetIds } from "./logic";
+import { addDays, bookingTotal, countingOf, dayOf, nights, placesFor, stayPetIds } from "./logic";
 import { signedAmount } from "./payments";
 import type { Booking, BookingSource, Cage, HotelData, ISODate, Owner, PaymentKind, PaymentMethod, Species } from "./types";
 
@@ -157,12 +157,12 @@ export function reportFor(data: HotelData, p: Period, filter: ReportFilter = NO_
   }
 
   // ----- the stays that began -----
-  const valueOf = (b: Booking) => bookingTotal(b, cageOf(b));
+  const valueOf = (b: Booking) => bookingTotal(b, cageOf(b), countingOf(data));
   const value = stays.reduce((sum, b) => sum + valueOf(b), 0);
   const charges = stays.flatMap((b) => b.charges);
   const addOns = charges.filter((c) => c.amount > 0).reduce((s, c) => s + c.amount, 0);
   const discounts = -charges.filter((c) => c.amount < 0).reduce((s, c) => s + c.amount, 0);
-  const boarding = stays.reduce((sum, b) => sum + bookingTotal({ ...b, charges: [] }, cageOf(b)), 0);
+  const boarding = stays.reduce((sum, b) => sum + bookingTotal({ ...b, charges: [] }, cageOf(b), countingOf(data)), 0);
   const soldNights = stays.reduce((n, b) => n + Math.max(0, nights(b.checkIn, b.checkOut)) * placesFor(b, cageOf(b)), 0);
 
   const leads = stays.filter((b) => !Number.isNaN(Date.parse(b.createdAt))).map((b) => Math.max(0, nights(dayOf(b.createdAt), b.checkIn)));

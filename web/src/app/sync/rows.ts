@@ -1,5 +1,5 @@
 import type { Arrival, Booking, CareEntry, Cage, Charge, Expense, HotelData, HotelSettings, ISODate, Invoice, Owner, Payment, Pet } from "@/app/domain/types";
-import { emptyData } from "@/app/domain/types";
+import { defaultStayRules, emptyData } from "@/app/domain/types";
 import { uuidFor } from "./ids";
 
 /**
@@ -194,7 +194,8 @@ export function fromRows(hotel: HotelRow, rows: Rows): HotelData {
 
   return {
     ...emptyData(),
-    settings: hotel.settings,
+    // A hotel saved before stay rules existed (data version 6) keeps counting per night, as it always did.
+    settings: { ...hotel.settings, stayRules: hotel.settings.stayRules ?? defaultStayRules(true) },
     hotel: { name: hotel.name, city: hotel.city, whatsapp: hotel.whatsapp, createdAt: iso(hotel.created_at, epoch) },
     cages: rows.cages.map((c): Cage => ({ id: c.id, name: c.name, size: c.size as Cage["size"], pricePerNight: c.price_per_night, capacity: c.capacity, archived: c.archived })),
     owners: rows.owners.map((o): Owner => ({ id: o.id, name: o.name, whatsapp: o.whatsapp, language: o.language as Owner["language"] })),

@@ -1,4 +1,5 @@
-import { addDays, hasNoUnits, isShared, nightlyRate, nights, stayPetIds, unitLabel } from "./logic";
+import { addDays, countingOf, hasNoUnits, isShared, nightlyRate, stayPetIds, unitLabel } from "./logic";
+import { billableDays } from "./stayRules";
 import { paidAmount } from "./payments";
 import type { Booking, HotelData, ISODate, Invoice, InvoiceLine, Language, TaxProfile } from "./types";
 
@@ -53,7 +54,7 @@ const WORDS = {
 export function invoiceLines(data: HotelData, booking: Booking, language: Language): InvoiceLine[] {
   const cage = data.cages.find((c) => c.id === booking.cageId);
   // In a shared room each pet pays the nightly rate, so the quantity is pet-nights.
-  const n = Math.max(0, nights(booking.checkIn, booking.checkOut)) * (isShared(cage) ? stayPetIds(booking).length : 1);
+  const n = billableDays(booking.checkIn, booking.checkOut, countingOf(data)) * (isShared(cage) ? stayPetIds(booking).length : 1);
   const names = petNames(data, booking);
   return [
     { label: WORDS[language].boarding(names, hasNoUnits(data) ? "" : (cage?.name ?? "-")), quantity: n, unitPrice: nightlyRate(booking, cage), amount: n * nightlyRate(booking, cage) },
@@ -102,7 +103,7 @@ export function buildInvoice(data: HotelData, bookingId: string, req: InvoiceReq
       },
       customer: { name: owner?.name ?? "", whatsapp: owner?.whatsapp ?? "" },
       petNames: petNames(data, booking),
-      stay: { checkIn: booking.checkIn, checkOut: booking.checkOut, nights: nights(booking.checkIn, booking.checkOut), cageName: unitLabel(data, cage) },
+      stay: { checkIn: booking.checkIn, checkOut: booking.checkOut, nights: billableDays(booking.checkIn, booking.checkOut, countingOf(data)), ...(countingOf(data) === "nights" ? {} : { counting: countingOf(data) }), cageName: unitLabel(data, cage) },
       lines,
       ...totals,
       pricesIncludeTax: data.settings.tax.pkp && data.settings.tax.pricesIncludeTax,

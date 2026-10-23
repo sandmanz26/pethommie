@@ -36,7 +36,7 @@ const rules = () => within(document.getElementById("booking-rules")!);
 
 /** Sets the hotel's rule in Settings and saves it. */
 async function setRule(mode: PayMode, percent?: string) {
-  const user = await open("/app/settings", aSmallHotel());
+  const user = await open("/app/settings/booking", aSmallHotel());
   await screen.findByRole("heading", { name: "Booking & payment rules" });
   const label = { flexible: "Book now, pay later", deposit_first: "Deposit first", check_first: "Check slot first" }[mode];
   await user.click(rules().getByRole("tab", { name: label }));
@@ -73,8 +73,10 @@ describe("the booking and payment rules", () => {
     await user.type(rules().getByLabelText(/minimum deposit/i), "40");
     await user.click(rules().getByRole("button", { name: /^save$/i }));
     expect(stored().settings.payPolicy).toEqual({ mode: "deposit_first", depositPercent: 40 });
-    // saving the business details afterwards doesn't undo it
-    await user.click(within(document.getElementById("business")!).getByRole("button", { name: /^save/i }));
+    // saving the business details afterwards (in Settings) doesn't undo it
+    const again = await open("/app/settings", stored());
+    await screen.findByRole("heading", { name: "Settings", level: 1 });
+    await again.click(within(document.getElementById("business")!).getByRole("button", { name: /^save/i }));
     expect(stored().settings.payPolicy).toEqual({ mode: "deposit_first", depositPercent: 40 });
   });
 

@@ -58,7 +58,7 @@ export function InvoiceDocument({ invoice, language, paid }: { invoice: Invoice;
             <b>{invoice.petNames}</b>
           </p>
           <p>
-            {day(invoice.stay.checkIn)} → {day(invoice.stay.checkOut)} · {d.nights(invoice.stay.nights)}
+            {day(invoice.stay.checkIn)} → {day(invoice.stay.checkOut)} · {(invoice.stay.counting && invoice.stay.counting !== "nights" ? d.days : d.nights)(invoice.stay.nights)}
           </p>
           {invoice.stay.cageName && (
             <p>

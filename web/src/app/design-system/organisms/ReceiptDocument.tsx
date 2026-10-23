@@ -1,5 +1,5 @@
 import type { Booking, HotelData, Language, Owner, Payment } from "@/app/domain/types";
-import { dayOf, formatDate, formatRupiah, timeOf, unitLabel } from "@/app/domain/logic";
+import { countingOf, dayOf, formatDate, formatRupiah, timeOf, unitLabel } from "@/app/domain/logic";
 import { standingAfter } from "@/app/domain/ledger";
 import { amountInWords } from "@/app/domain/words";
 import { formatWhatsapp } from "@/shared/lib/phone";
@@ -18,7 +18,7 @@ export function ReceiptDocument({ data, booking, payment, owner, pets, number, l
   const refund = payment.kind === "refund";
   const s = data.settings;
   const hotel = data.hotel;
-  const after = standingAfter(booking, cage, payment);
+  const after = standingAfter(booking, cage, payment, countingOf(data));
 
   return (
     <article className="ds-invdoc ds-receipt" aria-label={`${refund ? d.refundTitle : d.title} ${number}`} lang={language}>

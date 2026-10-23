@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Booking, BookingSource } from "@/app/domain/types";
 import { filterBookings, NO_BOOKING_FILTER, type BookingFilter } from "@/app/domain/filters";
-import { hasNoUnits, todayISO, unitLabel } from "@/app/domain/logic";
+import { countingOf, hasNoUnits, todayISO, unitLabel } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -129,7 +129,7 @@ export function BookingsPage() {
                 names={petNames(data, b)}
                 owner={data.owners.find((o) => o.id === pet?.ownerId)}
                 cage={data.cages.find((c) => c.id === b.cageId)}
-                unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))}
+                unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))} counting={countingOf(data)}
                 checkInTo={b.status === "booked" && !b.hold && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}
                 onCheckOut={b.status === "checked_in" ? () => checkOut.request(b) : undefined}
                 onCancel={b.status === "booked" ? () => cancel.request(b) : undefined}

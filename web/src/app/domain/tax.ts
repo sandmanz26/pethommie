@@ -1,4 +1,4 @@
-import { addDays, bookingTotal, dayOf } from "./logic";
+import { addDays, bookingTotal, countingOf, dayOf } from "./logic";
 import { toCsv } from "./csv";
 import type { HotelData, ISODate, TaxProfile } from "./types";
 
@@ -79,7 +79,7 @@ export function taxFor(data: HotelData, year: number): YearTax {
     }
     if (b.status === "checked_out") {
       const m = monthOf(b.checkOut, year);
-      if (m) accrual[m - 1] += tax.pricesIncludeTax ? withoutTax(bookingTotal(b, data.cages.find((c) => c.id === b.cageId)), tax) : bookingTotal(b, data.cages.find((c) => c.id === b.cageId));
+      if (m) accrual[m - 1] += tax.pricesIncludeTax ? withoutTax(bookingTotal(b, data.cages.find((c) => c.id === b.cageId), countingOf(data)), tax) : bookingTotal(b, data.cages.find((c) => c.id === b.cageId), countingOf(data));
     }
   }
   for (const i of data.invoices) {

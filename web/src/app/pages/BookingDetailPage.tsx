@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { bookingTotal, dayOf, formatDate, formatRupiah, hasNoUnits, unitLabel, nights, stayPetIds, todayISO, vaccineState } from "@/app/domain/logic";
+import { bookingTotal, countingOf, dayOf, formatDate, formatRupiah, hasNoUnits, unitLabel, stayDays, stayPetIds, todayISO, vaccineState } from "@/app/domain/logic";
+import { stayCount, stayHoursHint } from "@/app/i18n/stayWords";
 import { petNames } from "@/app/domain/invoices";
 import { requiredDeposit } from "@/app/domain/policy";
 import { paidAmount } from "@/app/domain/payments";
@@ -75,7 +76,7 @@ export function BookingDetailPage() {
   // Not confirmed yet (see settings.payPolicy): a request to confirm, or a deposit to wait for. No check-in until then.
   const hold = booking.status === "booked" ? booking.hold : undefined;
   const pp = t.payPolicy;
-  const depositDue = Math.max(0, requiredDeposit(bookingTotal(booking, cage), data.settings.payPolicy.depositPercent) - paidAmount(booking));
+  const depositDue = Math.max(0, requiredDeposit(bookingTotal(booking, cage, countingOf(data)), data.settings.payPolicy.depositPercent) - paidAmount(booking));
 
   return (
     <>
@@ -96,8 +97,9 @@ export function BookingDetailPage() {
       <section className="pg-summary" aria-label={d.stay}>
         <StatusBadge booking={booking} />
         <span>
-          {!hasNoUnits(data) && <><b>{cage?.name ?? "—"}</b> · </>}{formatDate(booking.checkIn, locale, { day: "numeric", month: "short" })} → {formatDate(booking.checkOut, locale, { day: "numeric", month: "short", year: "numeric" })} · {t.common.nights(nights(booking.checkIn, booking.checkOut))}
+          {!hasNoUnits(data) && <><b>{cage?.name ?? "—"}</b> · </>}{formatDate(booking.checkIn, locale, { day: "numeric", month: "short" })} → {formatDate(booking.checkOut, locale, { day: "numeric", month: "short", year: "numeric" })} · {stayCount(t, stayDays(booking, countingOf(data)), countingOf(data))}
         </span>
+        {editable && <Muted>{stayHoursHint(t, data.settings.stayRules)}</Muted>}
         {booking.notes && <Muted>{booking.notes}</Muted>}
       </section>
 
@@ -152,6 +154,7 @@ export function BookingDetailPage() {
             <ChargesPanel
               booking={booking}
               cage={cage}
+              counting={countingOf(data)}
               onAdd={editable ? (charge) => store.addCharge(booking.id, charge) : undefined}
               onRemove={editable ? (chargeId) => store.removeCharge(booking.id, chargeId) : undefined}
             />
@@ -160,11 +163,12 @@ export function BookingDetailPage() {
             simple={!advanced}
             booking={booking}
             cage={cage}
+            counting={countingOf(data)}
             onAdd={(payment) => store.recordPayment(booking.id, payment)}
             onRemove={booking.status === "cancelled" ? undefined : (paymentId) => store.removePayment(booking.id, paymentId)}
           />
           {advanced && booking.status !== "cancelled" && <InvoicePanel data={data} booking={booking} onIssue={(request) => store.issueInvoice(booking.id, request)} />}
-          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} petName={names} owner={owner} cage={cage} unitName={unitLabel(data, cage)} />}
+          {advanced && pet && <MessagesPanel hotel={hotel} booking={booking} pet={pet} petName={names} owner={owner} cage={cage} unitName={unitLabel(data, cage)} counting={countingOf(data)} />}
         </div>
 
         {(staying || booking.status === "checked_out") && (

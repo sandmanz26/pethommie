@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import type { Booking, Cage } from "@/app/domain/types";
+import type { Booking, Cage, StayCounting } from "@/app/domain/types";
 import { CHARGE_SUGGESTIONS, MAX_LABEL, type ChargeIssue } from "@/app/domain/charges";
-import { bookingTotal, formatRupiah, nightlyRate, nights } from "@/app/domain/logic";
+import { bookingTotal, formatRupiah, nightlyRate, stayDays } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
 import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input, Select } from "@/app/design-system/atoms/Input";
@@ -19,9 +19,12 @@ export function ChargesPanel({
   cage,
   onAdd,
   onRemove,
+  counting = "nights",
 }: {
   booking: Booking;
   cage: Cage | undefined;
+  /** How the hotel counts days (settings.stayRules.counting). */
+  counting?: StayCounting;
   /** Omit for a stay whose price can't change. */
   onAdd?: (charge: { label: string; amount: number }) => ChargeIssue[];
   onRemove?: (id: string) => void;
@@ -31,7 +34,7 @@ export function ChargesPanel({
   const v = t.validation;
   const { ref, focusInvalid } = useFocusInvalid();
   const rp = (n: number) => formatRupiah(n, locale);
-  const n = Math.max(0, nights(booking.checkIn, booking.checkOut));
+  const n = stayDays(booking, counting);
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
   const [kind, setKind] = useState<"addon" | "discount">("addon");
@@ -65,7 +68,7 @@ export function ChargesPanel({
       </div>
       <ul className="ds-paylist">
         <li>
-          <span>{cage ? c.nights(n, rp(nightlyRate(booking, cage)), rp(n * nightlyRate(booking, cage))) : "—"}</span>
+          <span>{cage ? (counting === "nights" ? c.nights : c.days)(n, rp(nightlyRate(booking, cage)), rp(n * nightlyRate(booking, cage))) : "—"}</span>
         </li>
         {booking.charges.map((x) => (
           <li key={x.id}>
@@ -85,7 +88,7 @@ export function ChargesPanel({
           <span>
             <b>{c.total}</b>
           </span>
-          <b>{rp(bookingTotal(booking, cage))}</b>
+          <b>{rp(bookingTotal(booking, cage, counting))}</b>
         </li>
       </ul>
 

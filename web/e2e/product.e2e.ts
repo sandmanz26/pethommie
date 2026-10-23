@@ -97,7 +97,7 @@ for (const [name, viewport, locale] of [
       await page.goto('/app/invoices')
       const invoiceHref = (await page.locator('a[href^="/app/invoices/"]').first().getAttribute('href')) ?? '/app'
       const paths = [receiptHref, invoiceHref,
-        '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings',
+        '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings', '/app/settings/booking',
         '/app/more', '/app/customers', '/app/payments', '/app/invoices', '/app/tax', '/app/reports', '/app/dashboard', '/app/transactions', '/app/expenses', '/app/finance', '/app/link', '/app/help', bookingHref!.replace('#care', ''),
       ]
       for (const path of paths) {

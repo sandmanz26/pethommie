@@ -13,6 +13,7 @@ import {
   isShared,
   newId,
   nights,
+  stayDays,
   placesUsed,
   poolUnit,
   SIZE_ORDER,
@@ -20,6 +21,7 @@ import {
   vaccineState,
 } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { Stepper } from "@/app/design-system/molecules/Stepper";
@@ -29,6 +31,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import { dateError, moneyError, textError } from "@/app/forms/messages";
 import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
 import { LIMITS, parseRupiah } from "@/shared/lib/validate";
+import { stayCount, stayHoursHint } from "@/app/i18n/stayWords";
 import "./organisms.css";
 
 /**
@@ -108,7 +111,8 @@ export function BookingForm({
   const cage = data.cages.find((c) => c.id === selectedCageId);
   const n = validDates ? nights(checkIn, checkOut) : 0;
   // Priced for the whole party: in a shared room each pet pays, including one not saved yet.
-  const total = bookingTotal({ checkIn, checkOut, companionIds: Array.from({ length: party - 1 }, (_, i) => String(i)) }, cage);
+  const counting = data.settings.stayRules.counting;
+  const total = bookingTotal({ checkIn, checkOut, companionIds: Array.from({ length: party - 1 }, (_, i) => String(i)) }, cage, counting);
   const states = chosen.map((id) => data.pets.find((p) => p.id === id)).flatMap((p) => (p ? [vaccineState(p, checkIn)] : []));
   const vState = states.includes("expired") ? "expired" : states.includes("soon") ? "soon" : states.includes("unknown") ? "unknown" : null;
 
@@ -207,6 +211,7 @@ export function BookingForm({
             <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), clear("dates"))} />
           </Field>
         </div>
+        <p className="ds-field__hint">{stayHoursHint(t, data.settings.stayRules)}</p>
         {pool ? (
           validDates && (
             <Field label={t.pool.capacity} error={errors.cage}>
@@ -250,7 +255,7 @@ export function BookingForm({
       <fieldset className="ds-form__section">
         <div className="ds-form__row">
           <Field label={f.deposit} hint={payInfo} error={errors.deposit} optional={t.common.optional}>
-            <Input value={deposit} onChange={(e) => (setDeposit(e.target.value), clear("deposit"))} inputMode="numeric" placeholder="0" />
+            <MoneyInput value={deposit} onChange={(e) => (setDeposit(e.target.value), clear("deposit"))} placeholder="0" />
           </Field>
           {depositAmount > 0 && (
             <Field label={t.payments.method}>
@@ -264,7 +269,7 @@ export function BookingForm({
             </Field>
           )}
           <div className="ds-summary" aria-live="polite">
-            <span>{f.summary(n)}</span>
+            <span>{validDates ? stayCount(t, stayDays({ checkIn, checkOut }, counting), counting) : f.summary(0)}</span>
             <b>{formatRupiah(total, locale)}</b>
           </div>
         </div>

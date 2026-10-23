@@ -341,6 +341,15 @@ export function OnboardingPage() {
             <Muted>{o.done.lead}</Muted>
           </div>
           <div className="pg-flow__choices">
+            {/* Booking rules first: a new booking needs them (see BookingNewPage). */}
+            <a className="pg-flow__choice" href="/app/settings/booking" onClick={(e) => (e.preventDefault(), navigate("/app/settings/booking"))}>
+              <Icon name="settings" size={22} />
+              <span>
+                <b>{o.done.bookingRules}</b>
+                <small>{o.done.bookingRulesHint}</small>
+              </span>
+              <Icon name="chevronRight" />
+            </a>
             <a className="pg-flow__choice" href="/app/bookings/new" onClick={(e) => (e.preventDefault(), navigate("/app/bookings/new"))}>
               <Icon name="bookings" size={22} />
               <span>

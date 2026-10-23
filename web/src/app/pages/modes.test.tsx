@@ -75,11 +75,11 @@ describe("simple and advanced mode", () => {
     expect(tabs.getAllByRole("link").map((l) => l.textContent)).toEqual(["Today", "Bookings", "Calendar", "Pets", "More"]);
     await user.click(tabs.getByRole("link", { name: "More" }));
     const more = within(await screen.findByRole("navigation", { name: "More" }));
-    expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Reports", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
+    expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Reports", "Cages", "Booking link", "Settings", "Booking settings", "Help", "Back to website"]);
     await user.click(sidebar().getByRole("link", { name: "Settings" }));
     await user.click(await screen.findByRole("button", { name: "Switch to Advanced" }));
     await user.click(tabs.getByRole("link", { name: "More" }));
-    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Expenses", "Invoices", "Finance", "Reports", "Tax", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
+    expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Expenses", "Invoices", "Finance", "Reports", "Tax", "Cages", "Booking link", "Settings", "Booking settings", "Help", "Back to website"]);
   });
 
   it("offers the upgrade in Settings on Simple, and takes you to the dashboard on Advanced", async () => {

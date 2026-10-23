@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { newId } from "@/app/domain/logic";
 import { normaliseWhatsapp } from "@/shared/lib/phone";
 import { guestFromRequest } from "@/app/domain/guest";
@@ -7,6 +7,8 @@ import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { BookingForm } from "@/app/design-system/organisms/BookingForm";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { Button } from "@/app/design-system/atoms/Button";
+import { Heading, Muted } from "@/app/design-system/atoms/Text";
 
 export function BookingNewPage() {
   const { data, saveBooking, saveOwner, savePet } = useStore();
@@ -14,6 +16,28 @@ export function BookingNewPage() {
   const { advanced } = useMode();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const location = useLocation();
+
+  // No booking before the hotel has said how it counts days and charges a late pick-up.
+  if (!data.settings.stayRules.configured) {
+    const back = encodeURIComponent(`${location.pathname}${location.search}`);
+    return (
+      <>
+        <PageHeader title={t.bookingForm.title} back={{ to: "/app/bookings", label: t.common.back }} />
+        <section className="ds-form__section" aria-labelledby="gate-title">
+          <Heading level={2} size="md">
+            <span id="gate-title">{t.stayRules.gateTitle}</span>
+          </Heading>
+          <Muted>{t.stayRules.gateBody}</Muted>
+          <div>
+            <Button to={`/app/settings/booking?back=${back}`} icon="chevronRight">
+              {t.stayRules.gateButton}
+            </Button>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>

@@ -57,7 +57,7 @@ function useStoreValue(repo: HotelRepository) {
       /** Calls a booked stay off: why, what is given back, and its invoice voided. */
       cancelBooking: (id: string, request: actions.CancelRequest): actions.CancelIssue[] => run((s) => actions.cancelBooking(s, id, request)),
       /** The pet goes home; `endOn` re-dates the stay to the day it really ended. */
-      checkOut: (id: string, endOn?: ISODate): actions.CheckOutIssue[] => run((s) => actions.checkOutBooking(s, id, endOn)),
+      checkOut: (id: string, endOn?: ISODate, lateCharge?: Omit<Charge, "id">): actions.CheckOutIssue[] => run((s) => actions.checkOutBooking(s, id, endOn, lateCharge)),
       /** Confirms a request once its slot is checked free again; "full" if it has been taken meanwhile. */
       confirmBooking: (id: string): actions.ConfirmIssue[] => run((s) => actions.confirmBooking(s, id)),
       /** False unless the stay is booked and confirmed (not a request, not waiting for its deposit). */

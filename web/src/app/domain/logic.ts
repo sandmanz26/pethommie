@@ -1,4 +1,5 @@
-import type { Booking, Cage, CageSize, Charge, HotelData, ISODate, Pet } from "./types";
+import { billableDays } from "./stayRules";
+import type { Booking, Cage, CageSize, Charge, HotelData, ISODate, Pet, StayCounting } from "./types";
 
 // ---------- dates (local calendar days, no time zones) ----------
 
@@ -159,17 +160,24 @@ export function poolCage(capacity: number, pricePerPet: number, name: string, id
 /** The rate a stay pays per night (per pet in a shared room): the one agreed when it was booked, or the unit's price. */
 export const nightlyRate = (booking: { rate?: number }, cage: Pick<Cage, "pricePerNight"> | undefined) => (booking.rate && booking.rate > 0 ? booking.rate : (cage?.pricePerNight ?? 0));
 
+/** How the hotel counts its days (settings.stayRules.counting). */
+export const countingOf = (data: Pick<HotelData, "settings">): StayCounting => data.settings.stayRules?.counting ?? "nights";
+
+/** The days a stay is charged for, the hotel's way (see stayRules.billableDays). */
+export const stayDays = (b: Pick<Booking, "checkIn" | "checkOut">, counting: StayCounting = "nights") => billableDays(b.checkIn, b.checkOut, counting);
+
 /**
- * The price of a stay: the nights at the unit's rate (for each pet in a shared room), plus add-ons and minus
- * discounts. Never below zero.
+ * The price of a stay: its days, counted the hotel's way (nights by default), at the unit's rate (for each pet in a
+ * shared room), plus add-ons and minus discounts. Never below zero.
  */
 export function bookingTotal(
   booking: Pick<Booking, "checkIn" | "checkOut"> & { charges?: Pick<Charge, "amount">[]; petId?: string; companionIds?: string[]; rate?: number },
   cage: Cage | undefined,
+  counting: StayCounting = "nights",
 ) {
   if (!cage) return 0;
   const pets = isShared(cage) ? 1 + (booking.companionIds?.length ?? 0) : 1;
-  const base = Math.max(0, nights(booking.checkIn, booking.checkOut)) * nightlyRate(booking, cage) * pets;
+  const base = billableDays(booking.checkIn, booking.checkOut, counting) * nightlyRate(booking, cage) * pets;
   const extras = (booking.charges ?? []).reduce((sum, c) => sum + c.amount, 0);
   return Math.max(0, base + extras);
 }

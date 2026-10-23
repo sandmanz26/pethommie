@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, type FormEvent } from "react";
-import type { Booking, Cage, Payment, PaymentKind, PaymentMethod } from "@/app/domain/types";
+import type { Booking, Cage, Payment, PaymentKind, PaymentMethod, StayCounting } from "@/app/domain/types";
 import { bookingTotal, formatRupiah, timeOf, dayOf, formatDate } from "@/app/domain/logic";
 import { balanceDue, paidAmount, paymentStatus, type PaymentIssue } from "@/app/domain/payments";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
@@ -25,6 +25,7 @@ export function PaymentsPanel({
   onAdd,
   onRemove,
   simple,
+  counting = "nights",
 }: {
   booking: Booking;
   cage: Cage | undefined;
@@ -33,16 +34,18 @@ export function PaymentsPanel({
   onRemove?: (paymentId: string) => void;
   /** Simple mode: no note, and one tap records the whole balance. */
   simple?: boolean;
+  /** How the hotel counts days (settings.stayRules.counting). */
+  counting?: StayCounting;
 }) {
   const { t, locale } = useAppT();
   const p = t.payments;
   const cancelled = booking.status === "cancelled";
-  const total = bookingTotal(booking, cage);
+  const total = bookingTotal(booking, cage, counting);
   const kept = paidAmount(booking);
   // Paid more than the stay costs: the difference is the owner's, to give back or carry to the next stay.
   const over = cancelled ? 0 : Math.max(0, kept - total);
-  const balance = balanceDue(booking, cage);
-  const status = paymentStatus(booking, cage);
+  const balance = balanceDue(booking, cage, counting);
+  const status = paymentStatus(booking, cage, counting);
   const rp = (n: number) => formatRupiah(n, locale);
 
   const [amount, setAmount] = useState("");

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { defaultSettings, emptyData } from "@/app/domain/types";
+import { defaultSettings, defaultStayRules, emptyData } from "@/app/domain/types";
+import { bookingTotal, countingOf } from "@/app/domain/logic";
 import { aBooking, aSmallHotel } from "@/app/testing/fixtures";
 import { createLocalRepository, dataKeyFor, parseStored } from "./storage";
 
@@ -29,7 +30,7 @@ describe("parseStored", () => {
   });
 
   it("flags data from a newer version of the app, without trying to read it", () => {
-    const raw = JSON.stringify({ ...aSmallHotel(), version: 7, somethingNew: true });
+    const raw = JSON.stringify({ ...aSmallHotel(), version: 8, somethingNew: true });
     expect(parseStored(raw)).toEqual({ data: emptyData(), problem: "newer" });
   });
 });
@@ -43,7 +44,7 @@ describe("upgrading a version 1 document", () => {
     const { data, problem, migratedFrom } = parseStored(v1([{ ...old, deposit: 100_000 }]));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(1);
-    expect(data.version).toBe(6);
+    expect(data.version).toBe(7);
     expect(data.bookings[0]).not.toHaveProperty("deposit");
     expect(data.bookings[0].payments).toEqual([expect.objectContaining({ amount: 100_000, at: "2026-09-30T10:00:00.000Z" })]);
     expect(data.bookings[0]).toMatchObject({ arrival: null, notes: "x" });
@@ -74,11 +75,12 @@ describe("upgrading a version 2 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v2()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(2);
-    expect(data.version).toBe(6);
+    expect(data.version).toBe(7);
     expect(data.bookings[0]).toMatchObject({ id: "b1", status: "checked_in", notes: "keep", charges: [], companionIds: [], payments: [expect.objectContaining({ amount: 5 })] });
     expect(data.owners.every((o) => o.language === "id")).toBe(true);
     expect(data.invoices).toEqual([]);
-    expect(data.settings).toEqual(defaultSettings());
+    // A hotel that was already set up keeps booking: its stay rules count nights, as before.
+    expect(data.settings).toEqual({ ...defaultSettings(), stayRules: defaultStayRules(true) });
     expect(data.careLog).toHaveLength(1);
     expect(data.hotel?.name).toBe("Rumah Meong");
   });
@@ -122,7 +124,7 @@ describe("upgrading a version 3 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v3()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(3);
-    expect(data.version).toBe(6);
+    expect(data.version).toBe(7);
     expect(data.cages.every((c) => c.capacity === 1)).toBe(true);
     expect(data.bookings[0]).toMatchObject({ source: "other", payments: [{ id: "pay", amount: 5, kind: "payment", reference: "" }] });
     expect(data.settings.unitTerm).toBe("cage");
@@ -165,7 +167,7 @@ describe("upgrading a version 4 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v4()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(4);
-    expect(data.version).toBe(6);
+    expect(data.version).toBe(7);
     expect(data.bookings.map((b) => [b.id, b.rate, b.cancelReason])).toEqual([["b1", 75_000, null], ["b2", 50_000, "owner"]]);
     expect(data.cages.every((c) => c.archived === false)).toBe(true);
     expect(data.settings.requireVaccine).toBe(false);
@@ -194,7 +196,7 @@ describe("upgrading a version 5 document", () => {
     const { data, problem, migratedFrom } = parseStored(JSON.stringify(v5()));
     expect(problem).toBeNull();
     expect(migratedFrom).toBe(5);
-    expect(data.version).toBe(6);
+    expect(data.version).toBe(7);
     expect(data.settings.payPolicy).toEqual({ mode: "flexible", depositPercent: 30 });
     expect(data.bookings[0].hold).toBeUndefined();
   });
@@ -206,6 +208,47 @@ describe("upgrading a version 5 document", () => {
     const badMode = { ...ok, settings: { ...ok.settings, payPolicy: { mode: "later", depositPercent: 30 } } };
     const badHold = { ...ok, bookings: [{ ...ok.bookings[0], hold: "maybe" }] };
     for (const bad of [noPolicy, badMode, badHold]) expect(parseStored(JSON.stringify(bad)).problem).toBe("corrupt");
+  });
+});
+
+describe("upgrading a version 6 document", () => {
+  const v6 = (over: Record<string, unknown> = {}) => {
+    const doc = JSON.parse(JSON.stringify(aSmallHotel({ bookings: [aBooking("b1", { petId: "p1", cageId: "m1", checkIn: "2026-10-01", checkOut: "2026-10-04", charges: [{ id: "c1", label: "Grooming", amount: 50_000 }] })] })));
+    doc.version = 6;
+    delete doc.settings.stayRules;
+    return { ...doc, ...over };
+  };
+
+  it("keeps a set-up hotel counting nights with no late fee, marked as set, so totals stay and booking isn't blocked", () => {
+    const before = bookingTotal(v6().bookings[0], v6().cages.find((c: { id: string }) => c.id === "m1"));
+    const { data, problem, migratedFrom } = parseStored(JSON.stringify(v6()));
+    expect(problem).toBeNull();
+    expect(migratedFrom).toBe(6);
+    expect(data.version).toBe(7);
+    expect(data.settings.stayRules).toEqual(defaultStayRules(true));
+    expect(data.settings.stayRules).toMatchObject({ configured: true, counting: "nights", late: { mode: "none" } });
+    expect(bookingTotal(data.bookings[0], data.cages.find((c) => c.id === "m1"), countingOf(data))).toBe(before);
+    expect(before).toBe(3 * 75_000 + 50_000);
+  });
+
+  it("leaves a document without a hotel yet to set its rules", () => {
+    const { data, problem } = parseStored(JSON.stringify(v6({ hotel: null })));
+    expect(problem).toBeNull();
+    expect(data.settings.stayRules.configured).toBe(false);
+  });
+
+  it("does not take a version 7 document with missing or wrong stay rules", () => {
+    const ok = JSON.parse(JSON.stringify(aSmallHotel()));
+    expect(parseStored(JSON.stringify(ok)).problem).toBeNull();
+    const rules = ok.settings.stayRules;
+    const bad = [
+      { ...rules, counting: "weeks" },
+      { ...rules, pickUpUntil: "25:00" },
+      { ...rules, late: { mode: "sometimes", perHour: 1 } },
+      { ...rules, configured: "yes" },
+      undefined,
+    ];
+    for (const stayRules of bad) expect(parseStored(JSON.stringify({ ...ok, settings: { ...ok.settings, stayRules } })).problem).toBe("corrupt");
   });
 });
 
@@ -256,7 +299,7 @@ describe("createLocalRepository", () => {
   it("keeps the original of an upgraded document, once", () => {
     const raw = JSON.stringify({ version: 1, hotel: null, cages: [], owners: [], pets: [], bookings: [] });
     localStorage.setItem(KEY, raw);
-    expect(repo.load().version).toBe(6);
+    expect(repo.load().version).toBe(7);
     expect(localStorage.getItem(`${KEY}.v1.backup`)).toBe(raw);
     localStorage.setItem(`${KEY}.v1.backup`, "kept");
     repo.load();

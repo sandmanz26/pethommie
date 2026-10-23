@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { addDays, todayISO } from "@/app/domain/logic";
-import { defaultSettings, emptyData, type HotelData } from "@/app/domain/types";
+import { defaultSettings, defaultStayRules, emptyData, type HotelData } from "@/app/domain/types";
 import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
 import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
@@ -27,7 +27,7 @@ const today = todayISO();
 /** A hotel with no cages or rooms: room for `capacity` pets, 60.000 per pet per night. Three owners with a pet each. */
 const poolHotel = (capacity = 3, bookings: HotelData["bookings"] = []) =>
   aSmallHotel({
-    settings: { ...defaultSettings(), unitTerm: "none" },
+    settings: { ...defaultSettings(), unitTerm: "none", stayRules: defaultStayRules(true) },
     cages: [{ ...aCage("pool", "M", 60_000, capacity), name: "Shared area" }],
     owners: [anOwner("o1"), anOwner("o2"), anOwner("o3")],
     pets: [aPet("p1", "o1", { name: "Mochi", vaccineExpiry: "2099-01-01" }), aPet("p2", "o2", { name: "Kopi", vaccineExpiry: "2099-01-01" }), aPet("p3", "o3", { name: "Nala", vaccineExpiry: "2099-01-01" })],

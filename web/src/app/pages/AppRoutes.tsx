@@ -41,6 +41,7 @@ import { PetsPage } from "./PetsPage";
 import { PetEditPage } from "./PetEditPage";
 import { CagesPage } from "./CagesPage";
 import { SettingsPage } from "./SettingsPage";
+import { BookingSettingsPage } from "./BookingSettingsPage";
 
 /** Workspace pages need a set-up hotel; send first-time users to onboarding. */
 function Workspace() {
@@ -125,6 +126,7 @@ export default function AppRoutes() {
               <Route path="pets/:id" element={<PetEditPage />} />
               <Route path="cages" element={<CagesPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="settings/booking" element={<BookingSettingsPage />} />
               <Route path="*" element={<Navigate to="/app" replace />} />
             </Route>
           </Route>

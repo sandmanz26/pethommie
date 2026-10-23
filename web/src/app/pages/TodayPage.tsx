@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Booking } from "@/app/domain/types";
 import { petNames } from "@/app/domain/invoices";
-import { addDays, formatDate, isLive, stayPetIds, todayBoard, totalPlaces, todayISO, unitLabel, vaccineState } from "@/app/domain/logic";
+import { addDays, countingOf, formatDate, isLive, stayPetIds, todayBoard, totalPlaces, todayISO, unitLabel, vaccineState } from "@/app/domain/logic";
 import { stayingToday } from "@/app/domain/careLog";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -44,7 +44,7 @@ export function TodayPage() {
       names={petNames(data, b)}
       owner={data.owners.find((o) => o.id === data.pets.find((p) => p.id === b.petId)?.ownerId)}
       cage={data.cages.find((c) => c.id === b.cageId)}
-      unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))}
+      unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))} counting={countingOf(data)}
       checkInTo={action === "in" && !b.hold ? `/app/bookings/${b.id}#checkin` : undefined}
       onCheckOut={action === "out" ? () => checkOut.request(b) : undefined}
       onNoShow={late ? () => cancel.request(b, "no_show") : undefined}

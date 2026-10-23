@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { countingOf } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
 import { receiptNumbers, standingAfter } from "@/app/domain/ledger";
 import { receiptMessage, waLink } from "@/app/domain/messages";
@@ -37,7 +38,7 @@ export function ReceiptPage() {
 
   const language = shown ?? owner?.language ?? data.settings.invoiceLanguage;
   const pets = petNames(data, booking);
-  const after = standingAfter(booking, data.cages.find((c) => c.id === booking.cageId), payment);
+  const after = standingAfter(booking, data.cages.find((c) => c.id === booking.cageId), payment, countingOf(data));
   const message = receiptMessage({
     hotelName: data.hotel?.name ?? "",
     ownerName: owner?.name ?? "",

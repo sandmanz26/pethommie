@@ -1,4 +1,4 @@
-import type { Booking, Cage, Hotel, Owner, Pet } from "@/app/domain/types";
+import type { Booking, Cage, Hotel, Owner, Pet, StayCounting } from "@/app/domain/types";
 import { bookingTotal, todayISO, vaccineState } from "@/app/domain/logic";
 import { balanceDue, paidAmount } from "@/app/domain/payments";
 import { arrivalNotice, bookingConfirmation, pickupReminder, vaccineReminder } from "@/app/domain/messages";
@@ -9,7 +9,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
 
 /** The other messages an operator keeps typing by hand: confirmation, arrival, pickup, vaccine. */
-export function MessagesPanel({ hotel, booking, pet, owner, cage, unitName, petName }: { hotel: Hotel; booking: Booking; pet: Pet; owner: Owner | undefined; cage: Cage | undefined; /** The unit as the owner reads it; empty leaves it out (a hotel without cages or rooms). */ unitName?: string; petName?: string }) {
+export function MessagesPanel({ hotel, booking, pet, owner, cage, unitName, petName, counting = "nights" }: { hotel: Hotel; booking: Booking; pet: Pet; owner: Owner | undefined; cage: Cage | undefined; /** The unit as the owner reads it; empty leaves it out (a hotel without cages or rooms). */ unitName?: string; petName?: string; counting?: StayCounting }) {
   const { t } = useAppT();
   const m = t.messages;
   const base = { hotelName: hotel.name, ownerName: owner?.name ?? "", petName: petName ?? pet.name, language: owner?.language };
@@ -19,10 +19,10 @@ export function MessagesPanel({ hotel, booking, pet, owner, cage, unitName, petN
     {
       key: "confirmation",
       label: m.confirmation,
-      text: bookingConfirmation({ ...base, checkIn: booking.checkIn, checkOut: booking.checkOut, cageName: unitName ?? cage?.name ?? "-", total: bookingTotal(booking, cage), paid: paidAmount(booking) }),
+      text: bookingConfirmation({ ...base, checkIn: booking.checkIn, checkOut: booking.checkOut, cageName: unitName ?? cage?.name ?? "-", total: bookingTotal(booking, cage, counting), paid: paidAmount(booking) }),
     },
     ...(booking.arrival ? [{ key: "arrival", label: m.arrival, text: arrivalNotice({ ...base, arrival: booking.arrival }) }] : []),
-    { key: "pickup", label: m.pickup, text: pickupReminder({ ...base, checkOut: booking.checkOut, balance: balanceDue(booking, cage) }) },
+    { key: "pickup", label: m.pickup, text: pickupReminder({ ...base, checkOut: booking.checkOut, balance: balanceDue(booking, cage, counting) }) },
     ...(vState !== "ok" ? [{ key: "vaccine", label: m.vaccine, text: vaccineReminder({ ...base, expiry: pet.vaccineExpiry, state: vState }) }] : []),
   ];
   return (

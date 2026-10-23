@@ -189,6 +189,31 @@ export type BookingHold = "request" | "deposit";
 export type PayMode = "flexible" | "deposit_first" | "check_first";
 export type PayPolicy = { mode: PayMode; /** Whole percent, 0–100, of the stay's price. */ depositPercent: number };
 
+/**
+ * How the hotel counts a stay's days (see domain/stayRules).
+ * nights: per night, hotel style; the check-out day isn't charged (Mon → Wed = 2).
+ * calendar_days: every calendar day the pet is here counts, the arrival day included (Mon → Wed = 3).
+ * hours24: each 24 hours from drop-off is a day (Mon 10:00 → Wed 10:00 = 2); time past that is late pick-up.
+ */
+export type StayCounting = "nights" | "calendar_days" | "hours24";
+/** What a late pick-up (past the limit plus the grace period) costs: nothing, a fee per started hour, or half or a full day's rate. */
+export type LateMode = "none" | "per_hour" | "half_day" | "full_day";
+
+export type StayRules = {
+  /** The hotel has set its rules. New bookings can't be made before. */
+  configured: boolean;
+  counting: StayCounting;
+  /** Drop-off hours, "HH:MM", from < until. */
+  dropOffFrom: string;
+  dropOffUntil: string;
+  /** Pick up by this time on the last day ("HH:MM"). For hours24 the limit is the drop-off time instead. */
+  pickUpUntil: string;
+  /** Minutes after the limit that cost nothing, 0–240. */
+  graceMinutes: number;
+  /** perHour: rupiah per started hour, used by "per_hour". */
+  late: { mode: LateMode; perHour: number };
+};
+
 /** Who the hotel is on paper, and how it is taxed: the top of every invoice. */
 export type HotelSettings = {
   legalName: string;
@@ -204,6 +229,7 @@ export type HotelSettings = {
   /** Refuse check-in for a pet whose vaccination has run out or isn't on record, unless the card is seen at the door. */
   requireVaccine: boolean;
   payPolicy: PayPolicy;
+  stayRules: StayRules;
 };
 
 /**
@@ -261,7 +287,8 @@ export type Invoice = {
   seller: { name: string; legalName: string; address: string; npwp: string; paymentInstructions: string };
   customer: { name: string; whatsapp: string };
   petNames: string;
-  stay: { checkIn: ISODate; checkOut: ISODate; nights: number; cageName: string };
+  /** nights: the days charged; counting: how they were counted, when not per night (absent on older invoices). */
+  stay: { checkIn: ISODate; checkOut: ISODate; nights: number; counting?: StayCounting; cageName: string };
   lines: InvoiceLine[];
   /** Before tax (the DPP). */
   subtotal: number;
@@ -273,7 +300,7 @@ export type Invoice = {
 };
 
 export type HotelData = {
-  version: 6;
+  version: 7;
   hotel: Hotel | null;
   settings: HotelSettings;
   cages: Cage[];
@@ -297,10 +324,22 @@ export const defaultSettings = (): HotelSettings => ({
   unitTerm: "cage",
   requireVaccine: false,
   payPolicy: { mode: "flexible", depositPercent: 30 },
+  stayRules: defaultStayRules(),
+});
+
+/** Hotel-style rules, not yet confirmed by the hotel (configured false). */
+export const defaultStayRules = (configured = false): StayRules => ({
+  configured,
+  counting: "nights",
+  dropOffFrom: "08:00",
+  dropOffUntil: "20:00",
+  pickUpUntil: "12:00",
+  graceMinutes: 60,
+  late: { mode: "none", perHour: 10_000 },
 });
 
 export const emptyData = (): HotelData => ({
-  version: 6,
+  version: 7,
   hotel: null,
   settings: defaultSettings(),
   cages: [],

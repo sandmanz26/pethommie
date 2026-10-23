@@ -6,7 +6,7 @@ import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { markBackedUp } from "@/app/store/backupNote";
 import { useStore } from "@/app/store/AppStore";
 import { useMode } from "@/app/mode/ModeProvider";
-import type { HotelSettings, Language, PayMode } from "@/app/domain/types";
+import type { HotelSettings, Language } from "@/app/domain/types";
 import { parseStored } from "@/app/store/storage";
 import { useAppT } from "@/app/i18n/useAppT";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
@@ -15,7 +15,6 @@ import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { Checkbox } from "@/app/design-system/atoms/Checkbox";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
-import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { UpgradeCard } from "@/app/design-system/organisms/UpgradeCard";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -49,11 +48,6 @@ export function SettingsPage() {
   const clearBiz = (key: keyof typeof bizErrors) => setBizErrors((x) => ({ ...x, [key]: undefined }));
   const clearHotel = (key: string) => setErrors(({ [key]: _, ...rest }) => rest);
   const editTax = (patch: Partial<HotelSettings["tax"]>) => edit({ tax: { ...draft.tax, ...patch } });
-  const [payMode, setPayMode] = useState<PayMode>(data.settings.payPolicy.mode);
-  const [percentText, setPercentText] = useState(String(data.settings.payPolicy.depositPercent));
-  const [percentErr, setPercentErr] = useState<string>();
-  const [paySaved, setPaySaved] = useState(false);
-  const payForm = useFocusInvalid();
   const [confirm, setConfirm] = useState<"reset" | "sample" | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [restore, setRestore] = useState<{ status: "idle" | "bad" | "newer" | "done" } | { status: "ask"; data: typeof data }>({ status: "idle" });
@@ -98,8 +92,8 @@ export function SettingsPage() {
       return void bizForm.focusInvalid();
     }
     const ppn = Number(ppnText.replace(",", "."));
-    // The booking rules have their own form and save; keep what is saved.
-    const issues = saveSettings({ ...draft, payPolicy: data.settings.payPolicy, tax: { ...draft.tax, ppnPercent: ppnText.trim() === "" ? NaN : ppn } });
+    // The booking settings have their own page and save; keep what is saved.
+    const issues = saveSettings({ ...draft, payPolicy: data.settings.payPolicy, stayRules: data.settings.stayRules, tax: { ...draft.tax, ppnPercent: ppnText.trim() === "" ? NaN : ppn } });
     setBizErrors({
       prefix: issues.includes("prefix") ? t.settingsBiz.errPrefix : undefined,
       ppn: issues.includes("ppn") ? t.settingsTax.errPpn : undefined,
@@ -107,16 +101,6 @@ export function SettingsPage() {
     });
     setBizSaved(issues.length === 0);
     if (issues.length) bizForm.focusInvalid();
-  }
-
-  function savePayPolicy(e: FormEvent) {
-    e.preventDefault();
-    // The percent only matters for the modes that ask for a deposit; flexible keeps what was there.
-    const percent = payMode === "flexible" ? data.settings.payPolicy.depositPercent : /^\d+$/.test(percentText.trim()) ? Number(percentText.trim()) : NaN;
-    const issues = saveSettings({ ...data.settings, payPolicy: { mode: payMode, depositPercent: percent } });
-    setPercentErr(issues.includes("deposit") ? t.payPolicy.errPercent : undefined);
-    setPaySaved(issues.length === 0);
-    if (issues.length) payForm.focusInvalid();
   }
 
   function exportJson() {
@@ -252,29 +236,15 @@ export function SettingsPage() {
         </div>
       </form>
 
-      <form ref={payForm.ref} className="ds-form__section pg-settings" onSubmit={savePayPolicy} noValidate id="booking-rules">
-        <Heading level={2} size="md">{t.payPolicy.title}</Heading>
-        <Muted>{t.payPolicy.lead}</Muted>
-        <Segmented<PayMode>
-          label={t.payPolicy.mode}
-          value={payMode}
-          onChange={(m) => (setPayMode(m), setPaySaved(false), setPercentErr(undefined))}
-          options={(["flexible", "deposit_first", "check_first"] as const).map((m) => ({ value: m, label: t.payPolicy.modes[m] }))}
-        />
-        <Muted>{t.payPolicy.explain[payMode]}</Muted>
-        {payMode !== "flexible" && (
-          <Field label={t.payPolicy.percent} hint={t.payPolicy.percentHint} error={percentErr}>
-            <Input value={percentText} inputMode="numeric" onChange={(e) => (setPercentText(e.target.value), setPaySaved(false), setPercentErr(undefined))} />
-          </Field>
-        )}
-        <div className="ds-form__actions">
-          {paySaved && <Alert tone="ok">{t.payPolicy.saved}</Alert>}
-          <span className="ds-form__spacer" />
-          <Button type="submit" icon="check">
-            {t.payPolicy.save}
+      <section className="ds-form__section pg-settings" id="booking-settings">
+        <Heading level={2} size="md">{t.stayRules.open}</Heading>
+        <Muted>{t.stayRules.openHint}</Muted>
+        <div>
+          <Button to="/app/settings/booking" variant="secondary" icon="chevronRight">
+            {t.stayRules.open}
           </Button>
         </div>
-      </form>
+      </section>
 
       <section className="ds-form__section pg-settings">
         <Heading level={2} size="md">{t.auth.accountTitle}</Heading>

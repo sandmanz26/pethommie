@@ -1,7 +1,7 @@
 import { addDays, generateCages, newId, todayISO } from "@/app/domain/logic";
 import { buildInvoice } from "@/app/domain/invoices";
 import { advancedSample } from "./sampleAdvanced";
-import { defaultSettings, type Arrival, type Booking, type CareEntry, type Expense, type HotelData, type ISODate, type Owner, type Pet, type ReportSent } from "@/app/domain/types";
+import { defaultSettings, defaultStayRules, type Arrival, type Booking, type CareEntry, type Expense, type HotelData, type ISODate, type Owner, type Pet, type ReportSent } from "@/app/domain/types";
 
 /** Local time `hour:minute` on a calendar day, as an ISO date-time. */
 const at = (day: ISODate, hour: number, minute: number) => {
@@ -128,13 +128,14 @@ function simpleSample(): HotelData {
   ];
   const reportsSent: ReportSent[] = [{ bookingId: mochi.id, date: yesterday, at: at(yesterday, 18, 0) }];
   const data: HotelData = {
-    version: 6,
+    version: 7,
     hotel: { name: "Rumah Meong Bintaro", city: "South Tangerang", whatsapp: "6281200001111", createdAt: new Date().toISOString() },
     settings: {
       ...defaultSettings(),
       legalName: "Rumah Meong Bintaro",
       address: "Jl. Bintaro Utama Sektor 3, Tangerang Selatan",
       paymentInstructions: "Contoh: BCA 1234567890 a.n. Rumah Meong · QRIS tersedia di kasir",
+      stayRules: defaultStayRules(true),
       tax: { ...defaultSettings().tax, regime: "final_umkm" },
     },
     cages,

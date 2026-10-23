@@ -1,4 +1,5 @@
-import { addDays, bookingTotal, cageIsFree, canGoUnitless, newId, placesFor } from "@/app/domain/logic";
+import { addDays, bookingTotal, cageIsFree, canGoUnitless, countingOf, newId, placesFor } from "@/app/domain/logic";
+import { stayRulesIssues } from "@/app/domain/stayRules";
 import { holdAfterConfirm, holdForNew, isValidDepositPercent } from "@/app/domain/policy";
 import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, petHasHistory, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
 import { careIssues, type CareIssue } from "@/app/domain/careLog";
@@ -72,7 +73,7 @@ function removePetRecords(s: HotelData, id: string): HotelData {
 
 /** What the stay costs and what has come in, for the deposit rules. */
 function moneyOf(s: HotelData, b: Booking) {
-  return { paid: paidAmount(b), total: bookingTotal(b, s.cages.find((c) => c.id === b.cageId)) };
+  return { paid: paidAmount(b), total: bookingTotal(b, s.cages.find((c) => c.id === b.cageId), countingOf(s)) };
 }
 
 /**
@@ -147,14 +148,14 @@ export function cancelBooking(s: HotelData, id: string, r: CancelRequest): Outco
   };
 }
 
-export type CheckOutIssue = "status" | "cage_taken";
+export type CheckOutIssue = "status" | "cage_taken" | "charge";
 
 /**
  * The pet goes home. With `endOn`, the stay is re-dated to the day it really ended: earlier (picked up early, so
  * fewer nights) or later (picked up late, so more nights, if the unit is free for them). Without it the booked
- * dates stand.
+ * dates stand. A `lateCharge` (the late pick-up fee the hotel agreed to) is added to the stay in the same step.
  */
-export function checkOutBooking(s: HotelData, id: string, endOn?: ISODate): Outcome<CheckOutIssue[]> {
+export function checkOutBooking(s: HotelData, id: string, endOn?: ISODate, lateCharge?: Omit<Charge, "id">): Outcome<CheckOutIssue[]> {
   const current = s.bookings.find((b) => b.id === id);
   if (!current || !canTransition(current.status, "checked_out")) return { state: s, result: ["status"] };
   let checkOut = current.checkOut;
@@ -163,7 +164,9 @@ export function checkOutBooking(s: HotelData, id: string, endOn?: ISODate): Outc
     const unit = s.cages.find((c) => c.id === current.cageId);
     if (checkOut > current.checkOut && !cageIsFree(s, current.cageId, current.checkOut, checkOut, current.id, placesFor(current, unit))) return { state: s, result: ["cage_taken"] };
   }
-  return { state: withBooking(s, id, (b) => ({ ...b, status: "checked_out", checkOut })), result: [] };
+  if (lateCharge && (chargeIssues(lateCharge).length || lateCharge.amount <= 0)) return { state: s, result: ["charge"] };
+  const extra: Charge[] = lateCharge ? [{ ...lateCharge, label: lateCharge.label.trim(), id: newId() }] : [];
+  return { state: withBooking(s, id, (b) => ({ ...b, status: "checked_out", checkOut, charges: [...b.charges, ...extra] })), result: [] };
 }
 
 /** Changes dates, cage or notes of a stay that exists, under the same rules as a new booking. */
@@ -246,7 +249,8 @@ export const removeCharge = (s: HotelData, bookingId: string, chargeId: string):
 /** What can be wrong with the hotel's business and tax settings. */
 /** layout: dropping cages and rooms while the hotel has more than one unit in use (see canGoUnitless). */
 /** deposit: the deposit percent isn't a whole number from 0 to 100. */
-export type SettingsIssue = "ppn" | "prefix" | "layout" | "deposit";
+/** stayRules: a time, the grace period or the late fee is wrong (see stayRulesIssues for which). */
+export type SettingsIssue = "ppn" | "prefix" | "layout" | "deposit" | "stayRules";
 
 export function settingsIssues(settings: HotelSettings): SettingsIssue[] {
   const issues: SettingsIssue[] = [];
@@ -254,6 +258,7 @@ export function settingsIssues(settings: HotelSettings): SettingsIssue[] {
   if (!Number.isFinite(ppnPercent) || ppnPercent < 0 || ppnPercent > 100) issues.push("ppn");
   if (!settings.invoicePrefix.replace(/[^A-Za-z0-9]/g, "")) issues.push("prefix");
   if (!isValidDepositPercent(settings.payPolicy.depositPercent)) issues.push("deposit");
+  if (stayRulesIssues(settings.stayRules).length) issues.push("stayRules");
   return issues;
 }
 

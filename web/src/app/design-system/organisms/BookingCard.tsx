@@ -1,5 +1,6 @@
-import type { Booking, Cage, Owner, Pet } from "@/app/domain/types";
-import { bookingTotal, formatDate, formatRupiah, nights } from "@/app/domain/logic";
+import type { Booking, Cage, Owner, Pet, StayCounting } from "@/app/domain/types";
+import { bookingTotal, formatDate, formatRupiah, stayDays } from "@/app/domain/logic";
+import { stayCount } from "@/app/i18n/stayWords";
 import { balanceDue } from "@/app/domain/payments";
 import { Link } from "react-router-dom";
 import { formatWhatsapp } from "@/shared/lib/phone";
@@ -23,6 +24,7 @@ export function BookingCard({
   onCheckOut,
   onCancel,
   onNoShow,
+  counting = "nights",
 }: {
   booking: Booking;
   pet?: Pet;
@@ -38,11 +40,13 @@ export function BookingCard({
   onCancel?: () => void;
   /** For a late arrival: the pet never came. */
   onNoShow?: () => void;
+  /** How the hotel counts days (settings.stayRules.counting). */
+  counting?: StayCounting;
 }) {
   const { t, locale } = useAppT();
-  const total = bookingTotal(booking, cage);
-  const balance = balanceDue(booking, cage);
-  const n = nights(booking.checkIn, booking.checkOut);
+  const total = bookingTotal(booking, cage, counting);
+  const balance = balanceDue(booking, cage, counting);
+  const n = stayDays(booking, counting);
   return (
     <article className="ds-booking">
       <Avatar name={pet?.name ?? "?"} species={pet?.species ?? "other"} />
@@ -58,7 +62,7 @@ export function BookingCard({
           {owner?.whatsapp && ` · ${formatWhatsapp(owner.whatsapp)}`}
         </span>
         <span className="ds-booking__meta">
-          {(unitLabel ?? cage?.name ?? "—") && <><b>{unitLabel ?? cage?.name ?? "—"}</b> · </>}{shortDate(booking.checkIn, locale)} → {shortDate(booking.checkOut, locale)} · {t.common.nights(n)}
+          {(unitLabel ?? cage?.name ?? "—") && <><b>{unitLabel ?? cage?.name ?? "—"}</b> · </>}{shortDate(booking.checkIn, locale)} → {shortDate(booking.checkOut, locale)} · {stayCount(t, n, counting)}
         </span>
       </div>
       <div className="ds-booking__money">

@@ -1,5 +1,5 @@
 import { toCsv } from "./csv";
-import { addDays, bookingTotal, dayOf, nights, totalPlaces } from "./logic";
+import { addDays, bookingTotal, countingOf, dayOf, nights, totalPlaces } from "./logic";
 import { paidAmount, signedAmount } from "./payments";
 import { nextMonthStart, reportFor } from "./reports";
 import { taxFor } from "./tax";
@@ -143,7 +143,7 @@ function revenueFor(data: HotelData, month: Month, basis: Basis): Revenue {
   let discounts = 0;
   for (const b of data.bookings) {
     if (b.status !== "checked_out" || monthOf(b.checkOut) !== month) continue;
-    boarding += bookingTotal({ ...b, charges: [] }, cageOf(data, b));
+    boarding += bookingTotal({ ...b, charges: [] }, cageOf(data, b), countingOf(data));
     for (const c of b.charges) {
       if (c.amount > 0) addOns += c.amount;
       else discounts -= c.amount;

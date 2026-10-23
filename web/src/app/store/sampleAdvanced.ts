@@ -4,6 +4,7 @@ import { buildInvoice } from "@/app/domain/invoices";
 import { paidAmount } from "@/app/domain/payments";
 import {
   defaultSettings,
+  defaultStayRules,
   type Booking,
   type BookingSource,
   type Cage,
@@ -70,7 +71,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
   });
 
   const data: HotelData = {
-    version: 6,
+    version: 7,
     hotel: { name: "Kandang Ceria Pet Hotel", city: "Jakarta Selatan", whatsapp: "6281399001122", createdAt: at(addDays(today, -400), 9) },
     settings: {
       ...defaultSettings(),
@@ -79,6 +80,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
       npwp: "01.234.567.8-912.000",
       invoicePrefix: "KCP",
       paymentInstructions: "BCA 5230 118 899 a.n. CV Kandang Ceria · QRIS tersedia di kasir",
+      stayRules: { ...defaultStayRules(true), late: { mode: "per_hour", perHour: 15_000 } },
       tax: { ...defaultSettings().tax, regime: "final_umkm", taxpayer: "other", basis: "cash" },
     },
     cages,

@@ -478,3 +478,39 @@ describe("expenses", () => {
     expect(out.state.expenses).toHaveLength(1);
   });
 });
+
+describe("stay rules in the store", () => {
+  const staying = aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-14", checkOut: "2026-10-16", status: "checked_in" });
+
+  it("checks out with the agreed late fee as a charge, in one step", () => {
+    const { state, result } = checkOutBooking(aSmallHotel({ bookings: [staying] }), "b1", undefined, { label: " Late pick-up fee ", amount: 20_000 });
+    expect(result).toEqual([]);
+    expect(state.bookings[0]).toMatchObject({ status: "checked_out", charges: [{ label: "Late pick-up fee", amount: 20_000 }] });
+  });
+
+  it("refuses a late fee that isn't a positive whole amount, and changes nothing", () => {
+    const start = aSmallHotel({ bookings: [staying] });
+    for (const amount of [0, -5_000, 1.5]) {
+      const { state, result } = checkOutBooking(start, "b1", undefined, { label: "Late", amount });
+      expect(result).toEqual(["charge"]);
+      expect(state).toBe(start);
+    }
+  });
+
+  it("refuses settings with broken stay rules", () => {
+    const start = aSmallHotel();
+    const { state, result } = saveSettings(start, { ...start.settings, stayRules: { ...start.settings.stayRules, dropOffFrom: "21:00", dropOffUntil: "20:00" } });
+    expect(result).toEqual(["stayRules"]);
+    expect(state).toBe(start);
+  });
+
+  it("asks a deposit of the hotel's own total: calendar days count the arrival day", () => {
+    const start = aSmallHotel();
+    const hotel = { ...start, settings: { ...start.settings, payPolicy: { mode: "deposit_first" as const, depositPercent: 50 }, stayRules: { ...start.settings.stayRules, counting: "calendar_days" as const } } };
+    // s1 is Rp50.000 a day; 2 nights is 3 calendar days = Rp150.000, so Rp75.000 is the deposit, and Rp50.000 isn't enough.
+    const paid = (amount: number) => [{ id: "p", at: "2026-10-01T00:00:00.000Z", amount, method: "cash" as const, kind: "deposit" as const, reference: "", note: "" }];
+    const booking = (amount: number) => aBooking("b2", { petId: "p1", cageId: "s1", checkIn: "2026-10-20", checkOut: "2026-10-22", payments: paid(amount) });
+    expect(upsertBooking(hotel, booking(50_000)).state.bookings[0].hold).toBe("deposit");
+    expect(upsertBooking(hotel, booking(75_000)).state.bookings[0].hold).toBeUndefined();
+  });
+});

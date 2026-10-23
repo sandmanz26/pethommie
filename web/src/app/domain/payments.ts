@@ -1,5 +1,5 @@
-import { bookingTotal } from "./logic";
-import type { Booking, Cage, HotelData, Payment } from "./types";
+import { bookingTotal, countingOf } from "./logic";
+import type { Booking, Cage, HotelData, Payment, StayCounting } from "./types";
 
 /** Money for a stay: what was received, what is still owed, and whether it is settled. */
 
@@ -13,13 +13,13 @@ export const paidAmount = (b: Pick<Booking, "payments">) => b.payments.reduce((s
 
 type Priced = Pick<Booking, "checkIn" | "checkOut" | "payments" | "charges"> & Partial<Pick<Booking, "petId" | "companionIds">>;
 
-export function balanceDue(b: Priced, cage: Cage | undefined) {
-  return Math.max(0, bookingTotal(b, cage) - paidAmount(b));
+export function balanceDue(b: Priced, cage: Cage | undefined, counting: StayCounting = "nights") {
+  return Math.max(0, bookingTotal(b, cage, counting) - paidAmount(b));
 }
 
 /** Paid in full, or more. A stay with nothing to pay (no cage on record) counts as paid, not as a debt. */
-export function paymentStatus(b: Priced, cage: Cage | undefined): PaymentStatus {
-  const total = bookingTotal(b, cage);
+export function paymentStatus(b: Priced, cage: Cage | undefined, counting: StayCounting = "nights"): PaymentStatus {
+  const total = bookingTotal(b, cage, counting);
   const paid = paidAmount(b);
   if (paid >= total) return "paid";
   return paid > 0 ? "partial" : "unpaid";
@@ -49,8 +49,8 @@ export function receivables(data: HotelData): Receivable[] {
     const group = booking.status === "checked_out" ? "left" : booking.status === "checked_in" ? "staying" : booking.status === "booked" ? "upcoming" : null;
     if (!group) continue;
     const cage = data.cages.find((c) => c.id === booking.cageId);
-    const balance = balanceDue(booking, cage);
-    if (balance > 0) rows.push({ booking, group, total: bookingTotal(booking, cage), paid: paidAmount(booking), balance });
+    const balance = balanceDue(booking, cage, countingOf(data));
+    if (balance > 0) rows.push({ booking, group, total: bookingTotal(booking, cage, countingOf(data)), paid: paidAmount(booking), balance });
   }
   return rows.sort((a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group) || a.booking.checkOut.localeCompare(b.booking.checkOut));
 }

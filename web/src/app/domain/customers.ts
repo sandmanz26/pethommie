@@ -1,4 +1,4 @@
-import { bookingTotal, nights } from "./logic";
+import { bookingTotal, countingOf, nights } from "./logic";
 import { balanceDue, paidAmount } from "./payments";
 import type { Booking, HotelData, ISODate, Owner, Pet } from "./types";
 
@@ -33,7 +33,7 @@ export function customerOf(data: HotelData, owner: Owner): Customer {
     lastCheckOut: bookings.reduce<ISODate | null>((last, b) => (last === null || b.checkOut > last ? b.checkOut : last), null),
     firstCheckIn: bookings.reduce<ISODate | null>((first, b) => (first === null || b.checkIn < first ? b.checkIn : first), null),
     paid: bookings.reduce((sum, b) => sum + paidAmount(b), 0),
-    owed: bookings.filter((b) => b.status !== "booked").reduce((sum, b) => sum + balanceDue(b, cage(b)), 0),
+    owed: bookings.filter((b) => b.status !== "booked").reduce((sum, b) => sum + balanceDue(b, cage(b), countingOf(data)), 0),
   };
 }
 
@@ -57,4 +57,4 @@ export function matchesCustomer(c: Customer, query: string): boolean {
 }
 
 /** A stay's total, for lists that show it beside what was paid. */
-export const stayTotal = (data: HotelData, b: Booking) => bookingTotal(b, data.cages.find((c) => c.id === b.cageId));
+export const stayTotal = (data: HotelData, b: Booking) => bookingTotal(b, data.cages.find((c) => c.id === b.cageId), countingOf(data));

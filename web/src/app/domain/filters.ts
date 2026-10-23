@@ -1,4 +1,4 @@
-import { addDays, isLive, involvesPet, stayPetIds, vaccineState } from "./logic";
+import { addDays, countingOf, isLive, involvesPet, stayPetIds, vaccineState } from "./logic";
 import { paymentStatus, type PaymentStatus } from "./payments";
 import type { Customer } from "./customers";
 import type { Booking, BookingSource, HotelData, ISODate, Pet, Species } from "./types";
@@ -62,7 +62,7 @@ export function filterBookings(data: HotelData, bookings: Booking[], f: BookingF
   return bookings.filter((b) => {
     if (f.unitId !== "all" && b.cageId !== f.unitId) return false;
     if (f.source !== "all" && b.source !== f.source) return false;
-    if (f.payment !== "all" && paymentStatus(b, data.cages.find((c) => c.id === b.cageId)) !== f.payment) return false;
+    if (f.payment !== "all" && paymentStatus(b, data.cages.find((c) => c.id === b.cageId), countingOf(data)) !== f.payment) return false;
     const pets = stayPetIds(b).map((id) => data.pets.find((p) => p.id === id)).filter((p): p is Pet => Boolean(p));
     if (f.species !== "all" && !pets.some((p) => p.species === f.species)) return false;
     if (!needle) return true;

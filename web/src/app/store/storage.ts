@@ -1,4 +1,4 @@
-import { defaultSettings, emptyData, type HotelData } from "@/app/domain/types";
+import { defaultSettings, defaultStayRules, emptyData, type HotelData } from "@/app/domain/types";
 
 /**
  * Where one hotel's data lives. Today: this browser's localStorage, one document per account.
@@ -19,7 +19,7 @@ export const demoDataKeyFor = (demoId: string) => `pethommie.demo.v1.${demoId}`;
  * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
  * one, and a test with an old document. Older documents are upgraded on load, never discarded.
  */
-const CURRENT_VERSION = 6;
+const CURRENT_VERSION = 7;
 
 export type StoredProblem = "corrupt" | "newer";
 export type Parsed = { data: HotelData; problem: StoredProblem | null; migratedFrom?: number };
@@ -86,7 +86,8 @@ function isV5(x: Record<string, unknown>): boolean {
 
 const HOLDS = ["request", "deposit"];
 
-function isHotelData(x: Record<string, unknown>): boolean {
+/** The shape version 6 had: booking and payment rules, but no stay rules (how days are counted). */
+function isV6(x: Record<string, unknown>): boolean {
   if (!isV5(x) || !isObject(x.settings)) return false;
   const policy = x.settings.payPolicy;
   return (
@@ -94,6 +95,23 @@ function isHotelData(x: Record<string, unknown>): boolean {
     ["flexible", "deposit_first", "check_first"].includes(policy.mode as string) &&
     typeof policy.depositPercent === "number" &&
     (x.bookings as Record<string, unknown>[]).every((b) => b.hold === undefined || HOLDS.includes(b.hold as string))
+  );
+}
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function isHotelData(x: Record<string, unknown>): boolean {
+  if (!isV6(x) || !isObject(x.settings)) return false;
+  const r = x.settings.stayRules;
+  return (
+    isObject(r) &&
+    typeof r.configured === "boolean" &&
+    ["nights", "calendar_days", "hours24"].includes(r.counting as string) &&
+    [r.dropOffFrom, r.dropOffUntil, r.pickUpUntil].every((t) => typeof t === "string" && TIME.test(t)) &&
+    typeof r.graceMinutes === "number" &&
+    isObject(r.late) &&
+    ["none", "per_hour", "half_day", "full_day"].includes(r.late.mode as string) &&
+    typeof r.late.perHour === "number"
   );
 }
 
@@ -155,6 +173,15 @@ function migrateV5(doc: Record<string, unknown>): Record<string, unknown> {
 }
 
 /**
+ * v7 adds how the hotel counts days and charges a late pick-up. A hotel that is already set up keeps counting per
+ * night with no late fee, so every total stays as it was, and counts as configured so it can keep booking. A
+ * document without a hotel yet sets its rules after onboarding.
+ */
+function migrateV6(doc: Record<string, unknown>): Record<string, unknown> {
+  return { ...doc, version: 7, settings: { ...(doc.settings as Record<string, unknown>), stayRules: defaultStayRules(doc.hotel !== null) } };
+}
+
+/**
  * Reads what was stored. Never throws: anything unreadable comes back as empty data plus the reason,
  * so the caller can keep the original before it is overwritten. Older versions are upgraded.
  */
@@ -190,6 +217,10 @@ export function parseStored(raw: string | null): Parsed {
   if (doc.version === 5 && isV5(doc)) {
     doc = migrateV5(doc);
     migratedFrom ??= 5;
+  }
+  if (doc.version === 6 && isV6(doc)) {
+    doc = migrateV6(doc);
+    migratedFrom ??= 6;
   }
   if (doc.version !== CURRENT_VERSION || !isHotelData(doc)) return { data: emptyData(), problem: "corrupt" };
   return { data: doc as unknown as HotelData, problem: null, migratedFrom };
