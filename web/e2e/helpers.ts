@@ -16,7 +16,7 @@ export async function signInWithSampleData(page: Page, locale: 'en' | 'id' = 'en
   if (mode === 'advanced') {
     // The switch is in Settings (on a phone also under More).
     await page.goto('/app/settings')
-    await page.getByRole('tab', { name: /^(advanced|lengkap)$/i }).first().click()
+    await page.getByRole('button', { name: /^(switch to advanced|pindah ke lengkap)$/i }).first().click()
     await page.goto('/app')
     await page.getByRole('heading', { level: 1 }).first().waitFor()
   }

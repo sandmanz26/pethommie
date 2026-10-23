@@ -16,7 +16,7 @@
   scrollbar-width: thin;
 }
 .ds-sidenav > * { flex-shrink: 0; }
-.ds-sidenav__brand { display: flex; gap: 10px; align-items: center; padding: 0 6px; }
+.ds-sidenav__brand { display: flex; gap: 10px; align-items: center; padding: 0 6px; color: inherit; text-decoration: none; }
 .ds-sidenav__brand b { display: block; font-family: var(--font-display); font-size: 1.1em; }
 .ds-sidenav__brand span { display: block; font-size: 0.82em; color: var(--ink-soft); max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-sidenav__links { display: grid; gap: 2px; }

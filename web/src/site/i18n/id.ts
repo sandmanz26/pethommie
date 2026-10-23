@@ -20,7 +20,6 @@ export const id: Messages = {
       { href: "#faq", label: "FAQ" },
     ],
     login: "Masuk",
-    tryNow: { href: "/app/try", label: "Coba demo", short: "Demo" },
     cta: "Coba gratis",
     languageLabel: "Bahasa",
   },

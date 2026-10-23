@@ -168,7 +168,7 @@ export const appId: AppMessages = {
       noneLead: "Tanpa kandang, tanpa kamar: anabul menginap bersama. Atur berapa anabul yang bisa diterima sekaligus dan harga per anabul per malam.",
       capacity: "Anabul sekaligus",
       roomsLead: "Kamar atau area tempat beberapa anabul menginap bersama. Atur berapa anabul per ruang dan harga per anabul per malam.",
-      roomName: "Nama",
+      roomName: "Nama ruangan",
       places: "Tempat",
       pricePerPet: "Harga per anabul per malam",
       addRoom: "Tambah ruang",

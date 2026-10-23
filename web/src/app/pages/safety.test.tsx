@@ -105,7 +105,7 @@ describe("money after a cancellation, and too much money", () => {
     const panel = within(await screen.findByRole("region", { name: /payments/i }));
     expect(panel.getByText(/30\.000 more than the total was paid/)).toBeInTheDocument();
     await user.click(panel.getByRole("button", { name: "Give it back" }));
-    expect(panel.getByLabelText(/amount/i)).toHaveValue("30000");
+    expect(panel.getByLabelText(/amount/i)).toHaveValue("30.000");
   });
 });
 

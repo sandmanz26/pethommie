@@ -3,6 +3,7 @@ import { busiestNight, formatRupiah, poolCage, poolUnit, todayISO } from "@/app/
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -49,7 +50,7 @@ export function CapacityPage() {
             <Input name="capacity" inputMode="numeric" value={capacity} onChange={(e) => (setCapacity(e.target.value), setSaved(false))} />
           </Field>
           <Field label={p.price} hint={formatRupiah(draft.price, locale)} error={priceError}>
-            <Input name="price" inputMode="numeric" value={price} onChange={(e) => (setPrice(e.target.value), setSaved(false))} />
+            <MoneyInput name="price" value={price} onChange={(e) => (setPrice(e.target.value), setSaved(false))} />
           </Field>
         </div>
         {saved && <Alert tone="ok">{p.saved}</Alert>}

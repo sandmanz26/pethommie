@@ -103,12 +103,14 @@
 .pg-ceiling--near .pg-ceiling__bar i { background: var(--warn); }
 .pg-ceiling--over .pg-ceiling__bar i { background: var(--danger); }
 
-/* Onboarding, shared rooms: name, places, price per pet, remove. */
-.pg-flow__size.pg-flow__room { grid-template-areas: none; grid-template-columns: 1fr auto; align-items: end; }
-.pg-flow__size.pg-flow__room > * { grid-area: auto; }
-@media (min-width: 600px) {
-  .pg-flow__size.pg-flow__room { grid-template-columns: 1fr auto 150px auto; }
-}
+/* A shared room: its name gets the whole first line (names can be long), then places, price and remove. */
+.pg-flow__size.pg-flow__room { grid-template-areas: "name name" "stepper price"; grid-template-columns: auto 1fr; align-items: end; }
+.pg-flow__room > .ds-field:first-child { grid-area: name; }
+.pg-flow__room > .pg-flow__places { grid-area: stepper; }
+.pg-flow__room > .ds-field:last-of-type { grid-area: price; }
+.pg-flow__room > .ds-btn { position: absolute; top: 10px; right: 10px; }
+.pg-flow__room { position: relative; padding-top: 14px; }
+.pg-flow__room > .ds-field:first-child { padding-right: 44px; }
 .pg-toolbar__count { align-self: center; color: var(--ink-soft); font-size: 0.85em; }
 
 /* ---------- Reports & dashboard ---------- */

@@ -7,6 +7,7 @@ import { useAppT } from "@/app/i18n/useAppT";
 import { Badge } from "@/app/design-system/atoms/Badge";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Checkbox } from "@/app/design-system/atoms/Checkbox";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
@@ -132,7 +133,7 @@ export function ExpensesPage() {
               <Input type="date" value={draft.date} onChange={(e) => set({ date: e.target.value })} />
             </Field>
             <Field label={x.amount} error={errors.amount}>
-              <Input value={draft.amount} onChange={(e) => set({ amount: e.target.value })} inputMode="numeric" placeholder="0" />
+              <MoneyInput value={draft.amount} onChange={(e) => set({ amount: e.target.value })} placeholder="0" />
             </Field>
           </div>
           <div className="ds-form__row">

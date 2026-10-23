@@ -14,9 +14,9 @@ export function FocusLayout({ children, aside, art }: { children: ReactNode; asi
     <div className={`app-root tpl-focus${art ? " tpl-focus--art" : ""}`}>
       {art && <img className="tpl-focus__art" src={art.src} srcSet={art.srcSet} sizes="100vw" width={art.width} height={art.height} alt="" decoding="async" />}
       <header className="tpl-focus__bar">
-        <span className="tpl-focus__brand">
+        <a className="tpl-focus__brand" href="/">
           <Hanko size={28} /> Pethommie
-        </span>
+        </a>
         <LanguageSwitch label={t.settings.language} />
       </header>
       <main className="tpl-focus__main">

@@ -14,13 +14,14 @@ export function AppNav({ hotelName, onLogout, labels = {} }: { hotelName: string
   return (
     <>
       <aside className="ds-sidenav">
-        <div className="ds-sidenav__brand">
+        {/* The logo goes home, to the website, as logos do. */}
+        <a className="ds-sidenav__brand" href="/">
           <Hanko size={32} />
           <div>
             <b>Pethommie</b>
             <span>{hotelName}</span>
           </div>
-        </div>
+        </a>
         <Button to="/app/bookings/new" icon="plus" block>
           {t.nav.newBooking}
         </Button>

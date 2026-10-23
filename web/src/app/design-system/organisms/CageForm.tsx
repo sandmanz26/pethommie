@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Cage, CageSize } from "@/app/domain/types";
 import { SIZE_ORDER } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -81,7 +82,7 @@ export function CageForm({
         )}
       </div>
       <Field label={shared ? c.priceShared : c.price} error={errors.price}>
-        <Input value={price} onChange={(e) => (setPrice(e.target.value), setErrors((x) => without(x, "price")))} inputMode="numeric" />
+        <MoneyInput value={price} onChange={(e) => (setPrice(e.target.value), setErrors((x) => without(x, "price")))} />
       </Field>
       <div className="ds-form__actions">
         {onDelete && (

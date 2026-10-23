@@ -185,7 +185,8 @@ test.describe('after the film', () => {
   test('Try now and Log in are separate ways in', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('.topbar a[href="/app/login"]')).toBeVisible()
-    await page.locator('.topbar a[href="/app/try"]').click()
+    await expect(page.locator('.topbar a[href="/app/try"]')).toHaveCount(0)
+    await page.locator('.hero__try a').click()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(/hotel contoh|sample hotel/i)
     await expect(page.getByRole('button', { name: /buka demo ini|open this demo/i })).toHaveCount(3)
   })

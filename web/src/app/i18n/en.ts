@@ -167,7 +167,7 @@ export const appEn = {
       noneLead: "No cages, no rooms: pets stay together. Set how many pets you take at once and the price per pet per night.",
       capacity: "Pets at once",
       roomsLead: "Rooms or areas where several pets stay together. Set how many pets each one takes and the price per pet per night.",
-      roomName: "Name",
+      roomName: "Room name",
       places: "Places",
       pricePerPet: "Price per pet per night",
       addRoom: "Add a room",

@@ -4,8 +4,6 @@ import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Icon } from "@/app/design-system/atoms/Icon";
 import { NavIcon } from "@/app/design-system/atoms/NavIcon";
-import { Heading } from "@/app/design-system/atoms/Text";
-import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { moreItems } from "@/app/design-system/organisms/navItems";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { Link } from "react-router-dom";
@@ -22,10 +20,6 @@ export function MorePage() {
   return (
     <>
       <PageHeader title={t.more.title} lead={t.more.lead} />
-      <section className="pg-section">
-        <Heading level={2} size="md">{t.mode.label}</Heading>
-        <ModeSwitch lead />
-      </section>
       <nav className="pg-morelist" aria-label={t.more.title}>
         {moreItems(advanced).map((i) => (
           <Link key={i.to} to={i.to} className="pg-morelist__item">

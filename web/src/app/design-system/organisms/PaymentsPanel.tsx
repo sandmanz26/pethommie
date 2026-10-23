@@ -5,6 +5,7 @@ import { bookingTotal, formatRupiah, timeOf, dayOf, formatDate } from "@/app/dom
 import { balanceDue, paidAmount, paymentStatus, type PaymentIssue } from "@/app/domain/payments";
 import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
 import { Button } from "@/app/design-system/atoms/Button";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -140,7 +141,7 @@ export function PaymentsPanel({
         <form ref={ref} className="ds-form" onSubmit={submit} noValidate aria-label={p.add}>
           <div className="ds-form__row">
             <Field label={p.amount} error={errors.amount}>
-              <Input value={amount} onChange={(e) => (setAmount(e.target.value), setErrors((x) => ({ ...x, amount: undefined })))} inputMode="numeric" placeholder="0" />
+              <MoneyInput value={amount} onChange={(e) => (setAmount(e.target.value), setErrors((x) => ({ ...x, amount: undefined })))} placeholder="0" />
             </Field>
             <Field label={p.method}>
               <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>

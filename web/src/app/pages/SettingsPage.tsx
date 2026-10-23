@@ -15,7 +15,6 @@ import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { Checkbox } from "@/app/design-system/atoms/Checkbox";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
-import { ModeSwitch } from "@/app/design-system/molecules/ModeSwitch";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { UpgradeCard } from "@/app/design-system/organisms/UpgradeCard";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
@@ -296,11 +295,6 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="ds-form__section pg-settings">
-        <Heading level={2} size="md">{t.mode.label}</Heading>
-        <ModeSwitch lead />
-        <Muted>{t.mode.note}</Muted>
-      </section>
 
       <section className="ds-form__section pg-settings">
         <Heading level={2} size="md">{t.settings.language}</Heading>

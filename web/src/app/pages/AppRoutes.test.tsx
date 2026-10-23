@@ -111,7 +111,7 @@ describe("a signed-in owner's first visit", () => {
     await user.click(await screen.findByRole("button", { name: /start setup/i }));
     await user.click(screen.getByRole("button", { name: /next: your cages/i }));
     await user.click(screen.getByRole("tab", { name: "Shared rooms, no cages" }));
-    const [first, second] = screen.getAllByLabelText(/^name$/i);
+    const [first, second] = screen.getAllByLabelText(/^room name$/i);
     await user.clear(second);
     await user.type(second, first.getAttribute("value")!.toUpperCase());
     await user.click(screen.getByRole("button", { name: /finish setup/i }));
@@ -140,7 +140,7 @@ describe("a signed-in owner's first visit", () => {
     await user.clear(small);
     await user.type(small, "65000");
     await user.click(screen.getByRole("tab", { name: /small hotel/i }));
-    expect(screen.getAllByLabelText(/price per night/i)[0]).toHaveValue("65000");
+    expect(screen.getAllByLabelText(/price per night/i)[0]).toHaveValue("65.000");
   });
 });
 

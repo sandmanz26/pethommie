@@ -10,6 +10,7 @@ import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Icon } from "@/app/design-system/atoms/Icon";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Illustration } from "@/app/design-system/atoms/Illustration";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
@@ -237,7 +238,7 @@ export function OnboardingPage() {
                     <Input name="pool-capacity" inputMode="numeric" value={pool.capacity || ""} onChange={(e) => setPool({ ...pool, capacity: digits(e.target.value) })} />
                   </Field>
                   <Field label={o.cages.pricePerPet} hint={formatRupiah(pool.price, locale)} error={showCages ? priceText(poolCheck.price) : undefined}>
-                    <Input name="pool-price" inputMode="numeric" value={pool.price || ""} onChange={(e) => setPool({ ...pool, price: digits(e.target.value) })} />
+                    <MoneyInput name="pool-price" value={pool.price || ""} onChange={(e) => setPool({ ...pool, price: digits(e.target.value) })} />
                   </Field>
                 </div>
               </div>
@@ -266,7 +267,7 @@ export function OnboardingPage() {
                       )}
                     </div>
                     <Field label={o.cages.pricePerPet} hint={formatRupiah(r.price, locale)} error={showCages ? priceText(roomCheck.rooms[i]?.price) : undefined}>
-                      <Input name={`room-${i}-price`} inputMode="numeric" value={r.price || ""} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, price: digits(e.target.value) } : x)))} />
+                      <MoneyInput name={`room-${i}-price`} value={r.price || ""} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, price: digits(e.target.value) } : x)))} />
                     </Field>
                     {rooms.length > 1 && (
                       <Button variant="ghost" size="sm" icon="trash" aria-label={o.cages.removeRoom(r.name)} onClick={() => setRooms(rooms.filter((_, k) => k !== i))} />
@@ -307,7 +308,7 @@ export function OnboardingPage() {
                       onChange={(n) => setSpec({ ...spec, [s]: { ...spec[s], count: n } })}
                     />
                     <Field label={o.cages.price} hint={formatRupiah(spec[s].price, locale)} error={showCages ? priceText(cageCheck.price?.[s]) : undefined}>
-                      <Input name={`price-${s}`} inputMode="numeric" value={spec[s].price || ""} onChange={(e) => setSpec({ ...spec, [s]: { ...spec[s], price: digits(e.target.value) } })} />
+                      <MoneyInput name={`price-${s}`} value={spec[s].price || ""} onChange={(e) => setSpec({ ...spec, [s]: { ...spec[s], price: digits(e.target.value) } })} />
                     </Field>
                   </div>
                 ))}

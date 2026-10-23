@@ -3,6 +3,7 @@ import type { Booking, Cage } from "@/app/domain/types";
 import { CHARGE_SUGGESTIONS, MAX_LABEL, type ChargeIssue } from "@/app/domain/charges";
 import { bookingTotal, formatRupiah, nightlyRate, nights } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
@@ -95,7 +96,7 @@ export function ChargesPanel({
               <Input list="charge-suggestions" value={label} onChange={(e) => (setLabel(e.target.value), setErrors({}))} placeholder={c.labelPh} />
             </Field>
             <Field label={c.amount} error={errors.amount}>
-              <Input value={amount} onChange={(e) => (setAmount(e.target.value), setErrors({}))} inputMode="numeric" placeholder="0" />
+              <MoneyInput value={amount} onChange={(e) => (setAmount(e.target.value), setErrors({}))} placeholder="0" />
             </Field>
           </div>
           <datalist id="charge-suggestions">

@@ -5,7 +5,8 @@ import type { Booking, CancelReason, PaymentMethod } from "@/app/domain/types";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
-import { Input, Select } from "@/app/design-system/atoms/Input";
+import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
+import { Select } from "@/app/design-system/atoms/Input";
 import { Field } from "@/app/design-system/molecules/Field";
 import { moneyError } from "@/app/forms/messages";
 import { parseRupiah } from "@/shared/lib/validate";
@@ -88,7 +89,7 @@ export function useCancelBooking() {
           )}
           {money === "part" && paid > 0 && (
             <Field label={c.amount} error={error}>
-              <Input value={part} onChange={(e) => (setPart(e.target.value), setError(undefined))} inputMode="numeric" placeholder="0" />
+              <MoneyInput value={part} onChange={(e) => (setPart(e.target.value), setError(undefined))} placeholder="0" />
             </Field>
           )}
           {refund > 0 && (

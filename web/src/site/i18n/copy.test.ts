@@ -18,7 +18,6 @@ describe("site copy", () => {
 
   it("sends Try now to the demo screen, apart from logging in and signing up", () => {
     for (const copy of [en, id]) {
-      expect(copy.nav.tryNow.href).toBe("/app/try");
       expect(copy.hero.tryNow.href).toBe("/app/try");
       expect(copy.hero.primaryCta.href).toBe("/app/register");
     }

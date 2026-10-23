@@ -102,14 +102,15 @@ describe("money panels", () => {
   const cage = aCage("c1", "S", 100_000);
   const booking = aBooking("b1", { petId: "p1", cageId: "c1", checkIn: today, checkOut: addDays(today, 2), status: "checked_in" });
 
-  it("an add-on with letters in its amount is not added", async () => {
+  it("an add-on amount takes digits only, grouped as typed, and none at all is not added", async () => {
     const onAdd = vi.fn(() => []);
     const user = show(<ChargesPanel booking={booking} cage={cage} onAdd={onAdd} />);
     const form = within(screen.getByRole("form", { name: /add-ons/i }));
     await user.type(form.getByLabelText("What for"), "Grooming");
-    await user.type(form.getByLabelText("Amount (Rp)"), "50rb");
+    await user.type(form.getByLabelText("Amount (Rp)"), "rb");
+    expect(form.getByLabelText("Amount (Rp)")).toHaveValue("");
     await user.click(form.getByRole("button", { name: "Add" }));
-    expect(form.getByRole("alert")).toHaveTextContent("Use whole rupiah, digits only");
+    expect(form.getByRole("alert")).toBeInTheDocument();
     expect(form.getByLabelText("Amount (Rp)")).toHaveFocus();
     expect(onAdd).not.toHaveBeenCalled();
 

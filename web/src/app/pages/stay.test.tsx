@@ -96,7 +96,7 @@ describe("payments", () => {
     const user = await open(stay({ payments: [{ id: "d", at: new Date().toISOString(), amount: 50_000, method: "cash", kind: "payment" as const, reference: "", note: "" }] }));
     const panel = await screen.findByRole("region", { name: /payments/i });
     await user.click(within(panel).getByRole("button", { name: /fill in the balance/i }));
-    expect(within(panel).getByLabelText(/amount/i)).toHaveValue("100000");
+    expect(within(panel).getByLabelText(/amount/i)).toHaveValue("100.000");
     await user.click(within(panel).getByRole("button", { name: /save payment/i }));
     expect(within(panel).getByText("Paid in full")).toBeInTheDocument();
     expect(within(panel).queryByRole("button", { name: /fill in the balance/i })).not.toBeInTheDocument();

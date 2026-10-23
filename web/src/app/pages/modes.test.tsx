@@ -39,7 +39,7 @@ const sidebar = () => within(screen.getByRole("complementary"));
 /** Switches to Advanced the way a person would on a wide screen: from Settings. */
 async function toAdvanced(user: ReturnType<typeof userEvent.setup>) {
   await user.click(sidebar().getByRole("link", { name: "Settings" }));
-  await user.click(within(await screen.findByRole("main")).getByRole("tab", { name: "Advanced" }));
+  await user.click(within(await screen.findByRole("main")).getByRole("button", { name: "Switch to Advanced" }));
 }
 
 describe("simple and advanced mode", () => {
@@ -76,7 +76,9 @@ describe("simple and advanced mode", () => {
     await user.click(tabs.getByRole("link", { name: "More" }));
     const more = within(await screen.findByRole("navigation", { name: "More" }));
     expect(more.getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Reports", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
-    await user.click(screen.getAllByRole("tab", { name: "Advanced" })[0]);
+    await user.click(sidebar().getByRole("link", { name: "Settings" }));
+    await user.click(await screen.findByRole("button", { name: "Switch to Advanced" }));
+    await user.click(tabs.getByRole("link", { name: "More" }));
     expect(within(screen.getByRole("navigation", { name: "More" })).getAllByRole("link").map((l) => l.textContent)).toEqual(["Dashboard", "Customers", "Payments", "Transactions", "Expenses", "Invoices", "Finance", "Reports", "Tax", "Cages", "Booking link", "Settings", "Help", "Back to website"]);
   });
 
@@ -92,12 +94,11 @@ describe("simple and advanced mode", () => {
     expect(screen.queryByRole("region", { name: /switch to advanced/i })).not.toBeInTheDocument();
   });
 
-  it("can be switched in Settings too, and says what each one is", async () => {
-    const user = await open("/app/settings");
+  it("has no Simple/Advanced switch in Settings or More: the mode comes with the hotel, upgrade is one card", async () => {
+    await open("/app/settings");
     const main = within(await screen.findByRole("main"));
-    expect(main.getByText(/just what you need every day/i)).toBeInTheDocument();
-    await user.click(main.getByRole("tab", { name: "Advanced" }));
-    expect(main.getByText(/customers, payments, invoices, tax and every option/i)).toBeInTheDocument();
+    expect(main.queryByRole("tab", { name: "Advanced" })).toBeNull();
+    expect(main.getByRole("button", { name: "Switch to Advanced" })).toBeInTheDocument();
   });
 });
 

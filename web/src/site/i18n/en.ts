@@ -25,7 +25,6 @@ export const en = {
       { href: "#faq", label: "FAQ" },
     ],
     login: "Log in",
-    tryNow: { href: "/app/try", label: "Try now", short: "Demo" },
     cta: "Try it free",
     languageLabel: "Language",
   },
