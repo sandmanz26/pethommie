@@ -70,7 +70,7 @@ export function dashboardFor(data: HotelData, today: ISODate): Dashboard {
   const owedRows = receivables(data);
   const soon = addDays(today, 7);
   const arrivingSoon = data.bookings
-    .filter((b) => holdsCage(b) && b.status === "booked" && b.checkIn >= today && b.checkIn < soon)
+    .filter((b) => b.status === "booked" && b.checkIn >= today && b.checkIn < soon)
     .sort((a, b) => a.checkIn.localeCompare(b.checkIn));
   const watched = [...board.inHouse, ...board.lateArrivals, ...arrivingSoon];
   const petIds = [...new Set(watched.flatMap(stayPetIds))];

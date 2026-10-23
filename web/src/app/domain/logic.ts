@@ -43,9 +43,17 @@ export function nights(checkIn: ISODate, checkOut: ISODate): number {
 
 // ---------- availability ----------
 
-/** A booking holds its cage from check-in night up to (not including) check-out day. */
-export function holdsCage(b: Booking) {
+/** A stay that is still on: booked (confirmed or not yet) or staying. */
+export function isLive(b: Pick<Booking, "status">) {
   return b.status === "booked" || b.status === "checked_in";
+}
+
+/**
+ * A booking holds its cage from check-in night up to (not including) check-out day. A request (hold "request") holds
+ * nothing until the hotel confirms the slot; one waiting for its deposit does hold it.
+ */
+export function holdsCage(b: Pick<Booking, "status" | "hold">) {
+  return isLive(b) && b.hold !== "request";
 }
 
 export function overlaps(aIn: ISODate, aOut: ISODate, bIn: ISODate, bOut: ISODate) {
@@ -199,7 +207,8 @@ export function vaccineState(pet: Pet, on: ISODate): VaccineState {
 // ---------- today board ----------
 
 export function todayBoard(data: HotelData, today: ISODate) {
-  const live = data.bookings.filter(holdsCage);
+  // Requests and stays waiting for a deposit still arrive on the board (with their badge), though a request holds no place.
+  const live = data.bookings.filter(isLive);
   return {
     arriving: live.filter((b) => b.status === "booked" && b.checkIn === today),
     lateArrivals: live.filter((b) => b.status === "booked" && b.checkIn < today),

@@ -1,4 +1,4 @@
-import { cageIsFree, holdsCage, involvesPet, overlaps, placesFor, stayPetIds } from "./logic";
+import { cageIsFree, holdsCage, involvesPet, isLive, overlaps, placesFor, stayPetIds } from "./logic";
 import type { Booking, BookingStatus, HotelData, ISODate } from "./types";
 
 /**
@@ -37,8 +37,8 @@ export function bookingIssues(data: HotelData, b: Booking): BookingIssue[] {
   // Companions share the cage: other pets of the same owner, each listed once.
   const bad = b.companionIds.some((id, i) => id === b.petId || b.companionIds.indexOf(id) !== i || data.pets.find((p) => p.id === id)?.ownerId !== primary?.ownerId);
   if (bad) result.push("companion");
-  // A pet can't be in two places: none of the pets may already be in another live stay on those nights.
-  if (holdsCage(b) && datesAreReal(b) && data.bookings.some((o) => o.id !== b.id && holdsCage(o) && overlaps(b.checkIn, b.checkOut, o.checkIn, o.checkOut) && stayPetIds(b).some((id) => involvesPet(o, id)))) {
+  // A pet can't be in two places (a request counts, as it is still on): none of the pets may already be in another live stay on those nights.
+  if (isLive(b) && datesAreReal(b) && data.bookings.some((o) => o.id !== b.id && isLive(o) && overlaps(b.checkIn, b.checkOut, o.checkIn, o.checkOut) && stayPetIds(b).some((id) => involvesPet(o, id)))) {
     result.push("pet_busy");
   }
   return result;
@@ -58,7 +58,7 @@ export function canTransition(from: BookingStatus, to: BookingStatus) {
 
 /** A cage with a pending or current stay can't be removed; finished stays don't block it. */
 export function cageCanBeRemoved(data: HotelData, cageId: string) {
-  return !data.bookings.some((b) => b.cageId === cageId && holdsCage(b));
+  return !data.bookings.some((b) => b.cageId === cageId && isLive(b));
 }
 
 export type BookingPatch = Partial<Pick<Booking, "checkIn" | "checkOut" | "cageId" | "notes" | "companionIds">>;

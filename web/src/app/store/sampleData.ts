@@ -128,7 +128,7 @@ function simpleSample(): HotelData {
   ];
   const reportsSent: ReportSent[] = [{ bookingId: mochi.id, date: yesterday, at: at(yesterday, 18, 0) }];
   const data: HotelData = {
-    version: 5,
+    version: 6,
     hotel: { name: "Rumah Meong Bintaro", city: "South Tangerang", whatsapp: "6281200001111", createdAt: new Date().toISOString() },
     settings: {
       ...defaultSettings(),

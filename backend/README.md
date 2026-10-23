@@ -13,6 +13,8 @@ supabase/migrations/   numbered SQL files, applied in order. Never edit one that
   0004_rates_cancellations_archive_expenses.sql  bookings.rate and .cancel_reason (set exactly when cancelled),
                                                  cages.archived (a trigger refuses stays in an archived unit),
                                                  the expenses table
+  0005_booking_holds.sql                         bookings.hold ('request' or 'deposit', only while booked); the
+                                                 capacity trigger leaves requests out (they hold no place)
 ```
 
 The migrations are tested without any database installed: `cd web && npm test` runs it on PGlite (Postgres compiled to

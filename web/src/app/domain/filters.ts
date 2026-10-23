@@ -1,4 +1,4 @@
-import { addDays, holdsCage, involvesPet, stayPetIds, vaccineState } from "./logic";
+import { addDays, isLive, involvesPet, stayPetIds, vaccineState } from "./logic";
 import { paymentStatus, type PaymentStatus } from "./payments";
 import type { Customer } from "./customers";
 import type { Booking, BookingSource, HotelData, ISODate, Pet, Species } from "./types";
@@ -14,7 +14,7 @@ export type PetStay = { kind: "staying"; booking: Booking } | { kind: "arriving"
 export const ARRIVING_DAYS = 7;
 
 export function petStay(data: HotelData, petId: string, today: ISODate): PetStay {
-  const live = data.bookings.filter((b) => holdsCage(b) && involvesPet(b, petId));
+  const live = data.bookings.filter((b) => isLive(b) && involvesPet(b, petId));
   const staying = live.find((b) => b.status === "checked_in");
   if (staying) return { kind: "staying", booking: staying };
   const next = live

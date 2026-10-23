@@ -66,6 +66,7 @@
 /* ---------- Booking page ---------- */
 .pg-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 18px; }
 .pg-summary > p { flex-basis: 100%; margin: 0; }
+.pg-hold { display: grid; gap: 10px; margin-bottom: 18px; }
 
 /* ---------- More ---------- */
 .pg-morelist { display: grid; gap: 8px; margin-top: 18px; }

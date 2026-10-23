@@ -70,7 +70,7 @@ export function advancedSample(today: ISODate = todayISO(), seed = 20261020): Ho
   });
 
   const data: HotelData = {
-    version: 5,
+    version: 6,
     hotel: { name: "Kandang Ceria Pet Hotel", city: "Jakarta Selatan", whatsapp: "6281399001122", createdAt: at(addDays(today, -400), 9) },
     settings: {
       ...defaultSettings(),

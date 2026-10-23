@@ -4,12 +4,10 @@ import { balanceDue } from "@/app/domain/payments";
 import { Link } from "react-router-dom";
 import { formatWhatsapp } from "@/shared/lib/phone";
 import { Avatar } from "@/app/design-system/atoms/Avatar";
-import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
+import { StatusBadge } from "@/app/design-system/molecules/StatusBadge";
 import { Button } from "@/app/design-system/atoms/Button";
 import { useAppT } from "@/app/i18n/useAppT";
 import "./organisms.css";
-
-const statusTone: Record<Booking["status"], Tone> = { booked: "info", checked_in: "ok", checked_out: "neutral", cancelled: "danger" };
 
 const shortDate = (iso: string, locale: string) => formatDate(iso, locale, { day: "numeric", month: "short" });
 
@@ -53,7 +51,7 @@ export function BookingCard({
           <Link className="ds-booking__name" to={`/app/bookings/${booking.id}`}>
             {names || pet?.name || "—"}
           </Link>
-          <Badge tone={statusTone[booking.status]}>{t.bookings.status[booking.status]}</Badge>
+          <StatusBadge booking={booking} />
         </div>
         <span className="ds-booking__meta">
           {owner?.name}

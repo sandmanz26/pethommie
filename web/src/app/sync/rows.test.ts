@@ -20,6 +20,20 @@ describe("toRows / fromRows", () => {
     expect(fromRows(hotel, rows)).toEqual(settled(data));
   });
 
+  it("keeps what a stay waits for (a request, a deposit), and no hold as null", () => {
+    const data = aSmallHotel({
+      bookings: [
+        aBooking("b1", { petId: "p1", cageId: "s1", checkIn: "2026-10-01", checkOut: "2026-10-03", hold: "request" }),
+        aBooking("b2", { petId: "p2", cageId: "m1", checkIn: "2026-10-01", checkOut: "2026-10-03", hold: "deposit" }),
+        aBooking("b3", { petId: "p1", cageId: "s1", checkIn: "2026-10-05", checkOut: "2026-10-06" }),
+      ],
+    });
+    const { hotel, rows } = toRows(data, HOTEL);
+    expect(rows.bookings.map((b) => b.hold)).toEqual(["request", "deposit", null]);
+    expect(fromRows(hotel, rows).bookings.map((b) => b.hold)).toEqual(["request", "deposit", undefined]);
+    expect("hold" in fromRows(hotel, rows).bookings[2]).toBe(false);
+  });
+
   it("carries the add-ons, shared cages and invoices of the sample hotel, so the round trip above is not empty", () => {
     const { rows } = toRows(sampleData(), HOTEL);
     expect(rows.charges.length).toBeGreaterThan(0);

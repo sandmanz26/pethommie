@@ -130,7 +130,7 @@ export function BookingsPage() {
                 owner={data.owners.find((o) => o.id === pet?.ownerId)}
                 cage={data.cages.find((c) => c.id === b.cageId)}
                 unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))}
-                checkInTo={b.status === "booked" && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}
+                checkInTo={b.status === "booked" && !b.hold && b.checkIn <= today ? `/app/bookings/${b.id}#checkin` : undefined}
                 onCheckOut={b.status === "checked_in" ? () => checkOut.request(b) : undefined}
                 onCancel={b.status === "booked" ? () => cancel.request(b) : undefined}
               />

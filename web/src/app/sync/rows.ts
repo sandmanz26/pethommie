@@ -25,6 +25,8 @@ export type BookingRow = {
   rate: number;
   status: string;
   cancel_reason: string | null;
+  /** What a booked stay waits for (Booking.hold); null when confirmed. */
+  hold: string | null;
   source: string;
   arrival: Arrival | null;
   notes: string;
@@ -118,6 +120,7 @@ export function toRows(data: HotelData, hotelId: string): { hotel: HotelRow; row
         rate: b.rate,
         status: b.status,
         cancel_reason: b.cancelReason,
+        hold: b.hold ?? null,
         source: b.source,
         arrival: b.arrival,
         notes: b.notes,
@@ -208,6 +211,7 @@ export function fromRows(hotel: HotelRow, rows: Rows): HotelData {
         rate: b.rate,
         status: b.status as Booking["status"],
         cancelReason: (b.cancel_reason ?? null) as Booking["cancelReason"],
+        ...(b.hold ? { hold: b.hold as NonNullable<Booking["hold"]> } : {}),
         source: b.source as Booking["source"],
         payments: sortedPayments(b.id),
         arrival: b.arrival,

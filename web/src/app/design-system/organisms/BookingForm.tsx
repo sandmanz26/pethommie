@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { bookingIssues, scheduleIssues } from "@/app/domain/bookingRules";
 import type { Booking, BookingSource, CageSize, HotelData, PaymentMethod } from "@/app/domain/types";
+import { requiredDeposit } from "@/app/domain/policy";
 import { emptyGuest, guestErrors, type GuestDraft, type GuestErrors } from "@/app/domain/guest";
 import {
   addDays,
@@ -112,6 +113,14 @@ export function BookingForm({
   const vState = states.includes("expired") ? "expired" : states.includes("soon") ? "soon" : states.includes("unknown") ? "unknown" : null;
 
   const depositAmount = parseRupiah(deposit) || 0;
+  // What happens to the booking under the hotel's rules (settings.payPolicy).
+  const policy = data.settings.payPolicy;
+  const payInfo =
+    policy.mode === "deposit_first"
+      ? total > 0
+        ? t.payPolicy.formInfo.deposit_first(formatRupiah(requiredDeposit(total, policy.depositPercent), locale), policy.depositPercent)
+        : t.payPolicy.explain.deposit_first
+      : t.payPolicy.formInfo[policy.mode];
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -240,7 +249,7 @@ export function BookingForm({
 
       <fieldset className="ds-form__section">
         <div className="ds-form__row">
-          <Field label={f.deposit} error={errors.deposit} optional={t.common.optional}>
+          <Field label={f.deposit} hint={payInfo} error={errors.deposit} optional={t.common.optional}>
             <Input value={deposit} onChange={(e) => (setDeposit(e.target.value), clear("deposit"))} inputMode="numeric" placeholder="0" />
           </Field>
           {depositAmount > 0 && (

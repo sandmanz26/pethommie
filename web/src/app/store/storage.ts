@@ -19,7 +19,7 @@ export const demoDataKeyFor = (demoId: string) => `pethommie.demo.v1.${demoId}`;
  * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
  * one, and a test with an old document. Older documents are upgraded on load, never discarded.
  */
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 
 export type StoredProblem = "corrupt" | "newer";
 export type Parsed = { data: HotelData; problem: StoredProblem | null; migratedFrom?: number };
@@ -71,7 +71,8 @@ function isV4(x: Record<string, unknown>): boolean {
   );
 }
 
-function isHotelData(x: Record<string, unknown>): boolean {
+/** The shape version 5 had: no booking and payment rules (payPolicy), no holds on bookings. */
+function isV5(x: Record<string, unknown>): boolean {
   return (
     isV4(x) &&
     isObject(x.settings) &&
@@ -80,6 +81,19 @@ function isHotelData(x: Record<string, unknown>): boolean {
     (x.bookings as Record<string, unknown>[]).every((b) => typeof b.rate === "number" && (b.cancelReason === null || typeof b.cancelReason === "string")) &&
     hasIds(x.expenses) &&
     (x.expenses as Record<string, unknown>[]).every((e) => typeof e.amount === "number" && typeof e.date === "string" && typeof e.category === "string")
+  );
+}
+
+const HOLDS = ["request", "deposit"];
+
+function isHotelData(x: Record<string, unknown>): boolean {
+  if (!isV5(x) || !isObject(x.settings)) return false;
+  const policy = x.settings.payPolicy;
+  return (
+    isObject(policy) &&
+    ["flexible", "deposit_first", "check_first"].includes(policy.mode as string) &&
+    typeof policy.depositPercent === "number" &&
+    (x.bookings as Record<string, unknown>[]).every((b) => b.hold === undefined || HOLDS.includes(b.hold as string))
   );
 }
 
@@ -133,6 +147,14 @@ function migrateV4(doc: Record<string, unknown>): Record<string, unknown> {
 }
 
 /**
+ * v6 adds how the hotel takes bookings and deposits. Every hotel starts flexible (book now, pay whenever), which is
+ * how it worked before, so every stay stays confirmed.
+ */
+function migrateV5(doc: Record<string, unknown>): Record<string, unknown> {
+  return { ...doc, version: 6, settings: { ...(doc.settings as Record<string, unknown>), payPolicy: { mode: "flexible", depositPercent: 30 } } };
+}
+
+/**
  * Reads what was stored. Never throws: anything unreadable comes back as empty data plus the reason,
  * so the caller can keep the original before it is overwritten. Older versions are upgraded.
  */
@@ -164,6 +186,10 @@ export function parseStored(raw: string | null): Parsed {
   if (doc.version === 4 && isV4(doc)) {
     doc = migrateV4(doc);
     migratedFrom ??= 4;
+  }
+  if (doc.version === 5 && isV5(doc)) {
+    doc = migrateV5(doc);
+    migratedFrom ??= 5;
   }
   if (doc.version !== CURRENT_VERSION || !isHotelData(doc)) return { data: emptyData(), problem: "corrupt" };
   return { data: doc as unknown as HotelData, problem: null, migratedFrom };

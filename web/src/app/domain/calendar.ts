@@ -15,12 +15,12 @@ export type CalendarBar = {
 
 /**
  * Stays on one cage inside [from, from + days). A stay covers its nights, so it starts in the check-in
- * column and stops before the check-out day. Cancelled stays aren't shown.
+ * column and stops before the check-out day. Cancelled stays aren't shown, nor requests: they hold no place yet.
  */
 export function calendarBars(data: HotelData, cageId: string, from: ISODate, days: number): CalendarBar[] {
   const end = addDays(from, days);
   return data.bookings
-    .filter((b) => b.cageId === cageId && b.status !== "cancelled" && b.checkIn < end && b.checkOut > from)
+    .filter((b) => b.cageId === cageId && b.status !== "cancelled" && b.hold !== "request" && b.checkIn < end && b.checkOut > from)
     .map((booking) => {
       const first = booking.checkIn < from ? from : booking.checkIn;
       const last = booking.checkOut > end ? end : booking.checkOut;

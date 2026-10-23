@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Booking } from "@/app/domain/types";
 import { petNames } from "@/app/domain/invoices";
-import { addDays, formatDate, holdsCage, stayPetIds, todayBoard, totalPlaces, todayISO, unitLabel, vaccineState } from "@/app/domain/logic";
+import { addDays, formatDate, isLive, stayPetIds, todayBoard, totalPlaces, todayISO, unitLabel, vaccineState } from "@/app/domain/logic";
 import { stayingToday } from "@/app/domain/careLog";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
@@ -45,7 +45,7 @@ export function TodayPage() {
       owner={data.owners.find((o) => o.id === data.pets.find((p) => p.id === b.petId)?.ownerId)}
       cage={data.cages.find((c) => c.id === b.cageId)}
       unitLabel={unitLabel(data, data.cages.find((c) => c.id === b.cageId))}
-      checkInTo={action === "in" ? `/app/bookings/${b.id}#checkin` : undefined}
+      checkInTo={action === "in" && !b.hold ? `/app/bookings/${b.id}#checkin` : undefined}
       onCheckOut={action === "out" ? () => checkOut.request(b) : undefined}
       onNoShow={late ? () => cancel.request(b, "no_show") : undefined}
     />
@@ -53,7 +53,7 @@ export function TodayPage() {
 
   // Vaccine alerts for pets staying now or arriving in the next 7 days.
   const alertPetIds = new Set(
-    data.bookings.filter((b) => holdsCage(b) && b.checkIn <= addDays(today, 7)).flatMap(stayPetIds),
+    data.bookings.filter((b) => isLive(b) && b.checkIn <= addDays(today, 7)).flatMap(stayPetIds),
   );
   const alerts = data.pets
     .filter((p) => alertPetIds.has(p.id))

@@ -134,6 +134,13 @@ export type Booking = {
   charges: Charge[];
   /** Filled at check-in; null if the pet was checked in without one. */
   arrival: Arrival | null;
+  /**
+   * Why a booked stay isn't confirmed yet (see PayPolicy). Absent: confirmed.
+   * request: asked for, the place isn't checked or held yet; the hotel confirms the slot first.
+   * deposit: the place is held, but the deposit (DP) the hotel asks for isn't paid yet.
+   * Either way it can't be checked in.
+   */
+  hold?: BookingHold;
   notes: string;
   createdAt: string;
 };
@@ -172,6 +179,16 @@ export type TaxProfile = {
   pricesIncludeTax: boolean;
 };
 
+export type BookingHold = "request" | "deposit";
+
+/**
+ * How a new booking is taken. flexible: book now, pay the deposit whenever. deposit_first: the booking waits until at
+ * least `depositPercent` of its price is paid. check_first: saved as a request; the hotel checks there is room and
+ * confirms, and only then asks for payment.
+ */
+export type PayMode = "flexible" | "deposit_first" | "check_first";
+export type PayPolicy = { mode: PayMode; /** Whole percent, 0–100, of the stay's price. */ depositPercent: number };
+
 /** Who the hotel is on paper, and how it is taxed: the top of every invoice. */
 export type HotelSettings = {
   legalName: string;
@@ -186,6 +203,7 @@ export type HotelSettings = {
   unitTerm: UnitTerm;
   /** Refuse check-in for a pet whose vaccination has run out or isn't on record, unless the card is seen at the door. */
   requireVaccine: boolean;
+  payPolicy: PayPolicy;
 };
 
 /**
@@ -255,7 +273,7 @@ export type Invoice = {
 };
 
 export type HotelData = {
-  version: 5;
+  version: 6;
   hotel: Hotel | null;
   settings: HotelSettings;
   cages: Cage[];
@@ -278,10 +296,11 @@ export const defaultSettings = (): HotelSettings => ({
   tax: { regime: "none", taxpayer: "individual", basis: "cash", pkp: false, ppnPercent: 11, pricesIncludeTax: false },
   unitTerm: "cage",
   requireVaccine: false,
+  payPolicy: { mode: "flexible", depositPercent: 30 },
 });
 
 export const emptyData = (): HotelData => ({
-  version: 5,
+  version: 6,
   hotel: null,
   settings: defaultSettings(),
   cages: [],

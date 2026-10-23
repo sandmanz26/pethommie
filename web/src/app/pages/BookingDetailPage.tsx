@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { dayOf, formatDate, hasNoUnits, unitLabel, nights, stayPetIds, todayISO, vaccineState } from "@/app/domain/logic";
+import { bookingTotal, dayOf, formatDate, formatRupiah, hasNoUnits, unitLabel, nights, stayPetIds, todayISO, vaccineState } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
+import { requiredDeposit } from "@/app/domain/policy";
+import { paidAmount } from "@/app/domain/payments";
 import { entriesOn, reportWasSent } from "@/app/domain/careLog";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
-import { Badge, type Tone } from "@/app/design-system/atoms/Badge";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Muted } from "@/app/design-system/atoms/Text";
+import { Alert } from "@/app/design-system/molecules/Alert";
 import { EmptyState } from "@/app/design-system/molecules/EmptyState";
+import { StatusBadge } from "@/app/design-system/molecules/StatusBadge";
 import { ArrivalSummary } from "@/app/design-system/organisms/ArrivalSummary";
 import { BookingEditForm } from "@/app/design-system/organisms/BookingEditForm";
 import { ChargesPanel } from "@/app/design-system/organisms/ChargesPanel";
@@ -25,8 +28,6 @@ import { useCheckOut } from "./useCheckOut";
 import { useCancelBooking } from "./useCancelBooking";
 import "./pages.css";
 
-const statusTone: Record<string, Tone> = { booked: "info", checked_in: "ok", checked_out: "neutral", cancelled: "danger" };
-
 /** One stay in full: check-in record, payments, daily care log, the report for the owner, and messages. */
 export function BookingDetailPage() {
   const { id = "" } = useParams();
@@ -37,6 +38,7 @@ export function BookingDetailPage() {
   const { advanced } = useMode();
   const [today] = useState(todayISO);
   const [editing, setEditing] = useState(false);
+  const [confirmResult, setConfirmResult] = useState<"ok" | "full" | null>(null);
   const checkOut = useCheckOut();
   const cancel = useCancelBooking();
 
@@ -70,6 +72,10 @@ export function BookingDetailPage() {
   const staying = booking.status === "checked_in";
   const sentAt = data.reportsSent.find((r) => r.bookingId === id && r.date === today)?.at ?? null;
   const editable = booking.status === "booked" || staying;
+  // Not confirmed yet (see settings.payPolicy): a request to confirm, or a deposit to wait for. No check-in until then.
+  const hold = booking.status === "booked" ? booking.hold : undefined;
+  const pp = t.payPolicy;
+  const depositDue = Math.max(0, requiredDeposit(bookingTotal(booking, cage), data.settings.payPolicy.depositPercent) - paidAmount(booking));
 
   return (
     <>
@@ -88,12 +94,34 @@ export function BookingDetailPage() {
       />
 
       <section className="pg-summary" aria-label={d.stay}>
-        <Badge tone={statusTone[booking.status]}>{t.bookings.status[booking.status]}</Badge>
+        <StatusBadge booking={booking} />
         <span>
           {!hasNoUnits(data) && <><b>{cage?.name ?? "—"}</b> · </>}{formatDate(booking.checkIn, locale, { day: "numeric", month: "short" })} → {formatDate(booking.checkOut, locale, { day: "numeric", month: "short", year: "numeric" })} · {t.common.nights(nights(booking.checkIn, booking.checkOut))}
         </span>
         {booking.notes && <Muted>{booking.notes}</Muted>}
       </section>
+
+      {hold === "request" && (
+        <section className="pg-hold" aria-label={pp.requestTitle}>
+          <Alert tone="info">
+            <b>{pp.requestTitle}.</b> {pp.requestBody} {pp.noCheckIn}
+          </Alert>
+          <div>
+            <Button icon="check" onClick={() => setConfirmResult(store.confirmBooking(booking.id).length ? "full" : "ok")}>
+              {pp.confirm}
+            </Button>
+          </div>
+          {confirmResult === "full" && <Alert tone="danger">{pp.full}</Alert>}
+        </section>
+      )}
+      {hold === "deposit" && (
+        <section className="pg-hold" aria-label={pp.depositTitle(formatRupiah(depositDue, locale))}>
+          <Alert tone="warn">
+            <b>{pp.depositTitle(formatRupiah(depositDue, locale))}.</b> {pp.depositBody} {pp.noCheckIn}
+          </Alert>
+        </section>
+      )}
+      {!hold && confirmResult === "ok" && <Alert tone="ok">{pp.confirmed}</Alert>}
 
       {editing && (
         <BookingEditForm
@@ -110,7 +138,7 @@ export function BookingDetailPage() {
 
       <div className="pg-columns">
         <div className="pg-section">
-          {booking.status === "booked" && (
+          {booking.status === "booked" && !hold && (
             <div id="checkin">
               <CheckInForm
                 compact={!advanced}

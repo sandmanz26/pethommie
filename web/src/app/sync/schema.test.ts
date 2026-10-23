@@ -100,7 +100,7 @@ async function readRows(hotelId: string): Promise<{ hotel: HotelRow; rows: Rows 
       cages: (await pick("cages", "id, hotel_id, name, size, price_per_night, capacity, archived")) as Rows["cages"],
       owners: (await pick("owners", "id, hotel_id, name, whatsapp, language")) as Rows["owners"],
       pets: (await pick("pets", `id, hotel_id, owner_id, name, species, breed, ${day("vaccine_expiry")}, notes`)) as Rows["pets"],
-      bookings: (await pick("bookings", `id, hotel_id, pet_id, cage_id, ${day("check_in")}, ${day("check_out")}, rate, status, cancel_reason, source, arrival, notes, ${ts("created_at")}`)) as Rows["bookings"],
+      bookings: (await pick("bookings", `id, hotel_id, pet_id, cage_id, ${day("check_in")}, ${day("check_out")}, rate, status, cancel_reason, hold, source, arrival, notes, ${ts("created_at")}`)) as Rows["bookings"],
       booking_pets: (await pick("booking_pets", "hotel_id, booking_id, pet_id, position")) as Rows["booking_pets"],
       charges: (await pick("charges", "id, hotel_id, booking_id, position, label, amount")) as Rows["charges"],
       invoices: (await db.query(`select id, hotel_id, booking_id, number, ${day("issued_on")}, ${day("due_on")}, language, status, ${day("voided_on")}, seller, customer, pet_names, stay, lines, subtotal, tax_percent::float8 as tax_percent, tax_amount, total, prices_include_tax from invoices where hotel_id = $1`, [hotelId])).rows as Rows["invoices"],
@@ -187,6 +187,24 @@ describe("the database refuses what the app refuses", () => {
     expect(await refused(booking({ cage_id: room, check_in: "2026-11-22", check_out: "2026-11-24" }))).toMatch(/bookings_no_double_booking/);
     // the night after they all leave is free again
     expect(await refused(booking({ cage_id: room, check_in: "2026-11-23", check_out: "2026-11-24" }))).toBeNull();
+  });
+
+  it("lets a request overlap a taken cage (it holds no place), but not a stay waiting for its deposit", async () => {
+    const made: string[] = [];
+    const held = (hold: string, status = "booked", on = "2026-11-11") => {
+      const id = crypto.randomUUID();
+      made.push(id);
+      return sql(
+        "insert into bookings (id, hotel_id, pet_id, cage_id, check_in, check_out, status, cancel_reason, hold) values ($1,$2,$3,$4,$8::date,$8::date + 2,$5,$6,$7)",
+        [id, H, rows.pets[made.length].id, rows.cages[0].id, status, status === "cancelled" ? "owner" : null, hold, on],
+      );
+    };
+    expect(await refused(held("request"))).toBeNull();
+    expect(await refused(held("deposit"))).toMatch(/bookings_no_double_booking/);
+    expect(await refused(held("maybe", "booked", "2027-01-05"))).toMatch(/check/i);
+    expect(await refused(held("request", "cancelled", "2027-01-05"))).toMatch(/bookings_hold_only_when_booked/);
+    // Leave nothing behind for the tests after this one.
+    await sql("delete from bookings where id = any($1)", [made]);
   });
 
   it("knows payment kinds and the new methods, and nothing else", async () => {

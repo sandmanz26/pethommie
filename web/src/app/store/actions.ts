@@ -1,4 +1,5 @@
-import { addDays, cageIsFree, canGoUnitless, newId, placesFor } from "@/app/domain/logic";
+import { addDays, bookingTotal, cageIsFree, canGoUnitless, newId, placesFor } from "@/app/domain/logic";
+import { holdAfterConfirm, holdForNew, isValidDepositPercent } from "@/app/domain/policy";
 import { bookingIssues, canTransition, cageCanBeRemoved, editIssues, petHasHistory, type BookingIssue, type BookingPatch } from "@/app/domain/bookingRules";
 import { careIssues, type CareIssue } from "@/app/domain/careLog";
 import { isValidAmount, paidAmount, type PaymentIssue } from "@/app/domain/payments";
@@ -69,11 +70,41 @@ function removePetRecords(s: HotelData, id: string): HotelData {
   };
 }
 
-/** Saves the booking unless it breaks a rule; the issues come back so the caller can say why. */
+/** What the stay costs and what has come in, for the deposit rules. */
+function moneyOf(s: HotelData, b: Booking) {
+  return { paid: paidAmount(b), total: bookingTotal(b, s.cages.find((c) => c.id === b.cageId)) };
+}
+
+/**
+ * Saves the booking unless it breaks a rule; the issues come back so the caller can say why. A new booking is taken
+ * the hotel's way (see PayPolicy): confirmed, waiting for its deposit, or a request. Its unit must be free either
+ * way, so a request is only made for a slot that is open when it is asked for.
+ */
 export function upsertBooking(s: HotelData, booking: Booking): Outcome<BookingIssue[]> {
-  const issues = bookingIssues(s, booking);
+  const existing = s.bookings.find((b) => b.id === booking.id);
+  // What a stay waits for is set here and by the actions that change it (confirm, pay, cancel), never by the caller.
+  const { hold: _given, ...plain } = booking;
+  const hold = existing ? existing.hold : holdForNew(s.settings.payPolicy, moneyOf(s, plain).paid, moneyOf(s, plain).total);
+  const issues = bookingIssues(s, existing ? { ...plain, ...(hold ? { hold } : {}) } : plain);
   if (issues.length) return { state: s, result: issues };
-  return { state: { ...s, bookings: upsert(s.bookings, booking) }, result: [] };
+  const saved: Booking = hold ? { ...plain, hold } : plain;
+  return { state: { ...s, bookings: upsert(s.bookings, saved) }, result: [] };
+}
+
+export type ConfirmIssue = "status" | "full";
+
+/**
+ * The hotel confirms a request: the slot is checked again (it holds nothing until now) and taken. Then it waits for
+ * the deposit, if the hotel asks for one and it isn't paid, or is simply confirmed.
+ */
+export function confirmBooking(s: HotelData, id: string): Outcome<ConfirmIssue[]> {
+  const current = s.bookings.find((b) => b.id === id);
+  if (!current || current.status !== "booked" || current.hold !== "request") return { state: s, result: ["status"] };
+  const unit = s.cages.find((c) => c.id === current.cageId);
+  if (!cageIsFree(s, current.cageId, current.checkIn, current.checkOut, current.id, placesFor(current, unit))) return { state: s, result: ["full"] };
+  const { paid, total } = moneyOf(s, current);
+  const hold = holdAfterConfirm(s.settings.payPolicy, paid, total);
+  return { state: withBooking(s, id, ({ hold: _h, ...b }) => (hold ? { ...b, hold } : b)), result: [] };
 }
 
 /** Moves a stay along its life cycle; refuses (result false) any other jump. Cancelling goes through cancelBooking. */
@@ -108,7 +139,8 @@ export function cancelBooking(s: HotelData, id: string, r: CancelRequest): Outco
   if (!current || !canTransition(current.status, "cancelled")) return { state: s, result: ["status"] };
   if (!Number.isInteger(r.refund) || r.refund < 0 || r.refund > paidAmount(current)) return { state: s, result: ["refund"] };
   const refund: Payment[] = r.refund > 0 ? [{ id: newId(), at: r.at, amount: r.refund, method: r.method, kind: "refund", reference: "", note: "" }] : [];
-  const next = withBooking(s, id, (b) => ({ ...b, status: "cancelled", cancelReason: r.reason, payments: [...b.payments, ...refund] }));
+  // A cancelled stay waits for nothing.
+  const next = withBooking(s, id, ({ hold: _h, ...b }) => ({ ...b, status: "cancelled", cancelReason: r.reason, payments: [...b.payments, ...refund] }));
   return {
     state: { ...next, invoices: next.invoices.map((i) => (i.bookingId === id && i.status === "issued" ? { ...i, status: "void", voidedOn: r.on } : i)) },
     result: [],
@@ -146,10 +178,13 @@ export function editBooking(s: HotelData, id: string, patch: BookingPatch): Outc
   return { state: withBooking(s, id, (b) => ({ ...b, ...patch, rate })), result: [] };
 }
 
-/** Checks a booked pet in, keeping the arrival record if there is one. Refuses anything but booked → checked in. */
+/**
+ * Checks a booked pet in, keeping the arrival record if there is one. Refuses anything but booked → checked in, and a
+ * stay that isn't confirmed yet (a request, or one still waiting for its deposit).
+ */
 export function checkInBooking(s: HotelData, id: string, arrival: Arrival | null): Outcome<boolean> {
   const current = s.bookings.find((b) => b.id === id);
-  if (!current || !canTransition(current.status, "checked_in")) return { state: s, result: false };
+  if (!current || current.hold || !canTransition(current.status, "checked_in")) return { state: s, result: false };
   return { state: withBooking(s, id, (b) => ({ ...b, status: "checked_in", arrival })), result: true };
 }
 
@@ -166,7 +201,14 @@ export function recordPayment(s: HotelData, bookingId: string, payment: Omit<Pay
   if (!isValidAmount(payment.amount)) issues.push("amount");
   else if (booking && payment.kind === "refund" && payment.amount > paidAmount(booking)) issues.push("refund");
   if (issues.length) return { state: s, result: issues };
-  return { state: withBooking(s, bookingId, (b) => ({ ...b, payments: [...b.payments, { ...payment, id: newId() }] })), result: [] };
+  const next = withBooking(s, bookingId, (b) => ({ ...b, payments: [...b.payments, { ...payment, id: newId() }] }));
+  // The deposit is in: the stay is confirmed.
+  const after = next.bookings.find((b) => b.id === bookingId)!;
+  if (after.hold === "deposit") {
+    const { paid, total } = moneyOf(next, after);
+    if (!holdAfterConfirm({ ...next.settings.payPolicy, mode: "deposit_first" }, paid, total)) return { state: withBooking(next, bookingId, ({ hold: _h, ...b }) => b), result: [] };
+  }
+  return { state: next, result: [] };
 }
 
 /** Takes back a payment that was entered by mistake. */
@@ -203,13 +245,15 @@ export const removeCharge = (s: HotelData, bookingId: string, chargeId: string):
 
 /** What can be wrong with the hotel's business and tax settings. */
 /** layout: dropping cages and rooms while the hotel has more than one unit in use (see canGoUnitless). */
-export type SettingsIssue = "ppn" | "prefix" | "layout";
+/** deposit: the deposit percent isn't a whole number from 0 to 100. */
+export type SettingsIssue = "ppn" | "prefix" | "layout" | "deposit";
 
 export function settingsIssues(settings: HotelSettings): SettingsIssue[] {
   const issues: SettingsIssue[] = [];
   const { ppnPercent } = settings.tax;
   if (!Number.isFinite(ppnPercent) || ppnPercent < 0 || ppnPercent > 100) issues.push("ppn");
   if (!settings.invoicePrefix.replace(/[^A-Za-z0-9]/g, "")) issues.push("prefix");
+  if (!isValidDepositPercent(settings.payPolicy.depositPercent)) issues.push("deposit");
   return issues;
 }
 
