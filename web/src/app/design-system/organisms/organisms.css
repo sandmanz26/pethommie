@@ -456,3 +456,51 @@ a.ds-cal__room:hover, a.ds-cal__room:focus-visible { background: var(--ok-bg); c
 }
 .ds-form__row--dates .ds-stepper { grid-template-columns: 47px 56px 47px; }
 .ds-form__row--dates .ds-stepper > * { min-height: 47px; height: 47px; }
+
+/* ---------- Calendar: toolbar, clickable days, month views, day drawer ---------- */
+.ds-calbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.ds-calbar__nav { display: flex; align-items: center; gap: 4px; }
+.ds-calbar__title { margin: 0; flex: 1 1 auto; min-width: 0; font-family: var(--font-display); font-size: 1.15em; }
+button.ds-cal__free, button.ds-cal__room, button.ds-cal__bar, button.ds-pool__head, .ds-poolmonth__day {
+  font: inherit; border-top: 0; border-right: 0; border-bottom: 0; cursor: pointer; text-align: left;
+}
+button.ds-cal__free { background: transparent; padding: 0; border-left: 1px solid var(--line); }
+button.ds-cal__room { background: transparent; border-left: 1px solid var(--line); font-size: 0.8em; padding: 0; }
+button.ds-cal__room:hover, button.ds-cal__room:focus-visible { background: var(--ok-bg); color: var(--ok); outline: none; }
+button.ds-cal__room.is-full:hover, button.ds-cal__room.is-full:focus-visible { background: var(--danger-bg); color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); }
+button.ds-cal__bar { border: 0; min-width: 0; }
+button.ds-cal__bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-cal__bar:hover { filter: brightness(1.08); }
+.ds-cal--month { --cell: 38px; --label: 84px; }
+.ds-cal--month .ds-cal__bar { padding: 0 6px; font-size: 0.82em; margin-left: 1px; margin-right: 1px; }
+button.ds-pool__head { width: 100%; padding: 0; background: none; color: inherit; border-radius: var(--radius-sm); }
+button.ds-pool__head:hover b:first-of-type { text-decoration: underline; }
+button.ds-pool__head:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.ds-poolmonth { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding: 10px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow); }
+.ds-poolmonth__wd { text-align: center; font-size: 0.72em; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 0 4px; }
+.ds-poolmonth__day {
+  display: grid; justify-items: center; align-content: center; gap: 2px; min-height: 58px; min-width: 0; padding: 4px 2px;
+  border: 0; border-radius: var(--radius-sm); background: var(--ok-bg); color: var(--ok); text-align: center;
+}
+.ds-poolmonth__day b { font-family: var(--font-display); color: var(--ink); }
+.ds-poolmonth__day small { font-size: 0.75em; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ds-poolmonth__day.is-some { background: var(--info-bg); color: var(--info); }
+.ds-poolmonth__day.is-full { background: var(--danger-bg); color: var(--danger); }
+.ds-poolmonth__day.is-today { box-shadow: inset 0 0 0 2px var(--info); }
+.ds-poolmonth__day:hover { filter: brightness(0.96); }
+.ds-poolmonth__day:focus-visible { outline: 3px solid var(--ink); outline-offset: 1px; }
+.ds-daydrawer__summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; color: var(--ink-soft); }
+.ds-daydrawer__group h3 { margin: 0 0 6px; font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+.ds-daydrawer__group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ds-daydrawer__stay { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-sunk); }
+.ds-daydrawer__stay > div { display: grid; justify-items: start; gap: 3px; min-width: 0; }
+.ds-daydrawer__stay small { color: var(--ink-soft); }
+.ds-daydrawer__stay .ds-btn { flex-shrink: 0; }
+.ds-daydrawer__nobody { margin: 0; color: var(--ink-faint); }
+@media (max-width: 480px) {
+  .ds-cal--week { --label: 64px; --cell: 36px; }
+  .ds-cal--week .ds-cal__label { padding: 8px 6px; }
+  .ds-cal--week .ds-cal__bar { padding: 0 6px; font-size: 0.82em; }
+  .ds-cal--month { --label: 64px; --cell: 36px; }
+  .ds-cal--month .ds-cal__label { padding: 8px 6px; }
+}

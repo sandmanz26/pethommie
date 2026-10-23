@@ -1,9 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
-import { addDays, todayISO } from "@/app/domain/logic";
+import { addDays, formatDate, todayISO } from "@/app/domain/logic";
+import { calendarRange, rangeTitle, shiftAnchor } from "@/app/domain/calendar";
 import type { Booking, HotelData } from "@/app/domain/types";
 import { modeKeyFor, type Mode } from "@/app/mode/mode";
 import { dataKeyFor } from "@/app/store/storage";
@@ -379,42 +380,97 @@ describe("messages to the owner", () => {
 });
 
 describe("the cage calendar", () => {
-  it("shows a stay as a bar that opens the booking", async () => {
+  const short = (d: string) => formatDate(d, "en", { day: "numeric", month: "short" });
+  const drawer = () => within(screen.getByRole("dialog"));
+  beforeEach(() => localStorage.removeItem("pethommie.calendar.view"));
+
+  it("opens a stay in a drawer with its summary, and from there the booking", async () => {
     const user = await open(stay(), {}, "/app/calendar");
-    await user.click(await screen.findByRole("link", { name: "Pet p1" }));
+    await user.click(await screen.findByRole("button", { name: "Pet p1" }));
+    expect(drawer().getByRole("heading", { name: new RegExp(`^S1 · `) })).toBeInTheDocument();
+    expect(drawer().getByText("Taken")).toBeInTheDocument();
+    const arriving = within(drawer().getByRole("region", { name: "Arriving" }));
+    expect(arriving.getByText("Pet p1")).toBeInTheDocument();
+    expect(arriving.getByText(new RegExp(`${short(today)} → ${short(addDays(today, 3))}`))).toBeInTheDocument();
+    expect(drawer().queryByRole("link", { name: "New booking" })).not.toBeInTheDocument();
+    await user.click(arriving.getByRole("link", { name: "Open booking: Pet p1" }));
     expect(await screen.findByRole("heading", { name: "Pet p1", level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /payments/i })).toBeInTheDocument();
   });
 
-  it("turns an empty day into a new booking for that cage and day", async () => {
+  it("opens an empty day in a drawer that books that cage and day", async () => {
     await signedInAs({ data: aSmallHotel() });
     const user = userEvent.setup();
     renderApp("/app/calendar");
-    const tomorrow = addDays(today, 1);
-    const cells = await screen.findAllByRole("link", { name: /new booking in S2 from/i });
-    await user.click(cells[1]);
-    expect(await screen.findByLabelText(/^check-in$/i)).toHaveValue(tomorrow);
-    expect(screen.getByLabelText(/^check-out$/i)).toHaveValue(addDays(tomorrow, 1));
+    await user.click(await screen.findByRole("button", { name: `S2, ${short(today)}: free` }));
+    expect(drawer().getByText("Free")).toBeInTheDocument();
+    expect(drawer().getByText("Nobody is here this day.")).toBeInTheDocument();
+    const book = drawer().getByRole("link", { name: "New booking" });
+    expect(book).toHaveAttribute("href", `/app/bookings/new?cage=s2&in=${today}&out=${addDays(today, 1)}`);
+    await user.click(book);
+    expect(await screen.findByLabelText(/^check-in$/i)).toHaveValue(today);
+    expect(screen.getByLabelText(/^check-out$/i)).toHaveValue(addDays(today, 1));
     expect(screen.getByLabelText(/^cage ·/i)).toHaveAttribute("data-value", "s2");
+  });
+
+  it("lists who arrives, stays and leaves on a day, and closes on Escape, giving focus back", async () => {
+    const left = aBooking("b0", { petId: "p2", cageId: "s1", checkIn: addDays(today, -2), checkOut: today, status: "checked_out" });
+    const user = await open(stay(), { bookings: [stay(), left] }, "/app/calendar");
+    const cell = await screen.findByRole("button", { name: "Pet p1" });
+    await user.click(cell);
+    expect(within(drawer().getByRole("region", { name: "Leaving" })).getByText("Pet p2")).toBeInTheDocument();
+    expect(within(drawer().getByRole("region", { name: "Arriving" })).getByText("Pet p1")).toBeInTheDocument();
+    expect(drawer().getByRole("button", { name: "Close" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(cell).toHaveFocus();
+    await user.click(cell);
+    await user.click(drawer().getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("does not offer a night that is taken", async () => {
     await open(stay({ checkOut: addDays(today, 2) }), {}, "/app/calendar");
-    await screen.findByRole("link", { name: "Pet p1" });
-    // S1 has two nights taken out of 14; S2 and M1 are empty.
-    expect(screen.getAllByRole("link", { name: /new booking in S1 from/i })).toHaveLength(12);
-    expect(screen.getAllByRole("link", { name: /new booking in S2 from/i })).toHaveLength(14);
+    await screen.findByRole("button", { name: "Pet p1" });
+    const { from } = calendarRange("week", today);
+    const taken = [today, addDays(today, 1)].filter((d) => d < addDays(from, 7)).length;
+    expect(screen.getAllByRole("button", { name: /^S1, .*: free$/ })).toHaveLength(7 - taken);
+    expect(screen.getAllByRole("button", { name: /^S2, .*: free$/ })).toHaveLength(7);
   });
 
-  it("pages forward and back", async () => {
-    const user = await open(stay({ checkIn: addDays(today, 20), checkOut: addDays(today, 22) }), {}, "/app/calendar");
-    await screen.findAllByRole("link", { name: /new booking in S1 from/i });
-    expect(screen.queryByRole("link", { name: "Pet p1" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /later/i }));
-    await user.click(screen.getByRole("button", { name: /later/i }));
-    expect(await screen.findByRole("link", { name: "Pet p1" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /^today$/i }));
-    expect(screen.queryByRole("link", { name: "Pet p1" })).not.toBeInTheDocument();
+  it("shows a week from Monday, or a month, pages back and forth, comes back to today, and remembers the view", async () => {
+    const nextMonth = shiftAnchor("month", today, 1);
+    const user = await open(stay({ checkIn: nextMonth, checkOut: addDays(nextMonth, 2) }), {}, "/app/calendar");
+    const title = () => screen.getByRole("heading", { level: 2, name: /\d{4}/ }).textContent;
+    const s2days = () => screen.getAllByRole("button", { name: /^S2, .*: free$/ });
+    await screen.findAllByRole("button", { name: /^S1, / });
+    const week = calendarRange("week", today);
+    expect(title()).toBe(rangeTitle("week", week.from, 7, "en"));
+    expect(s2days()[0]).toHaveAccessibleName(`S2, ${short(week.from)}: free`);
+    expect(s2days()).toHaveLength(7);
+    expect(screen.getByRole("button", { name: "Today" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Next week" }));
+    expect(title()).toBe(rangeTitle("week", addDays(week.from, 7), 7, "en"));
+    expect(s2days()[0]).toHaveAccessibleName(`S2, ${short(addDays(week.from, 7))}: free`);
+    await user.click(screen.getByRole("button", { name: "Previous week" }));
+    await user.click(screen.getByRole("button", { name: "Previous week" }));
+    expect(title()).toBe(rangeTitle("week", addDays(week.from, -7), 7, "en"));
+    await user.click(screen.getByRole("button", { name: "Today" }));
+    expect(title()).toBe(rangeTitle("week", week.from, 7, "en"));
+
+    await user.click(screen.getByRole("tab", { name: "Month" }));
+    const month = calendarRange("month", today);
+    expect(title()).toBe(formatDate(today, "en", { month: "long", year: "numeric" }));
+    expect(s2days()).toHaveLength(month.days);
+    expect(localStorage.getItem("pethommie.calendar.view")).toBe("month");
+    expect(screen.queryByRole("button", { name: "Pet p1" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next month" }));
+    expect(title()).toBe(rangeTitle("month", nextMonth, 0, "en"));
+    expect(s2days()).toHaveLength(calendarRange("month", nextMonth).days);
+    expect(screen.getByRole("button", { name: "Pet p1" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Today" }));
+    expect(title()).toBe(rangeTitle("month", month.from, month.days, "en"));
   });
 
   it("asks for cages first when there are none", async () => {

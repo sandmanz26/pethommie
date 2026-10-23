@@ -78,10 +78,18 @@ test('an invoice for a stay shows up in the register and in the tax estimate', a
   await expect(page.getByRole('button', { name: /Download for the accountant/ })).toBeVisible()
 })
 
-test('the calendar books an empty day', async ({ page }) => {
+test('the calendar opens a day in a drawer and books from it', async ({ page }) => {
   await signInWithSampleData(page)
   await page.goto('/app/calendar')
-  await page.getByRole('link', { name: /new booking in S-04 from/i }).first().click()
+  await page.getByRole('button', { name: /^S-04, .*: free$/ }).first().click()
+  const drawer = page.getByRole('dialog')
+  await expect(drawer).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(drawer).toBeHidden()
+  await page.getByRole('tab', { name: 'Month' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: /^[A-Z][a-z]+ \d{4}$/ })).toBeVisible()
+  await page.getByRole('button', { name: /^S-04, .*: free$/ }).last().click()
+  await page.getByRole('dialog').getByRole('link', { name: 'New booking' }).click()
   await expect(page.getByLabel(/^cage ·/i)).toHaveAttribute('data-value', /.+/)
   await expect(page.getByRole('heading', { name: 'New booking', level: 1 })).toBeVisible()
 })

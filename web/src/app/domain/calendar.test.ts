@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aBooking, aSmallHotel } from "@/app/testing/fixtures";
-import { calendarBars, occupiedCount } from "./calendar";
+import { calendarBars, calendarRange, dayStays, occupiedCount, rangeTitle, shiftAnchor, startOfWeek } from "./calendar";
 
 const stay = (id: string, cageId: string, checkIn: string, checkOut: string, over = {}) => aBooking(id, { petId: "p1", cageId, checkIn, checkOut, ...over });
 
@@ -46,5 +46,50 @@ describe("occupiedCount", () => {
     expect(occupiedCount(data, "2026-10-13")).toBe(2);
     expect(occupiedCount(data, "2026-10-14")).toBe(1);
     expect(occupiedCount(data, "2026-10-15")).toBe(0);
+  });
+});
+
+describe("calendar views", () => {
+  it("starts a week on Monday and a month on the 1st", () => {
+    expect(startOfWeek("2026-10-23")).toBe("2026-10-19"); // a Friday
+    expect(startOfWeek("2026-10-19")).toBe("2026-10-19");
+    expect(startOfWeek("2026-10-25")).toBe("2026-10-19"); // a Sunday
+    expect(calendarRange("week", "2026-10-23")).toEqual({ from: "2026-10-19", days: 7 });
+    expect(calendarRange("month", "2026-10-23")).toEqual({ from: "2026-10-01", days: 31 });
+    expect(calendarRange("month", "2028-02-10")).toEqual({ from: "2028-02-01", days: 29 });
+  });
+
+  it("pages by a week or a month, across the year end", () => {
+    expect(shiftAnchor("week", "2026-10-23", 1)).toBe("2026-10-26");
+    expect(shiftAnchor("week", "2026-10-23", -1)).toBe("2026-10-12");
+    expect(shiftAnchor("month", "2026-12-31", 1)).toBe("2027-01-01");
+    expect(shiftAnchor("month", "2026-01-31", -1)).toBe("2025-12-01");
+  });
+
+  it("titles the range", () => {
+    expect(rangeTitle("week", "2026-10-19", 7, "en")).toBe("19–25 Oct 2026");
+    expect(rangeTitle("week", "2026-09-28", 7, "en")).toMatch(/^28 Sept? – 4 Oct 2026$/);
+    expect(rangeTitle("week", "2026-12-28", 7, "en")).toBe("28 Dec 2026 – 3 Jan 2027");
+    expect(rangeTitle("month", "2026-10-01", 31, "en")).toBe("October 2026");
+  });
+});
+
+describe("dayStays", () => {
+  const data = aSmallHotel({
+    bookings: [
+      stay("in", "s1", "2026-10-12", "2026-10-14"),
+      stay("over", "s1", "2026-10-10", "2026-10-13"),
+      stay("out", "s1", "2026-10-09", "2026-10-12", { status: "checked_out" }),
+      stay("gone", "s1", "2026-10-12", "2026-10-13", { status: "cancelled" }),
+      stay("other", "s2", "2026-10-12", "2026-10-13"),
+    ],
+  });
+
+  it("splits a unit's day into arriving, staying and leaving, without cancelled stays", () => {
+    const ids = (k: keyof ReturnType<typeof dayStays>, cage: string | null) => dayStays(data, cage, "2026-10-12")[k].map((b) => b.id);
+    expect(ids("arriving", "s1")).toEqual(["in"]);
+    expect(ids("staying", "s1")).toEqual(["over"]);
+    expect(ids("leaving", "s1")).toEqual(["out"]);
+    expect(ids("arriving", null)).toEqual(["in", "other"]);
   });
 });

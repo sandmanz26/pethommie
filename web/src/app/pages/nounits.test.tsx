@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
-import { addDays, todayISO } from "@/app/domain/logic";
+import { addDays, formatDate, todayISO } from "@/app/domain/logic";
+import { calendarRange } from "@/app/domain/calendar";
 import { defaultSettings, defaultStayRules, emptyData, type HotelData } from "@/app/domain/types";
 import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
@@ -82,17 +83,34 @@ describe("a hotel with no cages or rooms", () => {
   });
 
   it("shows the calendar as places taken per day, with who is staying, and books from a day", async () => {
+    localStorage.removeItem("pethommie.calendar.view");
     await signedInAs({ data: poolHotel(3, [stay("b1", "p1"), stay("b2", "p2", today, addDays(today, 1))]) });
+    const user = userEvent.setup();
     renderApp("/app/calendar");
     expect(await screen.findByRole("heading", { level: 1, name: "Calendar" })).toBeInTheDocument();
     const days = within(screen.getByRole("list", { name: "Calendar" }));
-    const first = days.getAllByRole("listitem", { name: /places taken/ })[0];
-    expect(first).toHaveAccessibleName(/2 of 3 places taken/);
+    expect(days.getAllByRole("listitem", { name: /places taken/ })).toHaveLength(7);
+    const date = formatDate(today, "en", { day: "numeric", month: "short" });
+    const first = days.getByRole("listitem", { name: `${date}: 2 of 3 places taken` });
     expect(first).toHaveTextContent("2/3");
     expect(within(first).getByRole("link", { name: "Mochi" })).toHaveAttribute("href", "/app/bookings/b1");
     expect(within(first).getByRole("link", { name: "Kopi" })).toBeInTheDocument();
     expect(within(first).getByRole("link", { name: /New booking from/ })).toHaveAttribute("href", `/app/bookings/new?in=${today}&out=${addDays(today, 1)}`);
-    expect(days.getAllByRole("listitem", { name: /places taken/ })[1]).toHaveTextContent("1/3");
+
+    // The day opens in a drawer: who arrives, places, and a booking from that day.
+    await user.click(within(first).getByRole("button", { name: `${date}: 2 of 3 places taken` }));
+    const drawer = within(screen.getByRole("dialog"));
+    expect(drawer.getByText("2 of 3 places used, 1 free")).toBeInTheDocument();
+    expect(within(drawer.getByRole("region", { name: "Arriving" })).getByText("Mochi")).toBeInTheDocument();
+    expect(drawer.getByRole("link", { name: "New booking" })).toHaveAttribute("href", `/app/bookings/new?in=${today}&out=${addDays(today, 1)}`);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    // The month: a grid of days with their counts.
+    await user.click(screen.getByRole("tab", { name: "Month" }));
+    const month = within(screen.getByRole("group", { name: "Calendar" }));
+    expect(month.getAllByRole("button", { name: /places taken/ })).toHaveLength(calendarRange("month", today).days);
+    expect(month.getByRole("button", { name: `${date}: 2 of 3 places taken` })).toHaveTextContent("2/3");
   });
 
   it("shows free places, and no unit names, on the today board and the booking", async () => {

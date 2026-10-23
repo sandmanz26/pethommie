@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
-import { addDays, todayISO } from "@/app/domain/logic";
+import { addDays, formatDate, todayISO } from "@/app/domain/logic";
 import { defaultSettings, emptyData, type HotelData } from "@/app/domain/types";
 import { dataKeyFor } from "@/app/store/storage";
 import { signedInAs } from "@/app/testing/auth";
@@ -52,7 +52,13 @@ describe("a cage-free hotel", () => {
     await signedInAs({ data });
     renderApp("/app/calendar");
     expect(await screen.findByRole("heading", { level: 1, name: "Room calendar" })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /1 of 2 places taken/ })).toHaveLength(2);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: new RegExp(`^ROOM, ${formatDate(today, "en", { day: "numeric", month: "short" })}: 1 of 2 places taken`) }));
+    const drawer = within(screen.getByRole("dialog"));
+    expect(drawer.getByText("1 of 2 places used, 1 free")).toBeInTheDocument();
+    expect(within(drawer.getByRole("region", { name: "Arriving" })).getByText("Mochi")).toBeInTheDocument();
+    expect(drawer.getByRole("link", { name: "New booking" })).toHaveAttribute("href", `/app/bookings/new?cage=room&in=${today}&out=${addDays(today, 1)}`);
+    await user.keyboard("{Escape}");
     expect(screen.getAllByRole("navigation", { name: "App" })[0]).toHaveTextContent("Rooms");
   });
 });
