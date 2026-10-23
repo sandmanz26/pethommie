@@ -1,9 +1,9 @@
 import { newId } from "@/app/domain/logic";
 import type { AuthService } from "./AuthService";
-import type { SeedAccount } from "./demoAccounts";
+import type { DemoAccount } from "./demoAccounts";
 import { hashPassword, verifyPassword } from "./password";
 import { normaliseEmail } from "./validation";
-import type { Account, PasswordHash, StoredAccount } from "./types";
+import type { Account, Offer, PasswordHash, StoredAccount } from "./types";
 
 /**
  * A stand-in for a real backend: accounts live in this browser's localStorage. Passwords are hashed,
@@ -42,13 +42,13 @@ export const publicAccount = ({ password, ...account }: StoredAccount): Account 
 
 type Options = {
   storage?: Storage;
-  /** Accounts to create when nothing is stored yet. */
-  seed?: SeedAccount[];
+  /** The hotels behind "Try now". Never stored with real accounts; empty for a launch without a demo. */
+  demo?: DemoAccount[];
   /** Lower in tests, so they are fast. */
   iterations?: number;
 };
 
-export function createLocalAuthService({ storage = localStorage, seed = [], iterations }: Options = {}): AuthService {
+export function createLocalAuthService({ storage = localStorage, demo = [], iterations }: Options = {}): AuthService {
   /** Reads the accounts; unreadable data is kept aside rather than overwritten, then we start fresh. */
   async function load(): Promise<AccountsDoc> {
     const raw = storage.getItem(ACCOUNTS_KEY);
@@ -56,16 +56,12 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
       try {
         const doc = JSON.parse(raw) as unknown;
         if (isObject(doc) && doc.version === 1 && Array.isArray(doc.accounts) && doc.accounts.every(isStoredAccount)) {
-          // A demo account added after this browser was seeded joins the others. Only where the demo accounts are
-          // already in use: someone who started without them doesn't get them later, and nothing is overwritten.
+          // Demo hotels used to be stored as accounts with a shared password. They live apart now: drop them from
+          // the real accounts, so the login form can't open them and a real sign-up can take those emails.
           const known = doc as AccountsDoc;
-          const seeded = seed.some((s) => known.accounts.some((a) => a.id === s.id));
-          const missing = seed.filter((s) => !known.accounts.some((a) => a.id === s.id || a.email === s.email));
-          if (!seeded || !missing.length) return known;
-          const createdAt = new Date().toISOString();
-          for (const { password, ...account } of missing) known.accounts.push({ ...account, createdAt, password: await hashPassword(password, iterations) });
-          save(known);
-          return known;
+          const real = known.accounts.filter((a) => !a.id.startsWith("demo-"));
+          if (real.length !== known.accounts.length) save({ ...known, accounts: real });
+          return { ...known, accounts: real };
         }
       } catch {
         // fall through
@@ -73,10 +69,6 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
       storage.setItem(`${ACCOUNTS_KEY}.backup`, raw);
     }
     const fresh: AccountsDoc = { version: 1, accounts: [] };
-    const createdAt = new Date().toISOString();
-    for (const { password, ...account } of seed) {
-      fresh.accounts.push({ ...account, createdAt, password: await hashPassword(password, iterations) });
-    }
     save(fresh);
     return fresh;
   }
@@ -86,13 +78,19 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
   }
 
   const signIn = (account: StoredAccount) => storage.setItem(SESSION_KEY, JSON.stringify({ accountId: account.id }));
+  /** A demo hotel as the app sees it: flagged, so it gets the demo banner and its own data. */
+  const demoAccount = (d: DemoAccount): Account => ({ ...d, createdAt: "2026-01-01T00:00:00.000Z", demo: true });
 
   return {
     async restore() {
       const doc = await load();
       try {
-        const session = JSON.parse(storage.getItem(SESSION_KEY) ?? "null") as { accountId?: string } | null;
-        const found = doc.accounts.find((a) => a.id === session?.accountId);
+        const session = JSON.parse(storage.getItem(SESSION_KEY) ?? "null") as { accountId?: string; demo?: boolean } | null;
+        if (session?.demo) {
+          const d = demo.find((a) => a.id === session.accountId);
+          if (d) return demoAccount(d);
+        }
+        const found = session?.demo ? undefined : doc.accounts.find((a) => a.id === session?.accountId);
         if (found) return publicAccount(found);
       } catch {
         // unreadable session: treat as signed out
@@ -101,7 +99,7 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
       return null;
     },
 
-    async register(input) {
+    async register(input, offer?: Offer) {
       const doc = await load();
       const email = normaliseEmail(input.email);
       if (doc.accounts.some((a) => a.email === email)) return { ok: false, error: "email_taken" };
@@ -112,6 +110,7 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
         whatsapp: input.whatsapp,
         hotelName: input.hotelName,
         createdAt: new Date().toISOString(),
+        ...(offer && Date.parse(offer.expiresAt) > Date.now() ? { offer } : {}),
         password: await hashPassword(input.password, iterations),
       };
       save({ ...doc, accounts: [...doc.accounts, account] });
@@ -126,6 +125,13 @@ export function createLocalAuthService({ storage = localStorage, seed = [], iter
       if (!account || !(await verifyPassword(password, account.password))) return { ok: false, error: "invalid_credentials" };
       signIn(account);
       return { ok: true, account: publicAccount(account) };
+    },
+
+    async tryDemo(accountId) {
+      const d = demo.find((a) => a.id === accountId);
+      if (!d) return { ok: false, error: "invalid_credentials" };
+      storage.setItem(SESSION_KEY, JSON.stringify({ accountId: d.id, demo: true }));
+      return { ok: true, account: demoAccount(d) };
     },
 
     async logout() {

@@ -18,6 +18,9 @@ import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { PetRow } from "@/app/design-system/organisms/PetRow";
 import { involvesPet, todayISO } from "@/app/domain/logic";
 import { petNames } from "@/app/domain/invoices";
+import { textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS } from "@/shared/lib/validate";
 import "./pages.css";
 
 /** One owner: contact, pets, history, and what they owe. */
@@ -57,6 +60,7 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [language, setLanguage] = useState<Language>(owner.language);
   const [saved, setSaved] = useState(false);
+  const { ref, focusInvalid } = useFocusInvalid();
   const today = todayISO();
   const rp = (n: number) => formatRupiah(n, locale);
   const petIds = new Set(customer.pets.map((p) => p.id));
@@ -66,14 +70,15 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
     e.preventDefault();
     const err: Record<string, string> = {};
     const number = wa.trim() ? normaliseWhatsapp(wa) : "";
-    if (!name.trim()) err.name = c.errName;
+    const nameErr = textError(t.validation, name, { required: c.errName, ...LIMITS.personName });
+    if (nameErr) err.name = nameErr;
     if (number === null) err.wa = c.errWhatsapp;
     else if (number) {
       const other = data.owners.find((o) => o.id !== owner.id && o.whatsapp === number);
       if (other) err.wa = c.errDuplicate(other.name);
     }
     setErrors(err);
-    if (Object.keys(err).length) return;
+    if (Object.keys(err).length) return void focusInvalid();
     saveOwner({ id: owner.id, name: name.trim(), whatsapp: number ?? "", language });
     setSaved(true);
   }
@@ -108,13 +113,13 @@ function Detail({ ownerId, data, saveOwner, locale, c, t }: Props) {
           {customer.pets.map((p) => (
             <PetRow key={p.id} pet={p} owner={owner} stays={data.bookings.filter((b) => involvesPet(b, p.id) && b.status !== "cancelled").length} today={today} />
           ))}
-          <form className="ds-form ds-form--panel" onSubmit={save} noValidate aria-label={c.editTitle}>
+          <form ref={ref} className="ds-form ds-form--panel" onSubmit={save} noValidate aria-label={c.editTitle}>
             <Heading level={2} size="md">{c.editTitle}</Heading>
             <Field label={c.name} error={errors.name}>
-              <Input value={name} onChange={(e) => (setName(e.target.value), setSaved(false))} />
+              <Input value={name} onChange={(e) => (setName(e.target.value), setSaved(false), setErrors(({ name: _, ...rest }) => rest))} />
             </Field>
             <Field label={c.whatsapp} error={errors.wa} optional={t.common.optional}>
-              <Input value={wa} onChange={(e) => (setWa(e.target.value), setSaved(false))} inputMode="tel" placeholder="08xx xxxx xxxx" />
+              <Input value={wa} onChange={(e) => (setWa(e.target.value), setSaved(false), setErrors(({ wa: _, ...rest }) => rest))} inputMode="tel" placeholder="08xx xxxx xxxx" />
             </Field>
             <Field label={c.language} hint={c.languageHint}>
               <Select value={language} onChange={(e) => (setLanguage(e.target.value as Language), setSaved(false))}>

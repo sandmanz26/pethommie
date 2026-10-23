@@ -6,7 +6,13 @@ import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { compact, intError, moneyError, textError, without } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS, parseRupiah } from "@/shared/lib/validate";
 import "./organisms.css";
+
+/** The most pets one shared room can be set to hold. */
+const MAX_PLACES = 50;
 
 export function CageForm({
   cage,
@@ -19,8 +25,10 @@ export function CageForm({
   onCancel: () => void;
   onDelete?: () => void;
 }) {
-  const { t } = useAppT();
+  const { t, locale } = useAppT();
   const c = t.cages;
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
   const [name, setName] = useState(cage?.name ?? "");
   const [size, setSize] = useState<CageSize>(cage?.size ?? "M");
   const [price, setPrice] = useState(String(cage?.pricePerNight ?? 75000));
@@ -30,23 +38,24 @@ export function CageForm({
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const p = parseInt(price.replace(/\D/g, "") || "0", 10);
-    const err: Record<string, string> = {};
-    if (!name.trim()) err.name = c.errName;
-    if (!(p > 0)) err.price = c.errPrice;
-    const places = parseInt(capacity.replace(/\D/g, "") || "0", 10);
-    if (shared && !(places >= 2)) err.capacity = c.errCapacity;
+    const p = parseRupiah(price) ?? 0;
+    const places = parseInt(capacity.trim(), 10);
+    const err = compact({
+      name: textError(v, name, { required: c.errName, ...LIMITS.unitName }),
+      price: moneyError(v, locale, price, { required: true, zero: c.errPrice }),
+      capacity: shared ? (/^\d+$/.test(capacity.trim()) && places < 2 ? c.errCapacity : intError(v, capacity, 2, MAX_PLACES)) : undefined,
+    });
     setErrors(err);
-    if (Object.keys(err).length) return;
+    if (Object.keys(err).length) return void focusInvalid();
     onSubmit({ name: name.trim(), size, pricePerNight: p, capacity: shared ? places : 1, archived: false });
   }
 
   return (
-    <form className="ds-form ds-form--panel" onSubmit={submit} noValidate>
+    <form ref={ref} className="ds-form ds-form--panel" onSubmit={submit} noValidate>
       <Heading level={2} size="md">{cage ? c.editTitle : c.newTitle}</Heading>
       <div className="ds-form__row">
         <Field label={c.name} error={errors.name}>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="M-05" autoFocus />
+          <Input value={name} onChange={(e) => (setName(e.target.value), setErrors((x) => without(x, "name")))} placeholder="M-05" autoFocus />
         </Field>
         <Field label={c.size}>
           <Select value={size} onChange={(e) => setSize(e.target.value as CageSize)}>
@@ -67,12 +76,12 @@ export function CageForm({
         </Field>
         {shared && (
           <Field label={c.capacity} error={errors.capacity}>
-            <Input value={capacity} onChange={(e) => setCapacity(e.target.value)} inputMode="numeric" />
+            <Input value={capacity} onChange={(e) => (setCapacity(e.target.value), setErrors((x) => without(x, "capacity")))} inputMode="numeric" />
           </Field>
         )}
       </div>
       <Field label={shared ? c.priceShared : c.price} error={errors.price}>
-        <Input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="numeric" />
+        <Input value={price} onChange={(e) => (setPrice(e.target.value), setErrors((x) => without(x, "price")))} inputMode="numeric" />
       </Field>
       <div className="ds-form__actions">
         {onDelete && (

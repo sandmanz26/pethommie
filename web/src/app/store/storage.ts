@@ -13,6 +13,8 @@ export type HotelRepository = {
 
 /** One document per account, so a second account in the same browser never sees the first one's hotel. */
 export const dataKeyFor = (accountId: string) => `pethommie.app.v1.${accountId}`;
+/** "Try now" hotels: a namespace of their own, apart from every real account's data. */
+export const demoDataKeyFor = (demoId: string) => `pethommie.demo.v1.${demoId}`;
 /**
  * Bump when HotelData changes shape: add a step to `migrate` that turns the previous version into the new
  * one, and a test with an old document. Older documents are upgraded on load, never discarded.

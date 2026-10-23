@@ -23,7 +23,14 @@ export type Account = {
   startsWithSampleData?: boolean;
   /** Mock accounts only: which sample hotel ("advanced" opens the busy one, in advanced mode). */
   sampleKind?: "simple" | "advanced";
+  /** A "Try now" session: one of the demo hotels, kept apart from real accounts and their data. */
+  demo?: true;
+  /** A discount claimed from the demo, kept with the account until paid plans open. */
+  offer?: Offer;
 };
+
+/** A discount offered in the demo: a share off the first paid plan, valid until a moment in time. */
+export type Offer = { code: string; percentOff: number; expiresAt: string };
 
 export type StoredAccount = Account & { password: PasswordHash };
 

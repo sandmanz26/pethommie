@@ -20,6 +20,9 @@ export function Hero() {
         </Button>
       </div>
       <p className="hero__note">{hero.note}</p>
+      <p className="hero__try">
+        <a href={hero.tryNow.href}>{hero.tryNow.label} →</a>
+      </p>
       <div className="hero__hint">
         <i aria-hidden="true" />
         {hero.scrollHint}

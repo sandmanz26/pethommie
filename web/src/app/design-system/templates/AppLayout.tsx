@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { AppNav } from "@/app/design-system/organisms/AppNav";
-import { useAppT } from "@/app/i18n/useAppT";
 import "./templates.css";
 import type { NavKey } from "@/app/design-system/organisms/navItems";
 
@@ -19,7 +18,6 @@ export function AppLayout({
   labels?: Partial<Record<NavKey, string>>;
   children: ReactNode;
 }) {
-  const { t } = useAppT();
   return (
     <div className="app-root tpl-app">
       <AppNav hotelName={hotelName} onLogout={onLogout} labels={labels} />
@@ -28,7 +26,6 @@ export function AppLayout({
           {banner}
           {children}
         </div>
-        <p className="tpl-app__demo">{t.common.demoNote}</p>
       </main>
     </div>
   );

@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import type { CageSize } from "@/app/domain/types";
 import { formatRupiah, generateCages, newId, SIZE_ORDER } from "@/app/domain/logic";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
+import { cageIssues, hasIssues, hotelIssues, roomIssues, SETUP_LIMITS, type LengthIssue, type PriceIssue, type RoomDraft } from "./onboardingRules";
 import { useAccount } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
 import { useMode } from "@/app/mode/ModeProvider";
@@ -21,6 +22,8 @@ import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
 import "./pages.css";
 
 type CageSpec = Record<CageSize, { count: number; price: number }>;
+/** Typing a price keeps digits only; an empty field reads as 0, which the rules then refuse. */
+const digits = (text: string) => parseInt(text.replace(/\D/g, "") || "0", 10);
 const DEFAULT_SPEC: CageSpec = { S: { count: 6, price: 50_000 }, M: { count: 4, price: 75_000 }, L: { count: 2, price: 120_000 } };
 
 /** One-tap starting points for the cage counts. Prices stay as the owner set them. */
@@ -37,8 +40,6 @@ function matchPreset(spec: CageSpec): PresetKey {
 }
 
 type Step = 0 | 1 | 2 | 3;
-
-type RoomDraft = { name: string; places: number; price: number };
 
 /** A welcome, then three short steps: name the hotel, set up cages, pick a first task. */
 export function OnboardingPage() {
@@ -60,7 +61,10 @@ export function OnboardingPage() {
     { name: o.cages.defaultRooms[0], places: 8, price: 60_000 },
     { name: o.cages.defaultRooms[1], places: 6, price: 85_000 },
   ]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Problems show after a first try to continue, then update as they are fixed.
+  const [tried, setTried] = useState<{ hotel?: boolean; cages?: boolean }>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  const focus = (field: string) => formRef.current?.querySelector<HTMLElement>(`[name="${field}"]`)?.focus();
 
   // Already set up and not in the middle of this flow: go to the app.
   if (data.hotel && step !== 3) return <Navigate to="/app" replace />;
@@ -77,33 +81,57 @@ export function OnboardingPage() {
     setSpec((prev) => ({ S: { ...prev.S, count: p.S }, M: { ...prev.M, count: p.M }, L: { ...prev.L, count: p.L } }));
   }
 
+  const rupiah = (n: number) => formatRupiah(n, locale);
+  const [minPrice, maxPrice] = SETUP_LIMITS.price;
+  const lengthText = (issue: LengthIssue | undefined, [min, max]: readonly [number, number], required: string) =>
+    issue === "required" ? required : issue === "short" ? o.hotel.errNameShort(min) : issue === "long" ? o.hotel.errTooLong(max) : undefined;
+  const priceText = (issue?: PriceIssue) => (issue === "low" ? o.cages.errPriceLow(rupiah(minPrice)) : issue === "high" ? o.cages.errPriceHigh(rupiah(maxPrice)) : undefined);
+
+  const hotelCheck = hotelIssues({ name, city, whatsapp: wa });
+  const hotelErrors = tried.hotel
+    ? {
+        name: lengthText(hotelCheck.name, SETUP_LIMITS.hotelName, o.hotel.errName),
+        city: hotelCheck.city && o.hotel.errTooLong(SETUP_LIMITS.city),
+        wa: hotelCheck.whatsapp && o.hotel.errWhatsapp,
+      }
+    : {};
+  const cageCheck = cageIssues(spec);
+  const roomCheck = roomIssues(rooms);
+  const showCages = !!tried.cages;
+  const roomNameText = (issue: LengthIssue | "duplicate" | undefined) => {
+    if (issue === "duplicate") return o.cages.errRoomDuplicate;
+    if (issue === "required") return o.cages.errRoomName;
+    if (issue === "short") return o.cages.errRoomNameShort(SETUP_LIMITS.roomName[0]);
+    if (issue === "long") return o.cages.errRoomNameLong(SETUP_LIMITS.roomName[1]);
+    return undefined;
+  };
+
   function submitHotel(e: FormEvent) {
     e.preventDefault();
-    const err: Record<string, string> = {};
-    if (!name.trim()) err.name = o.hotel.errName;
-    if (wa.trim() && !normaliseWhatsapp(wa)) err.wa = o.hotel.errWhatsapp;
-    setErrors(err);
-    if (!Object.keys(err).length) setStep(2);
+    setTried((x) => ({ ...x, hotel: true }));
+    if (hasIssues(hotelCheck)) return focus(hotelCheck.name ? "name" : hotelCheck.city ? "city" : "whatsapp");
+    setStep(2);
   }
 
   function submitCages(e: FormEvent) {
     e.preventDefault();
+    setTried((x) => ({ ...x, cages: true }));
     if (layout === "rooms") {
-      if (!rooms.length || rooms.some((r) => !r.name.trim() || r.places < 2 || !(r.price > 0))) {
-        setErrors({ cages: o.cages.errRooms });
-        return;
+      if (hasIssues(roomCheck)) {
+        const i = roomCheck.rooms.findIndex((r) => hasIssues(r));
+        const r = roomCheck.rooms[i];
+        return i >= 0 && focus(`room-${i}-${r.name ? "name" : r.price ? "price" : "places"}`);
       }
       setCages(rooms.map((r) => ({ id: newId(), name: r.name.trim(), size: "M", pricePerNight: r.price, capacity: r.places, archived: false })));
       saveSettings({ ...data.settings, unitTerm: "room" });
     } else {
-      if (totalCages === 0) {
-        setErrors({ cages: o.cages.errNone });
-        return;
+      if (hasIssues(cageCheck)) {
+        const size = SIZE_ORDER.find((x) => cageCheck.price?.[x]);
+        return size && focus(`price-${size}`);
       }
       setCages(generateCages(spec));
       saveSettings({ ...data.settings, unitTerm: "cage" });
     }
-    setErrors({});
     setHotel({ name: name.trim(), city: city.trim(), whatsapp: normaliseWhatsapp(wa) ?? "", createdAt: new Date().toISOString() });
     setStep(3);
   }
@@ -150,20 +178,20 @@ export function OnboardingPage() {
       )}
 
       {step === 1 && (
-        <form className="pg-flow" onSubmit={submitHotel} noValidate>
+        <form ref={formRef} className="pg-flow" onSubmit={submitHotel} noValidate>
           <Illustration name="app-hotel" height={140} />
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.hotel.title}</Heading>
             <Muted>{o.hotel.lead}</Muted>
           </div>
-          <Field label={o.hotel.name} error={errors.name}>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={o.hotel.namePh} autoFocus autoComplete="organization" />
+          <Field label={o.hotel.name} error={hotelErrors.name}>
+            <Input name="name" value={name} maxLength={SETUP_LIMITS.hotelName[1] + 10} onChange={(e) => setName(e.target.value)} placeholder={o.hotel.namePh} autoFocus autoComplete="organization" />
           </Field>
-          <Field label={o.hotel.city} optional={t.common.optional}>
-            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={o.hotel.cityPh} autoComplete="address-level2" />
+          <Field label={o.hotel.city} optional={t.common.optional} error={hotelErrors.city}>
+            <Input name="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder={o.hotel.cityPh} autoComplete="address-level2" />
           </Field>
-          <Field label={o.hotel.whatsapp} hint={o.hotel.whatsappHint} error={errors.wa} optional={t.common.optional}>
-            <Input value={wa} onChange={(e) => setWa(e.target.value)} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
+          <Field label={o.hotel.whatsapp} hint={o.hotel.whatsappHint} error={hotelErrors.wa} optional={t.common.optional}>
+            <Input name="whatsapp" value={wa} onChange={(e) => setWa(e.target.value)} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
           </Field>
           <div className="pg-flow__actions">
             <Button variant="secondary" icon="chevronLeft" onClick={() => setStep(0)}>
@@ -177,7 +205,7 @@ export function OnboardingPage() {
       )}
 
       {step === 2 && (
-        <form className="pg-flow" onSubmit={submitCages} noValidate>
+        <form ref={formRef} className="pg-flow" onSubmit={submitCages} noValidate>
           <Illustration name="app-cages" height={130} />
           <div className="pg-flow__head pg-flow__head--center">
             <Heading level={1}>{o.cages.title}</Heading>
@@ -186,7 +214,7 @@ export function OnboardingPage() {
           <Segmented
             label={o.cages.layout.label}
             value={layout}
-            onChange={(v) => (setLayout(v), setErrors({}))}
+            onChange={(v) => (setLayout(v), setTried((x) => ({ ...x, cages: false })))}
             options={[
               { value: "cages", label: o.cages.layout.cages },
               { value: "rooms", label: o.cages.layout.rooms },
@@ -198,12 +226,25 @@ export function OnboardingPage() {
               <div className="pg-flow__sizes">
                 {rooms.map((r, i) => (
                   <div className="pg-flow__size pg-flow__room" key={i}>
-                    <Field label={o.cages.roomName}>
-                      <Input value={r.name} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} />
+                    <Field label={o.cages.roomName} error={showCages ? roomNameText(roomCheck.rooms[i]?.name) : undefined}>
+                      <Input name={`room-${i}-name`} maxLength={SETUP_LIMITS.roomName[1] + 10} value={r.name} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} />
                     </Field>
-                    <Stepper label={`${r.name || o.cages.roomName} · ${o.cages.places}`} value={r.places} onChange={(n) => setRooms(rooms.map((x, k) => (k === i ? { ...x, places: n } : x)))} />
-                    <Field label={o.cages.pricePerPet} hint={formatRupiah(r.price, locale)}>
-                      <Input inputMode="numeric" value={r.price} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, price: parseInt(e.target.value.replace(/\D/g, "") || "0", 10) } : x)))} />
+                    <div className="pg-flow__places">
+                      <Stepper
+                        label={`${r.name || o.cages.roomName} · ${o.cages.places}`}
+                        value={r.places}
+                        min={1}
+                        max={SETUP_LIMITS.places[1]}
+                        onChange={(n) => setRooms(rooms.map((x, k) => (k === i ? { ...x, places: n } : x)))}
+                      />
+                      {showCages && roomCheck.rooms[i]?.places && (
+                        <p className="ds-field__error" role="alert">
+                          {o.cages.errPlaces(...SETUP_LIMITS.places)}
+                        </p>
+                      )}
+                    </div>
+                    <Field label={o.cages.pricePerPet} hint={formatRupiah(r.price, locale)} error={showCages ? priceText(roomCheck.rooms[i]?.price) : undefined}>
+                      <Input name={`room-${i}-price`} inputMode="numeric" value={r.price || ""} onChange={(e) => setRooms(rooms.map((x, k) => (k === i ? { ...x, price: digits(e.target.value) } : x)))} />
                     </Field>
                     {rooms.length > 1 && (
                       <Button variant="ghost" size="sm" icon="trash" aria-label={o.cages.removeRoom(r.name)} onClick={() => setRooms(rooms.filter((_, k) => k !== i))} />
@@ -243,12 +284,8 @@ export function OnboardingPage() {
                       value={spec[s].count}
                       onChange={(n) => setSpec({ ...spec, [s]: { ...spec[s], count: n } })}
                     />
-                    <Field label={o.cages.price} hint={formatRupiah(spec[s].price, locale)}>
-                      <Input
-                        inputMode="numeric"
-                        value={spec[s].price}
-                        onChange={(e) => setSpec({ ...spec, [s]: { ...spec[s], price: parseInt(e.target.value.replace(/\D/g, "") || "0", 10) } })}
-                      />
+                    <Field label={o.cages.price} hint={formatRupiah(spec[s].price, locale)} error={showCages ? priceText(cageCheck.price?.[s]) : undefined}>
+                      <Input name={`price-${s}`} inputMode="numeric" value={spec[s].price || ""} onChange={(e) => setSpec({ ...spec, [s]: { ...spec[s], price: digits(e.target.value) } })} />
                     </Field>
                   </div>
                 ))}
@@ -256,7 +293,9 @@ export function OnboardingPage() {
               <p className="pg-flow__total">{o.cages.total(totalCages)}</p>
             </>
           )}
-          {errors.cages && <Alert tone="danger">{errors.cages}</Alert>}
+          {showCages && (layout === "rooms" ? roomCheck.none || hasIssues(roomCheck) : hasIssues(cageCheck)) && (
+            <Alert tone="danger">{layout === "cages" && cageCheck.none ? o.cages.errNone : o.cages.errFix}</Alert>
+          )}
           <div className="pg-flow__actions">
             <Button variant="secondary" icon="chevronLeft" onClick={() => setStep(1)}>
               {t.common.back}

@@ -10,6 +10,9 @@ import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { useAppT } from "@/app/i18n/useAppT";
+import { compact, moneyError, textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS, parseRupiah } from "@/shared/lib/validate";
 import "./organisms.css";
 
 const statusTone: Record<"unpaid" | "partial" | "paid", Tone> = { unpaid: "danger", partial: "warn", paid: "ok" };
@@ -46,7 +49,9 @@ export function PaymentsPanel({
   const [kind, setKind] = useState<PaymentKind>(booking.status === "cancelled" ? "refund" : booking.status === "booked" ? "deposit" : "payment");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | undefined>();
+  const [errors, setErrors] = useState<Partial<Record<"amount" | "reference" | "note", string>>>({});
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
 
   function payInFull() {
     onAdd?.({ at: new Date().toISOString(), amount: balance, method, kind: "payment", reference: "", note: "" });
@@ -54,13 +59,19 @@ export function PaymentsPanel({
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const digits = parseInt(amount.replace(/\D/g, "") || "0", 10);
+    const local = compact({
+      amount: moneyError(v, locale, amount, { required: true, zero: p.errAmount }),
+      reference: textError(v, reference, { max: LIMITS.short }),
+      note: textError(v, note, { max: LIMITS.line }),
+    });
+    if (Object.keys(local).length) return void (setErrors(local), focusInvalid());
+    const digits = parseRupiah(amount) ?? 0;
     const issues = onAdd?.({ at: new Date().toISOString(), amount: digits, method, kind, reference: reference.trim(), note: note.trim() }) ?? [];
-    if (issues.length) return setError(issues.includes("refund") ? p.errRefund : p.errAmount);
+    if (issues.length) return void (setErrors({ amount: issues.includes("refund") ? p.errRefund : p.errAmount }), focusInvalid());
     setAmount("");
     setReference("");
     setNote("");
-    setError(undefined);
+    setErrors({});
   }
 
   return (
@@ -126,10 +137,10 @@ export function PaymentsPanel({
       )}
 
       {onAdd && (!cancelled || kept > 0) && (
-        <form className="ds-form" onSubmit={submit} noValidate aria-label={p.add}>
+        <form ref={ref} className="ds-form" onSubmit={submit} noValidate aria-label={p.add}>
           <div className="ds-form__row">
-            <Field label={p.amount} error={error}>
-              <Input value={amount} onChange={(e) => (setAmount(e.target.value), setError(undefined))} inputMode="numeric" placeholder="0" />
+            <Field label={p.amount} error={errors.amount}>
+              <Input value={amount} onChange={(e) => (setAmount(e.target.value), setErrors((x) => ({ ...x, amount: undefined })))} inputMode="numeric" placeholder="0" />
             </Field>
             <Field label={p.method}>
               <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
@@ -154,11 +165,11 @@ export function PaymentsPanel({
           </div>
           {!simple && (
             <div className="ds-form__row">
-              <Field label={p.reference} optional={t.common.optional}>
-                <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={p.referencePh} />
+              <Field label={p.reference} error={errors.reference} optional={t.common.optional}>
+                <Input value={reference} onChange={(e) => (setReference(e.target.value), setErrors((x) => ({ ...x, reference: undefined })))} placeholder={p.referencePh} />
               </Field>
-              <Field label={p.note} optional={t.common.optional}>
-                <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={p.notePh} />
+              <Field label={p.note} error={errors.note} optional={t.common.optional}>
+                <Input value={note} onChange={(e) => (setNote(e.target.value), setErrors((x) => ({ ...x, note: undefined })))} placeholder={p.notePh} />
               </Field>
             </div>
           )}

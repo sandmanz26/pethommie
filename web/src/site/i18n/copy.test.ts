@@ -16,11 +16,11 @@ describe("site copy", () => {
     expect(times(id)).toEqual(times(en));
   });
 
-  it("never links to a demo: there is none to offer", () => {
+  it("sends Try now to the demo screen, apart from logging in and signing up", () => {
     for (const copy of [en, id]) {
-      const text = JSON.stringify(copy);
-      expect(text).not.toMatch(/\/app\/demo/);
-      expect(text).not.toMatch(/open the demo|buka demo/i);
+      expect(copy.nav.tryNow.href).toBe("/app/try");
+      expect(copy.hero.tryNow.href).toBe("/app/try");
+      expect(copy.hero.primaryCta.href).toBe("/app/register");
     }
   });
 

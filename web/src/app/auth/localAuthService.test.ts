@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_PASSWORD, demoAccounts } from "./demoAccounts";
+import { demoAccounts } from "./demoAccounts";
+import { hashPassword } from "./password";
 import { ACCOUNTS_KEY, createLocalAuthService, SESSION_KEY } from "./localAuthService";
 import type { Registration } from "./types";
 
@@ -101,34 +102,53 @@ describe("stored accounts", () => {
   });
 });
 
-describe("mock accounts", () => {
-  it("creates the demo accounts once, on first use, and they can log in", async () => {
-    const auth = createLocalAuthService({ ...FAST, seed: demoAccounts });
-    const out = await auth.login("demo@pethommie.id", DEMO_PASSWORD);
-    expect(out.ok && out.account).toMatchObject({ id: "demo-rina", hotelName: "Rumah Meong Bintaro", startsWithSampleData: true });
-    const fresh = await auth.login("baru@pethommie.id", DEMO_PASSWORD);
-    expect(fresh.ok && fresh.account.startsWithSampleData).toBeFalsy();
+describe("demo hotels (Try now)", () => {
+  const demo = demoAccounts;
+
+  it("opens a demo hotel without a password, flagged as the demo, and keeps it open on the next visit", async () => {
+    const auth = createLocalAuthService({ ...FAST, demo });
+    const out = await auth.tryDemo("demo-rina");
+    expect(out.ok && out.account).toMatchObject({ id: "demo-rina", hotelName: "Rumah Meong Bintaro", demo: true, startsWithSampleData: true });
+    expect(await createLocalAuthService({ ...FAST, demo }).restore()).toMatchObject({ id: "demo-rina", demo: true });
   });
 
-  it("does not bring them back for someone who already has accounts", async () => {
-    await createLocalAuthService(FAST).register(rina);
-    const auth = createLocalAuthService({ ...FAST, seed: demoAccounts });
-    expect(await auth.login("demo@pethommie.id", DEMO_PASSWORD)).toEqual({ ok: false, error: "invalid_credentials" });
-  });
-
-  it("adds a demo account that is new since this browser was seeded, and leaves the others as they were", async () => {
-    const first = createLocalAuthService({ ...FAST, seed: demoAccounts.slice(0, 2) });
-    await first.login("demo@pethommie.id", DEMO_PASSWORD);
-    const before = JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts;
-    const later = createLocalAuthService({ ...FAST, seed: demoAccounts });
-    const pro = await later.login("pro@pethommie.id", DEMO_PASSWORD);
-    expect(pro.ok && pro.account).toMatchObject({ id: "demo-pro", sampleKind: "advanced" });
-    expect(JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts.slice(0, 2)).toEqual(before);
-  });
-
-  it("creates none when there is no seed (a real launch)", async () => {
-    const auth = createLocalAuthService(FAST);
-    expect(await auth.login("demo@pethommie.id", DEMO_PASSWORD)).toEqual({ ok: false, error: "invalid_credentials" });
+  it("never stores the demo hotels with the real accounts, and the login form can't open them", async () => {
+    const auth = createLocalAuthService({ ...FAST, demo });
+    await auth.tryDemo("demo-pro");
+    expect(await auth.login("pro@pethommie.id", "Demo1234")).toEqual({ ok: false, error: "invalid_credentials" });
     expect(JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts).toEqual([]);
+  });
+
+  it("does not let a demo session pass as a real account with the same id", async () => {
+    await createLocalAuthService(FAST).register(rina);
+    const realId = JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts[0].id;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ accountId: realId, demo: true }));
+    expect(await createLocalAuthService({ ...FAST, demo }).restore()).toBeNull();
+  });
+
+  it("takes out the demo accounts older versions stored with a password, and leaves real ones alone", async () => {
+    const password = await hashPassword("Demo1234", 1000);
+    const old = { id: "demo-rina", name: "Rina", email: "demo@pethommie.id", whatsapp: "", hotelName: "Rumah Meong Bintaro", createdAt: "2026-01-01", password };
+    const real = { ...old, id: "acct-1", email: "owner@example.com" };
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify({ version: 1, accounts: [old, real] }));
+    const auth = createLocalAuthService({ ...FAST, demo });
+    expect(await auth.login("demo@pethommie.id", "Demo1234")).toEqual({ ok: false, error: "invalid_credentials" });
+    expect(await auth.login("owner@example.com", "Demo1234")).toMatchObject({ ok: true });
+    expect(JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts.map((a: { id: string }) => a.id)).toEqual(["acct-1"]);
+  });
+
+  it("refuses an unknown hotel, and has none at all for a launch without the demo", async () => {
+    expect(await createLocalAuthService({ ...FAST, demo }).tryDemo("demo-nope")).toEqual({ ok: false, error: "invalid_credentials" });
+    expect(await createLocalAuthService(FAST).tryDemo("demo-rina")).toEqual({ ok: false, error: "invalid_credentials" });
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
+  });
+
+  it("keeps a running demo discount with a new account, and drops one that has ended", async () => {
+    const auth = createLocalAuthService(FAST);
+    const offer = { code: "DEMO50", percentOff: 50, expiresAt: new Date(Date.now() + 86_400_000).toISOString() };
+    const kept = await auth.register(rina, offer);
+    expect(kept.ok && kept.account.offer).toEqual(offer);
+    const late = await auth.register({ ...rina, email: "late@example.com" }, { ...offer, expiresAt: new Date(Date.now() - 1).toISOString() });
+    expect(late.ok && late.account.offer).toBeUndefined();
   });
 });

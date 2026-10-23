@@ -19,6 +19,9 @@ import { UpgradeCard } from "@/app/design-system/organisms/UpgradeCard";
 import { ConfirmDialog } from "@/app/design-system/molecules/ConfirmDialog";
 import { Field } from "@/app/design-system/molecules/Field";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { isValidNpwp, LIMITS } from "@/shared/lib/validate";
 import "./pages.css";
 
 export function SettingsPage() {
@@ -36,9 +39,14 @@ export function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [draft, setDraft] = useState<HotelSettings>(data.settings);
   const [ppnText, setPpnText] = useState(String(data.settings.tax.ppnPercent));
-  const [bizErrors, setBizErrors] = useState<{ prefix?: string; ppn?: string }>({});
+  const [bizErrors, setBizErrors] = useState<{ prefix?: string; ppn?: string; legalName?: string; address?: string; npwp?: string; payment?: string }>({});
+  const v = t.validation;
+  const hotelForm = useFocusInvalid();
+  const bizForm = useFocusInvalid();
   const [bizSaved, setBizSaved] = useState(false);
   const edit = (patch: Partial<HotelSettings>) => (setDraft((d) => ({ ...d, ...patch })), setBizSaved(false));
+  const clearBiz = (key: keyof typeof bizErrors) => setBizErrors((x) => ({ ...x, [key]: undefined }));
+  const clearHotel = (key: string) => setErrors(({ [key]: _, ...rest }) => rest);
   const editTax = (patch: Partial<HotelSettings["tax"]>) => edit({ tax: { ...draft.tax, ...patch } });
   const [confirm, setConfirm] = useState<"reset" | "sample" | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -58,17 +66,31 @@ export function SettingsPage() {
   function save(e: FormEvent) {
     e.preventDefault();
     const err: Record<string, string> = {};
-    if (!name.trim()) err.name = t.onboarding.hotel.errName;
+    const nameErr = textError(v, name, { required: t.onboarding.hotel.errName, ...LIMITS.hotelName });
+    if (nameErr) err.name = nameErr;
+    const cityErr = textError(v, city, { min: LIMITS.city.min, max: LIMITS.city.max });
+    if (cityErr) err.city = cityErr;
     const normalised = wa.trim() ? normaliseWhatsapp(wa) : "";
     if (normalised === null) err.wa = t.onboarding.hotel.errWhatsapp;
     setErrors(err);
-    if (Object.keys(err).length) return;
+    if (Object.keys(err).length) return void hotelForm.focusInvalid();
     setHotel({ ...hotel, name: name.trim(), city: city.trim(), whatsapp: normalised ?? "" });
     setSaved(true);
   }
 
   function saveBusiness(e: FormEvent) {
     e.preventDefault();
+    const local = {
+      legalName: textError(v, draft.legalName, { max: LIMITS.hotelName.max }),
+      address: textError(v, draft.address, { max: LIMITS.line }),
+      npwp: draft.npwp.trim() && !isValidNpwp(draft.npwp) ? v.npwp : undefined,
+      payment: textError(v, draft.paymentInstructions, { max: LIMITS.notes }),
+    };
+    if (Object.values(local).some(Boolean)) {
+      setBizErrors(local);
+      setBizSaved(false);
+      return void bizForm.focusInvalid();
+    }
     const ppn = Number(ppnText.replace(",", "."));
     const issues = saveSettings({ ...draft, tax: { ...draft.tax, ppnPercent: ppnText.trim() === "" ? NaN : ppn } });
     setBizErrors({
@@ -76,6 +98,7 @@ export function SettingsPage() {
       ppn: issues.includes("ppn") ? t.settingsTax.errPpn : undefined,
     });
     setBizSaved(issues.length === 0);
+    if (issues.length) bizForm.focusInvalid();
   }
 
   function exportJson() {
@@ -101,17 +124,17 @@ export function SettingsPage() {
         />
       )}
 
-      <form className="ds-form__section pg-settings" onSubmit={save} noValidate>
+      <form ref={hotelForm.ref} className="ds-form__section pg-settings" onSubmit={save} noValidate>
         <Heading level={2} size="md">{t.settings.hotel}</Heading>
         <Field label={t.onboarding.hotel.name} error={errors.name}>
-          <Input value={name} onChange={(e) => (setName(e.target.value), setSaved(false))} />
+          <Input value={name} onChange={(e) => (setName(e.target.value), setSaved(false), clearHotel("name"))} />
         </Field>
         <div className="ds-form__row">
-          <Field label={t.onboarding.hotel.city} optional={t.common.optional}>
-            <Input value={city} onChange={(e) => (setCity(e.target.value), setSaved(false))} />
+          <Field label={t.onboarding.hotel.city} error={errors.city} optional={t.common.optional}>
+            <Input value={city} onChange={(e) => (setCity(e.target.value), setSaved(false), clearHotel("city"))} />
           </Field>
           <Field label={t.onboarding.hotel.whatsapp} error={errors.wa} optional={t.common.optional}>
-            <Input value={wa} onChange={(e) => (setWa(e.target.value), setSaved(false))} inputMode="tel" />
+            <Input value={wa} onChange={(e) => (setWa(e.target.value), setSaved(false), clearHotel("wa"))} inputMode="tel" />
           </Field>
         </div>
         <div className="ds-form__actions">
@@ -123,25 +146,25 @@ export function SettingsPage() {
         </div>
       </form>
 
-      <form className="ds-form__section pg-settings" onSubmit={saveBusiness} noValidate id="business">
+      <form ref={bizForm.ref} className="ds-form__section pg-settings" onSubmit={saveBusiness} noValidate id="business">
         <Heading level={2} size="md">{t.settingsBiz.title}</Heading>
         <Muted>{t.settingsBiz.lead}</Muted>
-        <Field label={t.settingsBiz.legalName} optional={t.common.optional}>
-          <Input value={draft.legalName} placeholder={t.settingsBiz.legalNamePh} onChange={(e) => edit({ legalName: e.target.value })} />
+        <Field label={t.settingsBiz.legalName} error={bizErrors.legalName} optional={t.common.optional}>
+          <Input value={draft.legalName} placeholder={t.settingsBiz.legalNamePh} onChange={(e) => (edit({ legalName: e.target.value }), clearBiz("legalName"))} />
         </Field>
-        <Field label={t.settingsBiz.address} optional={t.common.optional}>
-          <Input value={draft.address} onChange={(e) => edit({ address: e.target.value })} />
+        <Field label={t.settingsBiz.address} error={bizErrors.address} optional={t.common.optional}>
+          <Input value={draft.address} onChange={(e) => (edit({ address: e.target.value }), clearBiz("address"))} />
         </Field>
         <div className="ds-form__row">
-          <Field label={t.settingsBiz.npwp} hint={t.settingsBiz.npwpHint} optional={t.common.optional}>
-            <Input value={draft.npwp} inputMode="numeric" onChange={(e) => edit({ npwp: e.target.value })} />
+          <Field label={t.settingsBiz.npwp} hint={t.settingsBiz.npwpHint} error={bizErrors.npwp} optional={t.common.optional}>
+            <Input value={draft.npwp} inputMode="numeric" onChange={(e) => (edit({ npwp: e.target.value }), clearBiz("npwp"))} />
           </Field>
           <Field label={t.settingsBiz.prefix} hint={t.settingsBiz.prefixHint(`${draft.invoicePrefix.replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "INV"}-${new Date().getFullYear()}-0001`)} error={bizErrors.prefix}>
-            <Input value={draft.invoicePrefix} onChange={(e) => edit({ invoicePrefix: e.target.value })} />
+            <Input value={draft.invoicePrefix} onChange={(e) => (edit({ invoicePrefix: e.target.value }), clearBiz("prefix"))} />
           </Field>
         </div>
-        <Field label={t.settingsBiz.payment} optional={t.common.optional}>
-          <Textarea rows={3} value={draft.paymentInstructions} placeholder={t.settingsBiz.paymentPh} onChange={(e) => edit({ paymentInstructions: e.target.value })} />
+        <Field label={t.settingsBiz.payment} error={bizErrors.payment} optional={t.common.optional}>
+          <Textarea rows={3} value={draft.paymentInstructions} placeholder={t.settingsBiz.paymentPh} onChange={(e) => (edit({ paymentInstructions: e.target.value }), clearBiz("payment"))} />
         </Field>
         <Field label={t.unitTerm.label} hint={t.unitTerm.hint}>
           <Select value={draft.unitTerm} onChange={(e) => edit({ unitTerm: e.target.value as HotelSettings["unitTerm"] })}>
@@ -191,7 +214,7 @@ export function SettingsPage() {
         {draft.tax.pkp && (
           <>
             <Field label={t.settingsTax.ppn} hint={t.settingsTax.ppnHint} error={bizErrors.ppn}>
-              <Input value={ppnText} inputMode="decimal" onChange={(e) => (setPpnText(e.target.value), setBizSaved(false))} />
+              <Input value={ppnText} inputMode="decimal" onChange={(e) => (setPpnText(e.target.value), setBizSaved(false), clearBiz("ppn"))} />
             </Field>
             <Checkbox label={t.settingsTax.includes} checked={draft.tax.pricesIncludeTax} onChange={(e) => editTax({ pricesIncludeTax: e.target.checked })} />
           </>

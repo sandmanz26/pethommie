@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useBodyTheme } from "@/shared/hooks/useBodyTheme";
 import { useDocumentMeta } from "@/shared/hooks/useDocumentMeta";
 import { AuthProvider, useAuth } from "@/app/auth/AuthProvider";
@@ -6,6 +6,7 @@ import { GuestOnly, RequireAuth } from "@/app/auth/guards";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
 import { useServiceWorker } from "@/app/pwa/useServiceWorker";
+import { DEMO_MODE } from "@/app/config";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { AppLayout } from "@/app/design-system/templates/AppLayout";
@@ -15,6 +16,7 @@ import { LoginPage } from "./LoginPage";
 import { CurrentStay } from "./CurrentStay";
 import { OnboardingPage } from "./OnboardingPage";
 import { RegisterPage } from "./RegisterPage";
+import { TryPage } from "./TryPage";
 import { TodayPage } from "./TodayPage";
 import { BookingsPage } from "./BookingsPage";
 import { BookingNewPage } from "./BookingNewPage";
@@ -43,8 +45,7 @@ import { SettingsPage } from "./SettingsPage";
 /** Workspace pages need a set-up hotel; send first-time users to onboarding. */
 function Workspace() {
   const { data, saveFailed } = useStore();
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+  const { logout, account } = useAuth();
   const { t } = useAppT();
   const sw = useServiceWorker();
   if (!data.hotel) return <Navigate to="/app/onboarding" replace />;
@@ -70,8 +71,7 @@ function Workspace() {
         </>
       }
       onLogout={async () => {
-        await logout();
-        navigate("/app/login", { replace: true });
+        await logout(account?.demo ? "/app/try" : "/app/login");
       }}
     >
       <Outlet />
@@ -93,6 +93,7 @@ export default function AppRoutes() {
         <Route element={<GuestOnly />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          {DEMO_MODE && <Route path="try" element={<TryPage />} />}
         </Route>
         <Route element={<RequireAuth />}>
           <Route element={<AccountData />}>

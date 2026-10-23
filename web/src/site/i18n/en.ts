@@ -25,6 +25,7 @@ export const en = {
       { href: "#faq", label: "FAQ" },
     ],
     login: "Log in",
+    tryNow: { href: "/app/try", label: "Try now", short: "Demo" },
     cta: "Try it free",
     languageLabel: "Language",
   },
@@ -36,6 +37,7 @@ export const en = {
     primaryCta: { href: "/app/register", label: "Try free for 30 days" },
     secondaryCta: { href: "#problem", label: "See the numbers" },
     note: "No card needed · Bahasa Indonesia & English",
+    tryNow: { href: "/app/try", label: "Or try a sample hotel first, no sign-up" },
     scrollHint: "Scroll to follow one stay",
   },
   film: {
@@ -305,6 +307,14 @@ export const en = {
     whatsapp: "WhatsApp",
     rights: "All rights reserved.",
     art: "Ink illustrations made for Pethommie",
+  },
+  validation: {
+    tooShort: (n: number) => `Use at least ${n} characters.`,
+    tooLong: (n: number) => `Keep it to ${n} characters or fewer.`,
+    hotelName: "Please write your pet hotel's name.",
+    city: "Please write your city.",
+    whatsapp: "Please write your WhatsApp number.",
+    datesFar: "Pick dates within the next year, for a stay of at most 60 nights.",
   },
 };
 

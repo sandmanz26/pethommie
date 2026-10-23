@@ -7,6 +7,8 @@ import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Field } from "@/app/design-system/molecules/Field";
+import { moneyError } from "@/app/forms/messages";
+import { parseRupiah } from "@/shared/lib/validate";
 
 type Money = "keep" | "all" | "part";
 const METHODS: PaymentMethod[] = ["transfer", "cash", "qris", "ewallet", "card"];
@@ -47,10 +49,12 @@ export function useCancelBooking() {
   const paid = booking ? paidAmount(booking) : 0;
   const rp = (n: number) => formatRupiah(n, locale);
   const invoice = booking ? data.invoices.find((i) => i.bookingId === booking.id && i.status === "issued") : undefined;
-  const refund = money === "all" ? paid : money === "part" ? parseInt(part.replace(/\D/g, "") || "0", 10) : 0;
+  const refund = money === "all" ? paid : money === "part" ? parseRupiah(part) || 0 : 0;
 
   function confirm() {
     if (!booking) return;
+    const partErr = money === "part" && paid > 0 ? moneyError(t.validation, locale, part, { required: true, zero: c.errRefund }) : undefined;
+    if (partErr) return setError(partErr);
     const issues = cancelBooking(booking.id, { reason, refund, method, on: todayISO(), at: new Date().toISOString() });
     if (issues.length) return setError(c.errRefund);
     setBooking(null);
@@ -84,7 +88,7 @@ export function useCancelBooking() {
           )}
           {money === "part" && paid > 0 && (
             <Field label={c.amount} error={error}>
-              <Input value={part} onChange={(e) => setPart(e.target.value)} inputMode="numeric" placeholder="0" />
+              <Input value={part} onChange={(e) => (setPart(e.target.value), setError(undefined))} inputMode="numeric" placeholder="0" />
             </Field>
           )}
           {refund > 0 && (

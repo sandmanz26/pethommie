@@ -174,3 +174,19 @@
   .ds-chart, .pg-panel, .ds-barlist { box-shadow: none; border: 1px solid #ddd; }
 }
 .pg-finance__period small { font-weight: 400; color: var(--ink-soft); }
+
+/* ---------- Try now ---------- */
+.pg-try__eyebrow { margin: 0; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--seal); }
+.pg-try { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pg-try__hotel {
+  display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
+  padding: 14px 14px 14px 16px; border-radius: var(--radius); background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.pg-try__hotel span { display: grid; gap: 2px; min-width: 0; }
+.pg-try__hotel small { color: var(--ink-soft); }
+.pg-try__apart { margin: 0; text-align: center; font-size: 0.875rem; color: var(--ink-soft); }
+@media (max-width: 420px) {
+  .pg-try__hotel { grid-template-columns: 1fr; }
+}
+.pg-settings .ds-muted { overflow-wrap: anywhere; }

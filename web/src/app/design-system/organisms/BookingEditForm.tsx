@@ -7,6 +7,9 @@ import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { CompanionPicker } from "@/app/design-system/molecules/CompanionPicker";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { compact, dateError, textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS } from "@/shared/lib/validate";
 import "./organisms.css";
 
 /** Change the dates, cage or notes of a stay that already exists. Only free cages are offered. */
@@ -30,8 +33,10 @@ export function BookingEditForm({
   const [cageId, setCageId] = useState(booking.cageId);
   const [notes, setNotes] = useState(booking.notes);
   const [companions, setCompanions] = useState<string[]>(booking.companionIds);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const inFixed = booking.status === "checked_in";
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
 
   const mainPet = data.pets.find((p) => p.id === booking.petId);
   const siblings = mainPet ? data.pets.filter((p) => p.ownerId === mainPet.ownerId && p.id !== mainPet.id) : [];
@@ -44,6 +49,13 @@ export function BookingEditForm({
 
   function submit(e: FormEvent) {
     e.preventDefault();
+    const local = compact({
+      checkIn: inFixed ? undefined : dateError(v, checkIn),
+      dates: dateError(v, checkOut) ?? (checkOut > checkIn ? undefined : f.errDates),
+      notes: textError(v, notes, { max: LIMITS.notes }),
+    });
+    if (local.checkIn) delete local.dates;
+    if (Object.keys(local).length) return void (setErrors(local), focusInvalid());
     const issues = onSave({ checkIn, checkOut, cageId, companionIds: chosenCompanions, notes: notes.trim() });
     const err: Record<string, string> = {};
     if (issues.includes("dates")) err.dates = f.errDates;
@@ -52,16 +64,17 @@ export function BookingEditForm({
     if (issues.includes("companion") || issues.includes("pet_busy")) err.companions = issues.includes("pet_busy") ? f.errPetBusy : f.errCompanion;
     if (issues.includes("locked")) err.dates = inFixed ? d.errCheckInFixed : d.errLocked;
     setErrors(err);
+    if (Object.keys(err).length) focusInvalid();
   }
 
   return (
-    <form className="ds-form ds-form--panel" onSubmit={submit} noValidate aria-label={d.edit}>
+    <form ref={ref} className="ds-form ds-form--panel" onSubmit={submit} noValidate aria-label={d.edit}>
       <div className="ds-form__row">
-        <Field label={f.checkIn}>
-          <Input type="date" value={checkIn} disabled={inFixed} onChange={(e) => setCheckIn(e.target.value)} />
+        <Field label={f.checkIn} error={errors.checkIn}>
+          <Input type="date" value={checkIn} disabled={inFixed} onChange={(e) => (setCheckIn(e.target.value), setErrors((x) => ({ ...x, checkIn: undefined, dates: undefined })))} />
         </Field>
         <Field label={f.checkOut} error={errors.dates}>
-          <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
+          <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), setErrors((x) => ({ ...x, dates: undefined })))} />
         </Field>
       </div>
       <Field label={t.units[data.settings.unitTerm].one} error={errors.cage}>
@@ -74,8 +87,8 @@ export function BookingEditForm({
         </Select>
       </Field>
       {siblings.length > 0 && <CompanionPicker pets={siblings} value={chosenCompanions} onChange={setCompanions} error={errors.companions} />}
-      <Field label={f.notes} optional={t.common.optional}>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={f.notesPh} />
+      <Field label={f.notes} error={errors.notes} optional={t.common.optional}>
+        <Textarea value={notes} onChange={(e) => (setNotes(e.target.value), setErrors((x) => ({ ...x, notes: undefined })))} placeholder={f.notesPh} />
       </Field>
       <div className="ds-form__actions">
         <Button type="submit" icon="check">

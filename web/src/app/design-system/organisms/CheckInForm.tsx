@@ -6,6 +6,9 @@ import { Input, Textarea } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { compact as onlyErrors, textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS } from "@/shared/lib/validate";
 import "./organisms.css";
 
 /** Parses "4.2" or "4,2" kg; null for empty, NaN for something that isn't a positive number. */
@@ -39,7 +42,9 @@ export function CheckInForm({
   const [belongings, setBelongings] = useState("");
   const [food, setFood] = useState("");
   const [notes, setNotes] = useState("");
-  const [error, setError] = useState<string | undefined>();
+  const [errors, setErrors] = useState<Partial<Record<"weight" | "belongings" | "food" | "notes", string>>>({});
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
   const [cardSeen, setCardSeen] = useState(false);
   const [gateError, setGateError] = useState(false);
   const gated = vaccineGate.length > 0 && !cardSeen;
@@ -48,7 +53,14 @@ export function CheckInForm({
     e.preventDefault();
     if (gated) return setGateError(true);
     const weightKg = parseWeight(weight);
-    if (Number.isNaN(weightKg)) return setError(a.errWeight);
+    const err = onlyErrors({
+      weight: Number.isNaN(weightKg) ? a.errWeight : undefined,
+      belongings: textError(v, belongings, { max: LIMITS.line }),
+      food: textError(v, food, { max: LIMITS.line }),
+      notes: textError(v, notes, { max: LIMITS.notes }),
+    });
+    setErrors(err);
+    if (Object.keys(err).length) return void focusInvalid();
     onSubmit({
       at: new Date().toISOString(),
       healthy,
@@ -62,7 +74,7 @@ export function CheckInForm({
   }
 
   return (
-    <form className="ds-form ds-form--panel" onSubmit={submit} noValidate aria-labelledby="checkin-title">
+    <form ref={ref} className="ds-form ds-form--panel" onSubmit={submit} noValidate aria-labelledby="checkin-title">
       <div>
         <span className="ds-panel__title">
           <Heading level={2} size="md">
@@ -87,22 +99,22 @@ export function CheckInForm({
         <Checkbox label={a.fleaFree} checked={fleaFree} onChange={(e) => setFleaFree(e.target.checked)} />
       </div>
       <div className="ds-form__row">
-        <Field label={a.weight} error={error} optional={t.common.optional}>
-          <Input value={weight} onChange={(e) => (setWeight(e.target.value), setError(undefined))} inputMode="decimal" placeholder="4.2" />
+        <Field label={a.weight} error={errors.weight} optional={t.common.optional}>
+          <Input value={weight} onChange={(e) => (setWeight(e.target.value), setErrors((x) => ({ ...x, weight: undefined })))} inputMode="decimal" placeholder="4.2" />
         </Field>
         {!compact && (
-          <Field label={a.belongings} optional={t.common.optional}>
-            <Input value={belongings} onChange={(e) => setBelongings(e.target.value)} placeholder={a.belongingsPh} />
+          <Field label={a.belongings} error={errors.belongings} optional={t.common.optional}>
+            <Input value={belongings} onChange={(e) => (setBelongings(e.target.value), setErrors((x) => ({ ...x, belongings: undefined })))} placeholder={a.belongingsPh} />
           </Field>
         )}
       </div>
       {!compact && (
         <>
-          <Field label={a.food} optional={t.common.optional}>
-            <Input value={food} onChange={(e) => setFood(e.target.value)} placeholder={a.foodPh} />
+          <Field label={a.food} error={errors.food} optional={t.common.optional}>
+            <Input value={food} onChange={(e) => (setFood(e.target.value), setErrors((x) => ({ ...x, food: undefined })))} placeholder={a.foodPh} />
           </Field>
-          <Field label={a.notes} optional={t.common.optional}>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={a.notesPh} />
+          <Field label={a.notes} error={errors.notes} optional={t.common.optional}>
+            <Textarea value={notes} onChange={(e) => (setNotes(e.target.value), setErrors((x) => ({ ...x, notes: undefined })))} placeholder={a.notesPh} />
           </Field>
         </>
       )}

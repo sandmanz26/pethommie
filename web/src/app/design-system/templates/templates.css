@@ -2,7 +2,6 @@
 .tpl-app { display: grid; grid-template-columns: 248px minmax(0, 1fr); }
 .tpl-app__main { padding: 28px clamp(16px, 3vw, 40px) 40px; min-width: 0; }
 .tpl-app__content { max-width: 1040px; margin-inline: auto; display: grid; gap: 22px; }
-.tpl-app__demo { max-width: 1040px; margin: 32px auto 0; font-size: 0.8em; color: var(--ink-faint); }
 @media (max-width: 899px) {
   .tpl-app { grid-template-columns: minmax(0, 1fr); }
   .tpl-app__main { padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 92px); }

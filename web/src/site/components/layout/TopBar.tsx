@@ -25,6 +25,11 @@ export function TopBar({ onLanding = true }: { onLanding?: boolean }) {
         <a className="topbar__login" href="/app/login">
           {t.nav.login}
         </a>
+        <a className="topbar__try" href={t.nav.tryNow.href}>
+          {/* One of the two shows, so the link's name is always the word on screen. */}
+          <span className="topbar__try-long">{t.nav.tryNow.label}</span>
+          <span className="topbar__try-short">{t.nav.tryNow.short}</span>
+        </a>
         <Button href="/app/register">{t.nav.cta}</Button>
       </div>
     </header>

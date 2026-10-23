@@ -21,6 +21,9 @@ import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
 import { GuestPicker } from "./GuestPicker";
 import { useAppT } from "@/app/i18n/useAppT";
+import { dateError, moneyError, textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS, parseRupiah } from "@/shared/lib/validate";
 import "./organisms.css";
 
 /**
@@ -57,6 +60,8 @@ export function BookingForm({
   const { t, locale } = useAppT();
   const f = t.bookingForm;
   const today = todayISO();
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
 
   const [guest, setGuest] = useState<GuestDraft>(() => {
     if (initialGuest) return initialGuest;
@@ -74,6 +79,7 @@ export function BookingForm({
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [guestErr, setGuestErr] = useState<GuestErrors>({});
+  const clear = (...keys: string[]) => setErrors((x) => Object.fromEntries(Object.entries(x).filter(([k]) => !keys.includes(k))));
 
   const validDates = checkOut > checkIn;
   // The owner's pets that are staying: the first is the one the stay is booked for, the rest share the unit.
@@ -95,7 +101,7 @@ export function BookingForm({
   const states = chosen.map((id) => data.pets.find((p) => p.id === id)).flatMap((p) => (p ? [vaccineState(p, checkIn)] : []));
   const vState = states.includes("expired") ? "expired" : states.includes("soon") ? "soon" : states.includes("unknown") ? "unknown" : null;
 
-  const depositAmount = parseInt(deposit.replace(/\D/g, "") || "0", 10);
+  const depositAmount = parseRupiah(deposit) || 0;
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -111,9 +117,26 @@ export function BookingForm({
     if (issues.includes("dates")) err.dates = f.errDates;
     if (issues.includes("cage")) err.cage = f.errCage;
     if (issues.includes("cage_taken")) err.cage = f.errTaken;
+    // Lengths of what is typed for a new owner or pet, once the basics are there.
+    if (guest.newOwner && !gErr.ownerName) {
+      const m = textError(v, guest.newOwner.name, LIMITS.personName);
+      if (m) gErr.ownerName = m;
+    }
+    if (guest.newPet && !gErr.petName) {
+      const m = textError(v, guest.newPet.name, LIMITS.petName);
+      if (m) gErr.petName = m;
+    }
+    const inErr = dateError(v, checkIn);
+    const outErr = dateError(v, checkOut);
+    if (inErr) err.checkIn = inErr;
+    if (outErr) err.dates = outErr;
+    const depositErr = moneyError(v, locale, deposit) ?? (cage && depositAmount > total ? v.depositTooHigh(formatRupiah(total, locale)) : undefined);
+    if (depositErr) err.deposit = depositErr;
+    const notesErr = textError(v, notes, { max: LIMITS.notes });
+    if (notesErr) err.notes = notesErr;
     setErrors(err);
     setGuestErr(gErr);
-    if (Object.keys(err).length || Object.keys(gErr).length) return;
+    if (Object.keys(err).length || Object.keys(gErr).length) return void focusInvalid();
 
     onSubmit(
       {
@@ -138,17 +161,17 @@ export function BookingForm({
   }
 
   return (
-    <form className="ds-form" onSubmit={submit} noValidate>
+    <form ref={ref} className="ds-form" onSubmit={submit} noValidate>
       <GuestPicker data={data} value={guest} onChange={setGuest} errors={guestErr} on={checkIn} />
       {vState && <Alert tone={vState === "expired" ? "danger" : "warn"}>{f.vaccineWarn[vState]}</Alert>}
 
       <fieldset className="ds-form__section">
         <div className="ds-form__row">
-          <Field label={f.checkIn}>
-            <Input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+          <Field label={f.checkIn} error={errors.checkIn}>
+            <Input type="date" value={checkIn} onChange={(e) => (setCheckIn(e.target.value), clear("checkIn", "dates"))} />
           </Field>
           <Field label={f.checkOut} error={errors.dates ?? (!validDates ? f.errDates : undefined)}>
-            <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => setCheckOut(e.target.value)} />
+            <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), clear("dates"))} />
           </Field>
         </div>
         <div className="ds-form__row">
@@ -182,8 +205,8 @@ export function BookingForm({
 
       <fieldset className="ds-form__section">
         <div className="ds-form__row">
-          <Field label={f.deposit} optional={t.common.optional}>
-            <Input value={deposit} onChange={(e) => setDeposit(e.target.value)} inputMode="numeric" placeholder="0" />
+          <Field label={f.deposit} error={errors.deposit} optional={t.common.optional}>
+            <Input value={deposit} onChange={(e) => (setDeposit(e.target.value), clear("deposit"))} inputMode="numeric" placeholder="0" />
           </Field>
           {depositAmount > 0 && (
             <Field label={t.payments.method}>
@@ -210,8 +233,8 @@ export function BookingForm({
             ))}
           </Select>
         </Field>
-        <Field label={f.notes} optional={t.common.optional}>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={f.notesPh} />
+        <Field label={f.notes} error={errors.notes} optional={t.common.optional}>
+          <Textarea value={notes} onChange={(e) => (setNotes(e.target.value), clear("notes"))} placeholder={f.notesPh} />
         </Field>
       </fieldset>
 

@@ -27,6 +27,18 @@
   margin-top: 12px;
   font-size: var(--step--1);
 }
+.hero > .hero__try {
+  margin-top: 6px;
+  font-size: var(--step--1);
+}
+.hero__try a {
+  font-weight: 700;
+  color: var(--ink);
+  text-underline-offset: 3px;
+}
+.hero__try a:hover {
+  color: var(--seal);
+}
 .hero__hint {
   display: flex;
   align-items: center;

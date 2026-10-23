@@ -6,6 +6,9 @@ import { Input, Select, Textarea } from "@/app/design-system/atoms/Input";
 import { Heading } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { compact, dateError, textError, without } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS } from "@/shared/lib/validate";
 import "./organisms.css";
 
 export type PetDraft = Omit<Pet, "id" | "ownerId">;
@@ -31,6 +34,8 @@ export function PetForm({
 }) {
   const { t } = useAppT();
   const f = t.petForm;
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
   const [name, setName] = useState(pet?.name ?? "");
   const [species, setSpecies] = useState<Species>(pet?.species ?? "cat");
   const [breed, setBreed] = useState(pet?.breed ?? "");
@@ -42,13 +47,17 @@ export function PetForm({
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const err: Record<string, string> = {};
-    if (!name.trim()) err.name = f.errName;
-    if (!ownerName.trim()) err.owner = f.errOwner;
     const normalised = wa.trim() ? normaliseWhatsapp(wa) : "";
-    if (normalised === null) err.wa = f.errWhatsapp;
+    const err = compact({
+      name: textError(v, name, { required: f.errName, ...LIMITS.petName }),
+      breed: textError(v, breed, { max: LIMITS.petName.max }),
+      vaccine: dateError(v, vaccineExpiry, false),
+      notes: textError(v, notes, { max: LIMITS.notes }),
+      owner: textError(v, ownerName, { required: f.errOwner, ...LIMITS.personName }),
+      wa: normalised === null ? f.errWhatsapp : undefined,
+    });
     setErrors(err);
-    if (Object.keys(err).length) return;
+    if (Object.keys(err).length) return void focusInvalid();
     onSubmit(
       { name: name.trim(), species, breed: breed.trim(), vaccineExpiry, notes: notes.trim() },
       { name: ownerName.trim(), whatsapp: normalised ?? "" },
@@ -56,11 +65,11 @@ export function PetForm({
   }
 
   return (
-    <form className="ds-form" onSubmit={submit} noValidate>
+    <form ref={ref} className="ds-form" onSubmit={submit} noValidate>
       <fieldset className="ds-form__section">
         <Heading level={2} size="sm">{f.petSection}</Heading>
         <Field label={f.name} error={errors.name}>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={f.namePh} autoFocus={!pet} />
+          <Input value={name} onChange={(e) => (setName(e.target.value), setErrors((x) => without(x, "name")))} placeholder={f.namePh} autoFocus={!pet} />
         </Field>
         <div className="ds-form__row">
           <Field label={f.species}>
@@ -72,25 +81,25 @@ export function PetForm({
               ))}
             </Select>
           </Field>
-          <Field label={f.breed} optional={t.common.optional}>
-            <Input value={breed} onChange={(e) => setBreed(e.target.value)} placeholder={f.breedPh} />
+          <Field label={f.breed} error={errors.breed} optional={t.common.optional}>
+            <Input value={breed} onChange={(e) => (setBreed(e.target.value), setErrors((x) => without(x, "breed")))} placeholder={f.breedPh} />
           </Field>
         </div>
-        <Field label={f.vaccine} optional={t.common.optional}>
-          <Input type="date" value={vaccineExpiry} onChange={(e) => setVaccine(e.target.value)} />
+        <Field label={f.vaccine} error={errors.vaccine} optional={t.common.optional}>
+          <Input type="date" value={vaccineExpiry} onChange={(e) => (setVaccine(e.target.value), setErrors((x) => without(x, "vaccine")))} />
         </Field>
-        <Field label={f.notes} optional={t.common.optional}>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={f.notesPh} />
+        <Field label={f.notes} error={errors.notes} optional={t.common.optional}>
+          <Textarea value={notes} onChange={(e) => (setNotes(e.target.value), setErrors((x) => without(x, "notes")))} placeholder={f.notesPh} />
         </Field>
       </fieldset>
 
       <fieldset className="ds-form__section">
         <Heading level={2} size="sm">{f.ownerSection}</Heading>
         <Field label={f.ownerName} error={errors.owner}>
-          <Input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder={f.ownerPh} autoComplete="name" />
+          <Input value={ownerName} onChange={(e) => (setOwnerName(e.target.value), setErrors((x) => without(x, "owner")))} placeholder={f.ownerPh} autoComplete="name" />
         </Field>
         <Field label={f.ownerWa} hint={f.ownerWaHint} error={errors.wa} optional={t.common.optional}>
-          <Input value={wa} onChange={(e) => setWa(e.target.value)} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
+          <Input value={wa} onChange={(e) => (setWa(e.target.value), setErrors((x) => without(x, "wa")))} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
         </Field>
       </fieldset>
 

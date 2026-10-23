@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -72,5 +72,19 @@ describe("the public booking page", () => {
     expect(text).toContain("Preference: Cage small");
     expect(text).toMatch(/\/app\/bookings\/new\?in=\d{4}-\d\d-\d\d&out=/);
     expect(screen.getByRole("status")).toHaveTextContent(/press send/i);
+  });
+  it("refuses a one-letter name and a stay of months, focusing the first problem", async () => {
+    const opened = vi.spyOn(window, "open").mockImplementation(() => null);
+    const user = open(`#${encodeCard(card)}`);
+    await user.type(screen.getByLabelText("Your name"), "S");
+    await user.type(screen.getByLabelText("Your WhatsApp"), "0812 3456 7890");
+    await user.type(screen.getByLabelText("Your pet's name"), "Rex");
+    const out = screen.getByLabelText("Pick-up") as HTMLInputElement;
+    const [y, m, d] = out.value.split("-");
+    fireEvent.change(out, { target: { value: `${Number(y) + 1}-${m}-${d}` } });
+    await user.click(screen.getByRole("button", { name: /send the request/i }));
+    expect(screen.getAllByRole("alert").map((a) => a.textContent)).toEqual(["Use at least 2 characters.", expect.stringMatching(/at most 60 nights/)]);
+    expect(screen.getByLabelText("Your name")).toHaveFocus();
+    expect(opened).not.toHaveBeenCalled();
   });
 });

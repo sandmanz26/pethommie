@@ -29,18 +29,22 @@ export async function open(browser, locale, { phone = false, viewport = { width:
 }
 
 /** Signs in to the small sample hotel as it comes (demo@pethommie.id, filled with sample data, simple mode). */
-export async function signIn(page) {
-  await page.goto(`${base}/app/login`)
-  await page.getByRole('button', { name: /^(use|pakai)$/i }).first().click()
-  await page.getByRole('button', { name: /^(log in|masuk)$/i }).click()
-  await page.waitForURL((u) => !u.pathname.includes('login'))
+/** Opens a "Try now" sample hotel (the first, small one unless told otherwise); `show` hides the demo strip and offer. */
+export async function signIn(page, demo = 0) {
+  await page.goto(`${base}/app/try`)
+  await page.getByRole('button', { name: /^(open this demo|buka demo ini)/i }).nth(demo).click()
+  await page.waitForURL((u) => !u.pathname.endsWith('/try'))
 }
 
-/** Goes to a screen and waits until it has drawn, without the demo line under it. */
+/** The demo's strip and floating offer are not part of the screens the pictures show. */
+export const HIDE_DEMO = '.demo-bar, .demo-offer { display: none !important; } body.has-demobar .tpl-app__main { padding-bottom: 40px !important; } body.has-demobar .ds-sidenav { top: 0 !important; height: 100dvh !important; }'
+
+
+/** Goes to a screen and waits until it has drawn, without the demo's strip and offer. */
 export async function show(page, path) {
   if (path) await page.goto(`${base}${path}`)
   await page.getByRole('heading', { level: 1 }).first().waitFor()
-  await page.addStyleTag({ content: '.tpl-app__demo { display: none !important; }' })
+  await page.addStyleTag({ content: HIDE_DEMO })
   await page.evaluate(() => document.fonts.ready)
   // the pointer rests in an empty corner, not over the last thing clicked (a hovered menu item would show)
   const { width } = page.viewportSize()

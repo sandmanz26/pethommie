@@ -7,8 +7,12 @@ import type { Registration } from "./types";
  */
 
 export const PASSWORD_MIN = 8;
+export const PASSWORD_MAX = 128;
+/** Shortest and longest a name may be, once trimmed. */
+export const NAME_LIMITS = { name: [2, 60], hotelName: [2, 80] } as const;
+export const EMAIL_MAX = 254;
 
-export type Issue = "required" | "invalid" | "too_short" | "too_weak";
+export type Issue = "required" | "invalid" | "too_short" | "too_long" | "too_weak";
 export type RegistrationInput = Record<keyof Registration, string>;
 export type RegistrationIssues = Partial<Record<keyof Registration, Issue>>;
 
@@ -20,6 +24,7 @@ export const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v
 export function passwordIssue(password: string): Issue | null {
   if (!password) return "required";
   if (password.length < PASSWORD_MIN) return "too_short";
+  if (password.length > PASSWORD_MAX) return "too_long";
   if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) return "too_weak";
   return null;
 }
@@ -33,9 +38,14 @@ export function parseRegistration(
   const email = normaliseEmail(input.email);
   const whatsapp = normaliseWhatsapp(input.whatsapp);
 
-  if (!name) issues.name = "required";
-  if (!hotelName) issues.hotelName = "required";
+  const nameIssue = (value: string, [min, max]: readonly [number, number]): Issue | undefined =>
+    !value ? "required" : value.length < min ? "too_short" : value.length > max ? "too_long" : undefined;
+  const n = nameIssue(name, NAME_LIMITS.name);
+  if (n) issues.name = n;
+  const h = nameIssue(hotelName, NAME_LIMITS.hotelName);
+  if (h) issues.hotelName = h;
   if (!email) issues.email = "required";
+  else if (email.length > EMAIL_MAX) issues.email = "too_long";
   else if (!isEmail(email)) issues.email = "invalid";
   if (!input.whatsapp.trim()) issues.whatsapp = "required";
   else if (!whatsapp) issues.whatsapp = "invalid";

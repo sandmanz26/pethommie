@@ -1,13 +1,13 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import { DEMO_MODE } from "@/app/config";
+import { useRef, useState, type FormEvent } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/app/auth/AuthProvider";
-import { mockRegistration } from "@/app/auth/demoAccounts";
-import { parseRegistration, type Issue, type RegistrationInput, type RegistrationIssues } from "@/app/auth/validation";
+import { EMAIL_MAX, NAME_LIMITS, PASSWORD_MAX, parseRegistration, type Issue, type RegistrationInput } from "@/app/auth/validation";
+import { activeOffer } from "@/app/demo/offer";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
+import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
 import { PasswordInput } from "@/app/design-system/molecules/PasswordField";
 import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
@@ -22,83 +22,93 @@ const SCENE = {
 
 const EMPTY: RegistrationInput = { name: "", hotelName: "", email: "", whatsapp: "", password: "" };
 
+type FieldName = keyof RegistrationInput;
+const FIELDS: FieldName[] = ["name", "hotelName", "email", "whatsapp", "password"];
+
 export function RegisterPage() {
-  const { t } = useAppT();
+  const { t, locale } = useAppT();
   const a = t.auth.register;
   const e = t.auth.errors;
   const { register } = useAuth();
+  const [params] = useSearchParams();
+  // Coming from the demo's offer: the discount goes with the new account while it still runs.
+  const [offer] = useState(() => (params.get("offer") ? activeOffer() : null));
 
   const [form, setForm] = useState<RegistrationInput>(EMPTY);
-  const [issues, setIssues] = useState<RegistrationIssues>({});
+  // A field shows its problem once it has been left, or after a try to submit; never while it is first being typed.
+  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
   const [emailTaken, setEmailTaken] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [sampleTurn, setSampleTurn] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const set = (field: keyof RegistrationInput) => (ev: { target: { value: string } }) => {
+  const parsed = parseRegistration(form);
+  const issues = parsed.ok ? {} : parsed.issues;
+
+  const set = (field: FieldName) => (ev: { target: { value: string } }) => {
     setForm({ ...form, [field]: ev.target.value });
     if (field === "email") setEmailTaken(false);
   };
+  const leave = (field: FieldName) => () => setTouched((x) => ({ ...x, [field]: true }));
 
-  const issueText = (field: keyof RegistrationInput, issue?: Issue) => {
-    if (field === "email" && emailTaken) return e.emailTaken;
-    if (!issue) return undefined;
+  const message = (field: FieldName, issue: Issue): string => {
     if (issue === "required") return e.required;
-    if (field === "email") return e.email;
+    if (field === "email") return issue === "too_long" ? e.tooLong(EMAIL_MAX) : e.email;
     if (field === "whatsapp") return e.whatsapp;
-    return issue === "too_short" ? e.passwordShort : e.passwordWeak;
+    if (field === "password") return issue === "too_short" ? e.passwordShort : issue === "too_long" ? e.tooLong(PASSWORD_MAX) : e.passwordWeak;
+    const [min, max] = NAME_LIMITS[field];
+    return issue === "too_short" ? e.tooShort(min) : e.tooLong(max);
+  };
+  const issueText = (field: FieldName) => {
+    if (field === "email" && emailTaken) return e.emailTaken;
+    const issue = issues[field];
+    return issue && (submitted || touched[field]) ? message(field, issue) : undefined;
   };
 
   async function submit(ev: FormEvent) {
     ev.preventDefault();
-    const parsed = parseRegistration(form);
-    setIssues(parsed.ok ? {} : parsed.issues);
-    if (!parsed.ok) return;
+    setSubmitted(true);
+    if (!parsed.ok) {
+      const first = FIELDS.find((f) => issues[f]);
+      if (first) formRef.current?.querySelector<HTMLInputElement>(`[name="${first}"]`)?.focus();
+      return;
+    }
     setBusy(true);
-    const result = await register(parsed.value);
+    const result = await register(parsed.value, offer ?? undefined);
     // On success GuestOnly sees the new session and sends the person to the app (and its setup).
     if (!result.ok) {
       setBusy(false);
       setEmailTaken(true);
+      formRef.current?.querySelector<HTMLInputElement>('[name="email"]')?.focus();
     }
   }
 
   return (
     <FocusLayout art={SCENE}>
-      <form className="pg-flow" onSubmit={submit} noValidate>
+      <form ref={formRef} className="pg-flow" onSubmit={submit} noValidate>
         <div className="pg-flow__head pg-flow__head--center">
           <Heading level={1}>{a.title}</Heading>
           <Muted>{a.lead}</Muted>
         </div>
-        {DEMO_MODE && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setForm(mockRegistration(sampleTurn));
-              setSampleTurn(sampleTurn + 1);
-              setIssues({});
-              setEmailTaken(false);
-            }}
-          >
-            {a.fillSample}
-          </Button>
-        )}
-        <Field label={a.name} error={issueText("name", issues.name)}>
-          <Input value={form.name} onChange={set("name")} placeholder={a.namePh} autoComplete="name" autoFocus />
+        {offer && <Alert tone="ok">{a.offer(offer.percentOff, new Date(offer.expiresAt).toLocaleString(locale === "id" ? "id-ID" : "en-GB", { dateStyle: "medium", timeStyle: "short" }))}</Alert>}
+        <Field label={a.name} error={issueText("name")}>
+          <Input name="name" value={form.name} onChange={set("name")} onBlur={leave("name")} maxLength={NAME_LIMITS.name[1] + 20} placeholder={a.namePh} autoComplete="name" autoFocus />
         </Field>
-        <Field label={a.hotelName} error={issueText("hotelName", issues.hotelName)}>
-          <Input value={form.hotelName} onChange={set("hotelName")} placeholder={a.hotelNamePh} autoComplete="organization" />
+        <Field label={a.hotelName} error={issueText("hotelName")}>
+          <Input name="hotelName" value={form.hotelName} onChange={set("hotelName")} onBlur={leave("hotelName")} maxLength={NAME_LIMITS.hotelName[1] + 20} placeholder={a.hotelNamePh} autoComplete="organization" />
         </Field>
-        <Field label={a.email} error={issueText("email", issues.email)}>
-          <Input type="email" value={form.email} onChange={set("email")} placeholder={a.emailPh} autoComplete="email" inputMode="email" />
+        <Field label={a.email} error={issueText("email")}>
+          <Input name="email" type="email" value={form.email} onChange={set("email")} onBlur={leave("email")} placeholder={a.emailPh} autoComplete="email" inputMode="email" />
         </Field>
-        <Field label={a.whatsapp} hint={a.whatsappHint} error={issueText("whatsapp", issues.whatsapp)}>
-          <Input value={form.whatsapp} onChange={set("whatsapp")} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
+        <Field label={a.whatsapp} hint={a.whatsappHint} error={issueText("whatsapp")}>
+          <Input name="whatsapp" value={form.whatsapp} onChange={set("whatsapp")} onBlur={leave("whatsapp")} placeholder="08xx xxxx xxxx" inputMode="tel" autoComplete="tel" />
         </Field>
-        <Field label={a.password} hint={a.passwordHint} error={issueText("password", issues.password)}>
+        <Field label={a.password} hint={a.passwordHint} error={issueText("password")}>
           <PasswordInput
+            name="password"
             value={form.password}
             onChange={set("password")}
+            onBlur={leave("password")}
             autoComplete="new-password"
             showLabel={t.auth.password.show}
             hideLabel={t.auth.password.hide}

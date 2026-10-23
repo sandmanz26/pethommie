@@ -1,14 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AuthService } from "./AuthService";
 import { authService } from "./defaultService";
-import type { Account, AuthResult, Registration } from "./types";
+import type { Account, AuthResult, Offer, Registration } from "./types";
 
-type State = { status: "loading" | "signedOut" | "signedIn"; account: Account | null };
+/** `leaveTo`: where a signed-out visitor goes next, when logging out chose somewhere other than the login screen. */
+type State = { status: "loading" | "signedOut" | "signedIn"; account: Account | null; leaveTo?: string };
 
 type AuthValue = State & {
   login(email: string, password: string): Promise<AuthResult>;
-  register(input: Registration): Promise<AuthResult>;
-  logout(): Promise<void>;
+  register(input: Registration, offer?: Offer): Promise<AuthResult>;
+  tryDemo(accountId: string): Promise<AuthResult>;
+  /** Ends the session; `leaveTo` is where to go instead of the login screen (leaving the demo, say). */
+  logout(leaveTo?: string): Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -38,10 +41,11 @@ export function AuthProvider({ children, service = authService }: { children: Re
     return {
       ...state,
       login: async (email, password) => enter(await service.login(email, password)),
-      register: async (input) => enter(await service.register(input)),
-      logout: async () => {
+      register: async (input, offer) => enter(await service.register(input, offer)),
+      tryDemo: async (accountId) => enter(await service.tryDemo(accountId)),
+      logout: async (leaveTo?: string) => {
         await service.logout();
-        setState({ status: "signedOut", account: null });
+        setState({ status: "signedOut", account: null, leaveTo });
       },
     };
   }, [state, service]);

@@ -64,6 +64,63 @@ describe("a signed-in owner's first visit", () => {
     expect(screen.getByText(/enter your pet hotel's name/i)).toBeInTheDocument();
   });
 
+  it("checks every field of the hotel step, puts the cursor on the first problem, and clears it once fixed", async () => {
+    await signedInAs();
+    const user = userEvent.setup();
+    renderApp("/app/onboarding");
+    await user.click(await screen.findByRole("button", { name: /start setup/i }));
+    const name = screen.getByLabelText(/pet hotel name/i);
+    await user.clear(name);
+    await user.type(name, "A");
+    await user.type(screen.getByLabelText(/^city/i), "x".repeat(61));
+    await user.clear(screen.getByLabelText(/business whatsapp/i));
+    await user.type(screen.getByLabelText(/business whatsapp/i), "12");
+    await user.click(screen.getByRole("button", { name: /next: your cages/i }));
+    expect(screen.getByText(/use at least 2 characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/keep it under 60 characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/whatsapp number doesn't look right/i)).toBeInTheDocument();
+    expect(name).toHaveFocus();
+    await user.type(name, "nabul");
+    expect(screen.queryByText(/use at least 2 characters/i)).toBeNull();
+    expect(screen.getByRole("heading", { name: /what's your pet hotel called/i })).toBeInTheDocument();
+  });
+
+  it("refuses a cage price that is surely a typo, and saves nothing until it is fixed", async () => {
+    await signedInAs();
+    const user = userEvent.setup();
+    renderApp("/app/onboarding");
+    await user.click(await screen.findByRole("button", { name: /start setup/i }));
+    await user.click(screen.getByRole("button", { name: /next: your cages/i }));
+    const [small] = screen.getAllByLabelText(/price per night/i);
+    await user.clear(small);
+    await user.type(small, "50");
+    await user.click(screen.getByRole("button", { name: /finish setup/i }));
+    expect(screen.getByText(/at least rp\s?1\.000 a night/i)).toBeInTheDocument();
+    expect(screen.getByText(/fix the fields marked in red/i)).toBeInTheDocument();
+    expect(stored().hotel).toBeNull();
+    await user.type(small, "000");
+    await user.click(screen.getByRole("button", { name: /finish setup/i }));
+    expect(await screen.findByRole("link", { name: /add your first booking/i })).toBeInTheDocument();
+    expect(stored().cages.find((c: { size: string }) => c.size === "S")?.pricePerNight).toBe(50_000);
+  });
+
+  it("refuses two shared rooms with the same name, or a room without a name", async () => {
+    await signedInAs();
+    const user = userEvent.setup();
+    renderApp("/app/onboarding");
+    await user.click(await screen.findByRole("button", { name: /start setup/i }));
+    await user.click(screen.getByRole("button", { name: /next: your cages/i }));
+    await user.click(screen.getByRole("tab", { name: "Shared rooms, no cages" }));
+    const [first, second] = screen.getAllByLabelText(/^name$/i);
+    await user.clear(second);
+    await user.type(second, first.getAttribute("value")!.toUpperCase());
+    await user.click(screen.getByRole("button", { name: /finish setup/i }));
+    expect(screen.getByText(/another room already has this name/i)).toBeInTheDocument();
+    await user.clear(second);
+    expect(screen.getByText(/give this room a name/i)).toBeInTheDocument();
+    expect(stored().cages).toEqual([]);
+  });
+
   it("can be skipped with sample data", async () => {
     await signedInAs();
     const user = userEvent.setup();

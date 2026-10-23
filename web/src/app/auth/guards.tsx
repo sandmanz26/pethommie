@@ -6,11 +6,15 @@ import { landingAfterLogin } from "./landing";
 
 /** Everything inside needs a signed-in account; anyone else goes to the login screen and comes back after. */
 export function RequireAuth() {
-  const { status } = useAuth();
+  const { status, leaveTo } = useAuth();
   const location = useLocation();
   const { locale } = useAppT();
   if (status === "loading") return <Loading label={locale === "id" ? "Memuat…" : "Loading…"} />;
-  if (status === "signedOut") return <Navigate to="/app/login" replace state={{ from: location.pathname + location.search }} />;
+  if (status === "signedOut") {
+    // Logged out on purpose, to somewhere chosen: go there. Otherwise log in, then come back here.
+    if (leaveTo) return <Navigate to={leaveTo} replace />;
+    return <Navigate to="/app/login" replace state={{ from: location.pathname + location.search }} />;
+  }
   return <Outlet />;
 }
 

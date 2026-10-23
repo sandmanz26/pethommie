@@ -20,6 +20,7 @@ export const id: Messages = {
       { href: "#faq", label: "FAQ" },
     ],
     login: "Masuk",
+    tryNow: { href: "/app/try", label: "Coba demo", short: "Demo" },
     cta: "Coba gratis",
     languageLabel: "Bahasa",
   },
@@ -31,6 +32,7 @@ export const id: Messages = {
     primaryCta: { href: "/app/register", label: "Coba gratis 30 hari" },
     secondaryCta: { href: "#problem", label: "Lihat angkanya" },
     note: "Tanpa kartu kredit · Bahasa Indonesia & Inggris",
+    tryNow: { href: "/app/try", label: "Atau coba hotel contoh dulu, tanpa daftar" },
     scrollHint: "Gulir untuk mengikuti satu masa inap",
   },
   film: {
@@ -298,5 +300,13 @@ export const id: Messages = {
     whatsapp: "WhatsApp",
     rights: "Hak cipta dilindungi.",
     art: "Ilustrasi tinta dibuat untuk Pethommie",
+  },
+  validation: {
+    tooShort: (n: number) => `Minimal ${n} karakter.`,
+    tooLong: (n: number) => `Maksimal ${n} karakter.`,
+    hotelName: "Tulis nama pet hotelmu dulu ya.",
+    city: "Tulis kotamu dulu ya.",
+    whatsapp: "Tulis nomor WhatsApp-mu dulu ya.",
+    datesFar: "Pilih tanggal dalam setahun ke depan, untuk menginap paling lama 60 malam.",
   },
 };

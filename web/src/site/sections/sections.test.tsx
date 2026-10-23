@@ -85,7 +85,17 @@ describe("landing sections", () => {
     await userEvent.click(screen.getByText("Rather we set it up with you?"));
     expect(help).toHaveAttribute("open");
     await userEvent.click(within(help).getByRole("button", { name: "Contact me on WhatsApp" }));
-    expect(within(help).getByRole("alert")).toHaveTextContent(/fill in your pet hotel name/i);
+    // Each missing field says so under itself, and focus goes to the first one.
+    const alerts = within(help).getAllByRole("alert").map((a) => a.textContent);
+    expect(alerts).toEqual(["Please write your pet hotel's name.", "Please write your WhatsApp number.", "Please write your city."]);
+    expect(within(help).getByLabelText(/name/i)).toHaveFocus();
+    expect(within(help).getByLabelText(/name/i)).toHaveAttribute("aria-invalid", "true");
+
+    await userEvent.type(within(help).getByLabelText(/name/i), "X");
+    await userEvent.type(within(help).getByLabelText(/city/i), "Bandung");
+    await userEvent.type(within(help).getByLabelText(/whatsapp/i), "12345");
+    await userEvent.click(within(help).getByRole("button", { name: "Contact me on WhatsApp" }));
+    expect(within(help).getAllByRole("alert").map((a) => a.textContent)).toEqual(["Use at least 2 characters.", expect.stringMatching(/doesn't look right/)]);
   });
 
   it("speaks to every kind of pet hotel, each with its picture", () => {

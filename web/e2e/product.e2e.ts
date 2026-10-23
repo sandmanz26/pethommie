@@ -182,12 +182,12 @@ test.describe('after the film', () => {
     await expect(page.locator('.chapter__art')).toHaveCount(8)
   })
 
-  test('nothing on the page leads to a demo', async ({ page }) => {
-    for (const locale of ['en', 'id']) {
-      await page.addInitScript((l) => localStorage.setItem('pethommie.locale', l), locale)
-      await page.goto('/')
-      await expect(page.locator('a[href*="demo"]')).toHaveCount(0)
-    }
+  test('Try now and Log in are separate ways in', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('.topbar a[href="/app/login"]')).toBeVisible()
+    await page.locator('.topbar a[href="/app/try"]').click()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/hotel contoh|sample hotel/i)
+    await expect(page.getByRole('button', { name: /buka demo ini|open this demo/i })).toHaveCount(3)
   })
 
   test.describe('with motion allowed', () => {
@@ -248,10 +248,9 @@ test.describe('layout on short and narrow screens', () => {
 
   test('the tax page shows how much of the final-tax turnover ceiling is used', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('pethommie.locale', 'en'))
-    await page.goto('/app/login')
-    await page.getByRole('button', { name: /^use$/i }).nth(2).click() // the full hotel, on the final 0.5% tax
-    await page.getByRole('button', { name: /^log in$/i }).click()
-    await page.waitForURL((u) => !u.pathname.endsWith('/login'))
+    await page.goto('/app/try')
+    await page.getByRole('button', { name: /^open this demo/i }).nth(1).click() // the full hotel, on the final 0.5% tax
+    await page.waitForURL((u) => !u.pathname.endsWith('/try'))
     await page.goto('/app/tax')
     const bar = page.getByRole('progressbar')
     await expect(bar).toBeVisible()

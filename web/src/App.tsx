@@ -33,6 +33,7 @@ export default function App() {
             {/* Short links people type or remember. */}
             <Route path="/login" element={<Navigate to="/app/login" replace />} />
             <Route path="/register" element={<Navigate to="/app/register" replace />} />
+            <Route path="/try" element={<Navigate to="/app/try" replace />} />
             <Route
               path="/app/*"
               element={

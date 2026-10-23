@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from "react";
 import type { Booking, Cage } from "@/app/domain/types";
-import { CHARGE_SUGGESTIONS, type ChargeIssue } from "@/app/domain/charges";
+import { CHARGE_SUGGESTIONS, MAX_LABEL, type ChargeIssue } from "@/app/domain/charges";
 import { bookingTotal, formatRupiah, nightlyRate, nights } from "@/app/domain/logic";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { compact, moneyError, textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { parseRupiah } from "@/shared/lib/validate";
 import "./organisms.css";
 
 /** What the stay costs: the nights, then every add-on and discount, and the total. Add and remove lines here. */
@@ -24,6 +27,8 @@ export function ChargesPanel({
 }) {
   const { t, locale } = useAppT();
   const c = t.charges;
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
   const rp = (n: number) => formatRupiah(n, locale);
   const n = Math.max(0, nights(booking.checkIn, booking.checkOut));
   const [label, setLabel] = useState("");
@@ -33,11 +38,16 @@ export function ChargesPanel({
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const digits = parseInt(amount.replace(/\D/g, "") || "0", 10);
+    const local = compact({
+      label: textError(v, label, { required: c.errLabel, max: MAX_LABEL }),
+      amount: moneyError(v, locale, amount, { required: true, zero: c.errAmount }),
+    });
+    if (Object.keys(local).length) return void (setErrors(local), focusInvalid());
+    const digits = parseRupiah(amount) ?? 0;
     const issues = onAdd?.({ label, amount: kind === "discount" ? -digits : digits }) ?? [];
     if (issues.length) {
       setErrors({ label: issues.includes("label") ? c.errLabel : undefined, amount: issues.includes("amount") ? c.errAmount : undefined });
-      return;
+      return void focusInvalid();
     }
     setLabel("");
     setAmount("");
@@ -79,7 +89,7 @@ export function ChargesPanel({
       </ul>
 
       {onAdd ? (
-        <form className="ds-form" onSubmit={submit} noValidate aria-label={c.title}>
+        <form ref={ref} className="ds-form" onSubmit={submit} noValidate aria-label={c.title}>
           <div className="ds-form__row">
             <Field label={c.label} error={errors.label}>
               <Input list="charge-suggestions" value={label} onChange={(e) => (setLabel(e.target.value), setErrors({}))} placeholder={c.labelPh} />

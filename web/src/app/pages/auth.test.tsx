@@ -4,8 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import App from "@/App";
 import { ACCOUNTS_KEY, SESSION_KEY } from "@/app/auth/localAuthService";
-import { DEMO_PASSWORD } from "@/app/auth/demoAccounts";
-import { dataKeyFor } from "@/app/store/storage";
+import { OFFER_KEY } from "@/app/demo/offer";
+import { dataKeyFor, demoDataKeyFor } from "@/app/store/storage";
 import { signedInAs, TEST_PASSWORD } from "@/app/testing/auth";
 import { aSmallHotel } from "@/app/testing/fixtures";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
@@ -34,10 +34,12 @@ describe("signed out", () => {
 
   it("comes back to the page it asked for after logging in", async () => {
     const user = userEvent.setup();
+    await signedInAs({ data: aSmallHotel() });
+    localStorage.removeItem(SESSION_KEY);
     renderApp("/app/bookings/new");
     await heading(/welcome back/i);
-    await user.type(screen.getByLabelText(/^email$/i), "demo@pethommie.id");
-    await user.type(screen.getByLabelText(/^password$/i), DEMO_PASSWORD);
+    await user.type(screen.getByLabelText(/^email$/i), "rina@example.com");
+    await user.type(screen.getByLabelText(/^password$/i), TEST_PASSWORD);
     await user.click(screen.getByRole("button", { name: /^log in$/i }));
     expect(await heading(/^new booking$/i)).toBeInTheDocument();
   });
@@ -102,22 +104,25 @@ describe("log in", () => {
     expect(field).toHaveAttribute("type", "password");
   });
 
-  it("fills in a demo account with one tap, and that account has a hotel with bookings", async () => {
+  it("checks each field as soon as it is left, not while it is first typed", async () => {
     const user = userEvent.setup();
     renderApp("/app/login");
-    await user.click((await screen.findAllByRole("button", { name: /^use$/i }))[0]);
-    expect(screen.getByLabelText(/^email$/i)).toHaveValue("demo@pethommie.id");
-    await user.click(screen.getByRole("button", { name: /^log in$/i }));
-    expect(await heading(/^today$/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/rumah meong bintaro/i).length).toBeGreaterThan(0);
+    const email = await screen.findByLabelText(/^email$/i);
+    await user.type(email, "rina@");
+    expect(screen.queryByText(/doesn't look right/i)).toBeNull();
+    await user.tab();
+    expect(screen.getByText(/doesn't look right/i)).toBeInTheDocument();
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    await user.type(email, "example.com");
+    expect(screen.queryByText(/doesn't look right/i)).toBeNull();
   });
 
-  it("sends the second demo account, a brand-new owner, to setup", async () => {
+  it("puts the cursor on the first field to fix", async () => {
     const user = userEvent.setup();
     renderApp("/app/login");
-    await user.click((await screen.findAllByRole("button", { name: /^use$/i }))[1]);
+    await user.type(await screen.findByLabelText(/^password$/i), "something1");
     await user.click(screen.getByRole("button", { name: /^log in$/i }));
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^email$/i)).toHaveFocus();
   });
 
   it("does not show login again to someone who is already in", async () => {
@@ -163,27 +168,26 @@ describe("sign up", () => {
     expect(accounts().filter((a) => a.email === "bad@")).toHaveLength(0);
   });
 
-  it("fills the form with sample data, a different person each time, and the result can sign up", async () => {
+  it("holds names to a sensible length, and points at the first field to fix", async () => {
     const user = userEvent.setup();
     renderApp("/app/register");
-    const fill = await screen.findByRole("button", { name: /fill with sample data/i });
-    await user.click(fill);
-    const first = (screen.getByLabelText(/your name/i) as HTMLInputElement).value;
-    expect(first).not.toBe("");
-    expect((screen.getByLabelText(/^email$/i) as HTMLInputElement).value).toMatch(/@example\.com$/);
-    await user.click(fill);
-    expect((screen.getByLabelText(/your name/i) as HTMLInputElement).value).not.toBe(first);
-
+    await user.type(await screen.findByLabelText(/your name/i), "A");
+    await user.type(screen.getByLabelText(/pet hotel name/i), "x".repeat(81));
     await user.click(screen.getByRole("button", { name: /create account/i }));
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(screen.getByText(/use at least 2 characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/keep it under 80 characters/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/your name/i)).toHaveFocus();
+    expect(screen.queryByRole("button", { name: /fill with sample data/i })).toBeNull();
   });
 
   it("refuses an email that is already registered, even in another case", async () => {
     const user = userEvent.setup();
+    await signedInAs();
+    localStorage.removeItem(SESSION_KEY);
     renderApp("/app/register");
     await user.type(await screen.findByLabelText(/your name/i), "Someone");
     await user.type(screen.getByLabelText(/pet hotel name/i), "Hotel");
-    await user.type(screen.getByLabelText(/^email$/i), "DEMO@pethommie.id");
+    await user.type(screen.getByLabelText(/^email$/i), "RINA@example.com");
     await user.type(screen.getByLabelText(/whatsapp number/i), "0812 3456 7890");
     await user.type(screen.getByLabelText(/^password$/i), "abc12345");
     await user.click(screen.getByRole("button", { name: /create account/i }));
@@ -208,25 +212,6 @@ describe("log out and accounts", () => {
     expect(await screen.findByText("rina@example.com", { exact: false })).toBeInTheDocument();
   });
 
-  it("keeps each account's hotel to itself, and gives it back on the next login", async () => {
-    const user = userEvent.setup();
-    renderApp("/app/login");
-
-    // Demo account: has sample bookings, and we change something.
-    await user.click((await screen.findAllByRole("button", { name: /^use$/i }))[0]);
-    await user.click(screen.getByRole("button", { name: /^log in$/i }));
-    await heading(/^today$/i);
-    await user.click(screen.getAllByRole("button", { name: /log out/i })[0]);
-    await heading(/welcome back/i);
-
-    // The other demo account is empty: none of that hotel is visible to it.
-    await user.click((await screen.findAllByRole("button", { name: /^use$/i }))[1]);
-    await user.click(screen.getByRole("button", { name: /^log in$/i }));
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem(dataKeyFor("demo-baru"))!)).toMatchObject({ hotel: null, bookings: [] });
-    expect(JSON.parse(localStorage.getItem(dataKeyFor("demo-rina"))!).hotel).not.toBeNull();
-  });
-
   it("works with the password the test helper uses", async () => {
     const user = userEvent.setup();
     await signedInAs({ data: aSmallHotel() });
@@ -236,5 +221,90 @@ describe("log out and accounts", () => {
     await user.type(screen.getByLabelText(/^password$/i), TEST_PASSWORD);
     await user.click(screen.getByRole("button", { name: /^log in$/i }));
     expect(await heading(/^today$/i)).toBeInTheDocument();
+  });
+});
+
+describe("try now (the demo)", () => {
+  it("has its own screen, reached from login, apart from the login form", async () => {
+    const user = userEvent.setup();
+    renderApp("/app/login");
+    expect(screen.queryByRole("button", { name: /^use$/i })).toBeNull();
+    await user.click(await screen.findByRole("link", { name: /try the demo/i }));
+    expect(await heading(/try pethommie with a sample hotel/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /open this demo/i })).toHaveLength(3);
+  });
+
+  it("opens a sample hotel with no password, always under the demo strip and the offer with its countdown", async () => {
+    const user = userEvent.setup();
+    renderApp("/app/try");
+    await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[0]);
+    expect(await heading(/^today$/i)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /^demo$/i })).toHaveTextContent(/trying a sample hotel/i);
+    const offer = screen.getByRole("complementary", { name: /50% off your first plan/i });
+    expect(offer).toHaveTextContent(/ends in 2d 23h 59m \d\ds|ends in 3d 0h 00m 00s/i);
+    expect(localStorage.getItem(OFFER_KEY)).not.toBeNull();
+
+    await user.click(screen.getAllByRole("link", { name: /bookings/i })[0]);
+    expect(screen.getByRole("region", { name: /^demo$/i })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: /50% off/i })).toBeInTheDocument();
+  });
+
+  it("keeps the demo's data apart from real accounts", async () => {
+    const user = userEvent.setup();
+    const real = await signedInAs({ data: aSmallHotel() });
+    localStorage.removeItem(SESSION_KEY);
+    const before = localStorage.getItem(dataKeyFor(real.id));
+    renderApp("/app/try");
+    await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[0]);
+    await heading(/^today$/i);
+    expect(JSON.parse(localStorage.getItem(demoDataKeyFor("demo-rina"))!).hotel.name).toBe("Rumah Meong Bintaro");
+    expect(localStorage.getItem(dataKeyFor("demo-rina"))).toBeNull();
+    expect(localStorage.getItem(dataKeyFor(real.id))).toBe(before);
+    expect(accounts().map((a) => a.id)).toEqual([real.id]);
+  });
+
+  it("leaves the demo back to its own screen, and the empty sample hotel starts at setup", async () => {
+    const user = userEvent.setup();
+    renderApp("/app/try");
+    await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[0]);
+    await heading(/^today$/i);
+    await user.click(screen.getByRole("button", { name: /leave demo/i }));
+    expect(await heading(/try pethommie with a sample hotel/i)).toBeInTheDocument();
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
+    await user.click(screen.getByRole("button", { name: /open this demo: start from nothing/i }));
+    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /^demo$/i })).toBeInTheDocument();
+  });
+
+  it("claiming the discount leaves the demo for sign-up, and the new account keeps the offer", async () => {
+    const user = userEvent.setup();
+    renderApp("/app/try");
+    await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[0]);
+    await heading(/^today$/i);
+    await user.click(screen.getByRole("button", { name: /claim the discount/i }));
+    expect(await heading(/create your account/i)).toBeInTheDocument();
+    expect(screen.getByText(/your 50% demo discount is saved/i)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/your name/i), "Dewi Lestari");
+    await user.type(screen.getByLabelText(/pet hotel name/i), "Kucing Manja");
+    await user.type(screen.getByLabelText(/^email$/i), "dewi@example.com");
+    await user.type(screen.getByLabelText(/whatsapp number/i), "0812 7788 4455");
+    await user.type(screen.getByLabelText(/^password$/i), "Pethommie123");
+    await user.click(screen.getByRole("button", { name: /create account/i }));
+    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /^demo$/i })).toBeNull();
+    const stored = JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts[0];
+    expect(stored.offer).toMatchObject({ code: "DEMO50", percentOff: 50 });
+  });
+
+  it("starts the demo over on request, after asking", async () => {
+    const user = userEvent.setup();
+    renderApp("/app/try");
+    await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[2]);
+    await heading(/welcome to pethommie/i);
+    await user.click(screen.getByRole("button", { name: /start setup/i }));
+    await user.click(screen.getByRole("button", { name: /^start over$/i }));
+    await user.click(within(screen.getByRole("dialog", { hidden: true })).getByRole("button", { name: /^start over$/i, hidden: true }));
+    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
   });
 });

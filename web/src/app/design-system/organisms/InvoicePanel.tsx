@@ -9,6 +9,7 @@ import { Input, Select } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { dateError } from "@/app/forms/messages";
 import "./organisms.css";
 
 const tone: Record<string, Tone> = { unpaid: "danger", partial: "warn", paid: "ok", unknown: "neutral" };
@@ -34,9 +35,13 @@ export function InvoicePanel({
   });
   const [due, setDue] = useState(() => defaultDueDate(booking, todayISO()));
   const [error, setError] = useState<string | undefined>();
+  const [dueError, setDueError] = useState<string | undefined>();
   const rp = (n: number) => formatRupiah(n, locale);
 
   function create() {
+    const bad = due ? dateError(t.validation, due) ?? (due < todayISO() ? t.validation.dateNotPast : undefined) : undefined;
+    setDueError(bad);
+    if (bad) return;
     const issues = onIssue({ issuedOn: todayISO(), language, dueOn: due || null });
     if (!issues.length) return setError(undefined);
     setError(issues.includes("cancelled") ? p.errCancelled : issues.includes("exists") ? p.errExists : p.errOther);
@@ -76,8 +81,8 @@ export function InvoicePanel({
                 <option value="en">{t.settingsBiz.languages.en}</option>
               </Select>
             </Field>
-            <Field label={p.dueOn}>
-              <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+            <Field label={p.dueOn} error={dueError}>
+              <Input type="date" value={due} onChange={(e) => (setDue(e.target.value), setDueError(undefined))} />
             </Field>
           </div>
           {error && <Alert tone="danger">{error}</Alert>}

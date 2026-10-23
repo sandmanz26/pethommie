@@ -32,7 +32,8 @@ export function TodayPage() {
   const board = todayBoard(data, today);
   const { account } = useAuth();
   const sinceBackup = account ? daysSinceBackup(account.id, today) : 0;
-  const needsBackup = data.bookings.length > 0 && (sinceBackup === null || sinceBackup >= BACKUP_EVERY_DAYS);
+  // A demo hotel is sample data: nothing there is worth a backup.
+  const needsBackup = !account?.demo && data.bookings.length > 0 && (sinceBackup === null || sinceBackup >= BACKUP_EVERY_DAYS);
   const hotel = data.hotel!;
 
   const card = (b: Booking, action: "in" | "out", late = false) => (

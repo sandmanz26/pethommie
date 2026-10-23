@@ -8,6 +8,8 @@ import { Input } from "@/app/design-system/atoms/Input";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Field } from "@/app/design-system/molecules/Field";
 import { useAppT } from "@/app/i18n/useAppT";
+import { textError, timeError } from "@/app/forms/messages";
+import { LIMITS } from "@/shared/lib/validate";
 import "./organisms.css";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -54,15 +56,22 @@ export function CareLogPanel({
   const [time, setTime] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | undefined>();
+  const [timeErr, setTimeErr] = useState<string | undefined>();
+  const v = t.validation;
   const presets = CARE_PRESETS[kind];
   const needsNote = NEEDS_NOTE.includes(kind);
 
   function add(preset: string | null) {
+    const badTime = timeError(v, time);
+    const longNote = textError(v, note, { max: LIMITS.line });
+    setTimeErr(badTime);
+    if (badTime || longNote) return setError(longNote);
     const issues = onAdd({ kind, preset, note, at: at(today, time) });
     if (issues.length) return setError(c.errNote);
     setNote("");
     setTime(null);
     setError(undefined);
+    setTimeErr(undefined);
   }
 
   const label = (e: CareEntry) =>
@@ -89,8 +98,8 @@ export function CareLogPanel({
           {(!simple || needsNote) && (
             <div className={simple ? "" : "ds-care__entry"}>
               {!simple && (
-                <Field label={c.time}>
-                  <Input type="time" value={time ?? clock()} onChange={(e) => setTime(e.target.value)} />
+                <Field label={c.time} error={timeErr}>
+                  <Input type="time" value={time ?? clock()} onChange={(e) => (setTime(e.target.value), setTimeErr(undefined))} />
                 </Field>
               )}
               <Field label={c.details} error={error} optional={needsNote ? undefined : t.common.optional}>

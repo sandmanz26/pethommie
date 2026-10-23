@@ -5,6 +5,7 @@
 //   node scripts/dribbble/shots.mjs <out-dir>
 import { chromium } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
+import { HIDE_DEMO } from '../capture-common.mjs'
 
 const base = process.env.E2E_BASE_URL ?? 'http://localhost:4173'
 const out = process.argv[2] ?? 'dribbble'
@@ -18,7 +19,8 @@ const english = async (p) => {
   await p.waitForTimeout(200)
 }
 
-async function session(browser, viewport, scale, account = 2) {
+/** `account`: which Try now hotel, 0 small, 1 big (advanced), 2 empty. */
+async function session(browser, viewport, scale, account = 1) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: scale, reducedMotion: 'reduce', serviceWorkers: 'block', timezoneId: 'Asia/Jakarta', ...(viewport.width < 500 ? { isMobile: true, hasTouch: true } : {}) })
   await context.addInitScript(([d]) => {
     localStorage.setItem('pethommie.locale', 'en')
@@ -27,18 +29,17 @@ async function session(browser, viewport, scale, account = 2) {
   }, [today])
   const page = await context.newPage()
   await page.clock.setFixedTime(afternoon)
-  await page.goto(`${base}/app/login`)
-  await page.getByRole('button', { name: /^use$/i }).nth(account).click()
-  await page.getByRole('button', { name: /^log in$/i }).click()
-  await page.waitForURL((u) => !u.pathname.includes('login'))
-  // the demo line under every page is for testers, not for the pictures
-  await page.addStyleTag({ content: '.tpl-app__demo { display: none !important; }' }).catch(() => {})
+  await page.goto(`${base}/app/try`)
+  await page.getByRole('button', { name: /^open this demo/i }).nth(account).click()
+  await page.waitForURL((u) => !u.pathname.endsWith('/try'))
+  // the demo's strip and offer are for visitors trying it, not for the pictures
+  await page.addStyleTag({ content: HIDE_DEMO }).catch(() => {})
   return { context, page }
 }
 
 async function settle(page) {
   await page.getByRole('heading', { level: 1 }).first().waitFor()
-  await page.addStyleTag({ content: '.tpl-app__demo { display: none !important; }' })
+  await page.addStyleTag({ content: HIDE_DEMO })
   const dismiss = page.getByRole('button', { name: /^dismiss$/i })
   if (await dismiss.count()) await dismiss.first().click()
   await page.evaluate(() => document.fonts.ready)

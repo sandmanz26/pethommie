@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useDocumentMeta } from "@/shared/hooks/useDocumentMeta";
 import { decodeCard, requestMessage, type LinkRequest, type LinkSpecies } from "@/shared/lib/bookingLink";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
+import { isValidISODate, LIMITS, textIssue } from "@/shared/lib/validate";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
 import { useLocale } from "@/shared/i18n/LocaleProvider";
 import { Hanko } from "@/shared/ui/Hanko";
 import { LanguageSwitch } from "@/shared/ui/LanguageSwitch";
@@ -17,6 +19,9 @@ const plusDays = (iso: string, n: number) => {
   return localDay(new Date(y, m - 1, d + n));
 };
 
+/** The longest stay the request form accepts: anything longer is almost always a typo in the year or month. */
+const MAX_NIGHTS = 60;
+
 /**
  * A pet hotel's public booking page, opened from the link the hotel shares. Everything about the hotel comes from
  * the link itself; the request is a WhatsApp message to the hotel, written for them, that the owner sends.
@@ -29,9 +34,12 @@ export function BookPage() {
   const b = t.bookPage;
   const today = localDay();
   const [r, setR] = useState<LinkRequest>({ ownerName: "", ownerWa: "", petName: "", species: card?.species[0] ?? "cat", breed: "", checkIn: plusDays(today, 1), checkOut: plusDays(today, 3), preference: "", notes: "" });
-  const [errors, setErrors] = useState<Partial<Record<"name" | "wa" | "pet" | "dates", string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<"name" | "wa" | "pet" | "breed" | "dates" | "notes", string>>>({});
+  const { ref, focusInvalid } = useFocusInvalid();
   const [sent, setSent] = useState(false);
   const set = (patch: Partial<LinkRequest>) => setR((prev) => ({ ...prev, ...patch }));
+  /** Clears an error once its field is being fixed. */
+  const fix = (key: keyof typeof errors, patch: Partial<LinkRequest>) => (set(patch), setErrors((x) => ({ ...x, [key]: undefined })));
   useDocumentMeta({ title: card ? b.metaTitle(card.hotel) : b.badTitle, robots: "noindex" });
 
   // The page opens in the hotel's language; the visitor can switch.
@@ -61,12 +69,21 @@ export function BookPage() {
   function submit(e: FormEvent) {
     e.preventDefault();
     const err: typeof errors = {};
-    if (!r.ownerName.trim()) err.name = b.errName;
+    const v = t.validation;
+    const words = (value: string, rules: { required?: string; min?: number; max: number }) => {
+      const issue = textIssue(value, { required: !!rules.required, min: rules.min, max: rules.max });
+      return issue === "required" ? rules.required : issue === "tooShort" ? v.tooShort(rules.min!) : issue === "tooLong" ? v.tooLong(rules.max) : undefined;
+    };
+    err.name = words(r.ownerName, { required: b.errName, ...LIMITS.personName });
     if (!normaliseWhatsapp(r.ownerWa)) err.wa = b.errWa;
-    if (!r.petName.trim()) err.pet = b.errPet;
-    if (!(r.checkOut > r.checkIn) || r.checkIn < today) err.dates = b.errDates;
+    err.pet = words(r.petName, { required: b.errPet, ...LIMITS.petName });
+    err.breed = words(r.breed, { max: LIMITS.petName.max });
+    err.notes = words(r.notes, { max: LIMITS.notes });
+    if (!isValidISODate(r.checkIn) || !isValidISODate(r.checkOut) || !(r.checkOut > r.checkIn) || r.checkIn < today) err.dates = b.errDates;
+    else if (r.checkIn > plusDays(today, 365) || r.checkOut > plusDays(r.checkIn, MAX_NIGHTS)) err.dates = v.datesFar;
+    (Object.keys(err) as (keyof typeof err)[]).forEach((k) => err[k] === undefined && delete err[k]);
     setErrors(err);
-    if (Object.keys(err).length) return;
+    if (Object.keys(err).length) return void focusInvalid();
     const text = requestMessage(card!, r, window.location.origin);
     window.open(`https://wa.me/${card!.wa}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     setSent(true);
@@ -115,25 +132,25 @@ export function BookPage() {
           {card.note && <p className="book__note">{card.note}</p>}
         </section>
 
-        <form className="form book__form" onSubmit={submit} noValidate>
+        <form ref={ref} className="form book__form" onSubmit={submit} noValidate>
           <h2>{b.formTitle}</h2>
           <p className="book__lead">{b.formLead}</p>
           <div className="form__row">
             <div className="book__field">
               <label htmlFor="b-name">{b.ownerName}</label>
-              <input id="b-name" autoComplete="name" value={r.ownerName} onChange={(e) => set({ ownerName: e.target.value })} {...field("name")} />
+              <input id="b-name" autoComplete="name" value={r.ownerName} onChange={(e) => fix("name", { ownerName: e.target.value })} {...field("name")} />
               {error("name")}
             </div>
             <div className="book__field">
               <label htmlFor="b-wa">{b.ownerWa}</label>
-              <input id="b-wa" inputMode="tel" autoComplete="tel" placeholder="0812 3456 7890" value={r.ownerWa} onChange={(e) => set({ ownerWa: e.target.value })} {...field("wa")} />
+              <input id="b-wa" inputMode="tel" autoComplete="tel" placeholder="0812 3456 7890" value={r.ownerWa} onChange={(e) => fix("wa", { ownerWa: e.target.value })} {...field("wa")} />
               {error("wa")}
             </div>
           </div>
           <div className="form__row">
             <div className="book__field">
               <label htmlFor="b-pet">{b.petName}</label>
-              <input id="b-pet" value={r.petName} onChange={(e) => set({ petName: e.target.value })} {...field("pet")} />
+              <input id="b-pet" value={r.petName} onChange={(e) => fix("pet", { petName: e.target.value })} {...field("pet")} />
               {error("pet")}
             </div>
             <div className="book__field">
@@ -150,17 +167,18 @@ export function BookPage() {
               <label htmlFor="b-breed"><span>
                 {b.breed} <small>({b.optional})</small>
               </span></label>
-              <input id="b-breed" value={r.breed} onChange={(e) => set({ breed: e.target.value })} />
+              <input id="b-breed" value={r.breed} onChange={(e) => fix("breed", { breed: e.target.value })} {...field("breed")} />
+              {error("breed")}
             </div>
           </div>
           <div className="form__row">
             <div className="book__field">
               <label htmlFor="b-in">{b.checkIn}</label>
-              <input id="b-in" type="date" min={today} value={r.checkIn} onChange={(e) => e.target.value && set({ checkIn: e.target.value, checkOut: r.checkOut > e.target.value ? r.checkOut : plusDays(e.target.value, 1) })} {...field("dates")} />
+              <input id="b-in" type="date" min={today} value={r.checkIn} onChange={(e) => e.target.value && fix("dates", { checkIn: e.target.value, checkOut: r.checkOut > e.target.value ? r.checkOut : plusDays(e.target.value, 1) })} {...field("dates")} />
             </div>
             <div className="book__field">
               <label htmlFor="b-out">{b.checkOut}</label>
-              <input id="b-out" type="date" min={plusDays(r.checkIn, 1)} value={r.checkOut} onChange={(e) => e.target.value && set({ checkOut: e.target.value })} {...field("dates")} />
+              <input id="b-out" type="date" min={plusDays(r.checkIn, 1)} value={r.checkOut} onChange={(e) => e.target.value && fix("dates", { checkOut: e.target.value })} {...field("dates")} />
             </div>
             {card.prices.length > 0 && (
               <div className="book__field">
@@ -181,7 +199,8 @@ export function BookPage() {
             <label htmlFor="b-notes"><span>
               {b.notes} <small>({b.optional})</small>
             </span></label>
-            <textarea id="b-notes" rows={3} placeholder={b.notesPh} value={r.notes} onChange={(e) => set({ notes: e.target.value })} />
+            <textarea id="b-notes" rows={3} placeholder={b.notesPh} value={r.notes} onChange={(e) => fix("notes", { notes: e.target.value })} {...field("notes")} />
+            {error("notes")}
           </div>
           <Button type="submit" className="form__submit">
             {b.send}

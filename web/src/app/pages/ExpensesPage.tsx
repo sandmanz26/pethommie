@@ -17,6 +17,9 @@ import { StatCard } from "@/app/design-system/molecules/StatCard";
 import { BarList } from "@/app/design-system/organisms/BarList";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { downloadCsv } from "./trend";
+import { compact, dateError, moneyError, textError } from "@/app/forms/messages";
+import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
+import { LIMITS, parseRupiah } from "@/shared/lib/validate";
 import "./pages.css";
 
 const METHODS: PaymentMethod[] = ["transfer", "cash", "qris", "ewallet", "card"];
@@ -33,7 +36,9 @@ export function ExpensesPage() {
   const [month, setMonth] = useState(() => today.slice(0, 7));
   const [f, setF] = useState<ExpenseFilter>(NO_EXPENSE_FILTER);
   const [draft, setDraft] = useState<Draft>(() => blank(today));
-  const [errors, setErrors] = useState<{ amount?: string; date?: string }>({});
+  const [errors, setErrors] = useState<{ amount?: string; date?: string; vendor?: string; note?: string }>({});
+  const v = t.validation;
+  const { ref, focusInvalid } = useFocusInvalid();
   const [notice, setNotice] = useState<string | null>(null);
   const [removing, setRemoving] = useState<Expense | null>(null);
 
@@ -44,14 +49,21 @@ export function ExpensesPage() {
   const total = sumOf(all);
   const direct = DIRECT_COSTS.reduce((s, c) => s + totals[c], 0);
   const rp = (n: number) => formatRupiah(n, locale);
-  const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
+  const set = (patch: Partial<Draft>) => (setDraft((d) => ({ ...d, ...patch })), setErrors((x) => ({ ...x, ...Object.fromEntries(Object.keys(patch).map((k) => [k, undefined])) })));
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const amount = parseInt(draft.amount.replace(/\D/g, "") || "0", 10);
-    const issues = saveExpense({ id: draft.id ?? newId(), date: draft.date, category: draft.category, amount, method: draft.method, vendor: draft.vendor, note: draft.note, recurring: draft.recurring });
+    const local = compact({
+      date: dateError(v, draft.date),
+      amount: moneyError(v, locale, draft.amount, { required: true, zero: x.errAmount }),
+      vendor: textError(v, draft.vendor, { max: LIMITS.short }),
+      note: textError(v, draft.note, { max: LIMITS.line }),
+    });
+    if (Object.keys(local).length) return void (setErrors(local), focusInvalid());
+    const amount = parseRupiah(draft.amount) ?? 0;
+    const issues = saveExpense({ id: draft.id ?? newId(), date: draft.date, category: draft.category, amount, method: draft.method, vendor: draft.vendor.trim(), note: draft.note.trim(), recurring: draft.recurring });
     setErrors({ amount: issues.includes("amount") ? x.errAmount : undefined, date: issues.includes("date") ? x.errDate : undefined });
-    if (issues.length) return;
+    if (issues.length) return void focusInvalid();
     setNotice(x.saved);
     if (draft.date.slice(0, 7) !== month) setMonth(draft.date.slice(0, 7));
     setDraft({ ...blank(draft.date), method: draft.method });
@@ -113,7 +125,7 @@ export function ExpensesPage() {
       </div>
 
       <div className="pg-columns">
-        <form className="ds-form__section pg-panel" id="expense-form" onSubmit={submit} noValidate aria-label={draft.id ? x.edit : x.add}>
+        <form ref={ref} className="ds-form__section pg-panel" id="expense-form" onSubmit={submit} noValidate aria-label={draft.id ? x.edit : x.add}>
           <h2 className="pg-panel__title">{draft.id ? x.edit : x.add}</h2>
           <div className="ds-form__row">
             <Field label={x.date} error={errors.date}>
@@ -143,10 +155,10 @@ export function ExpensesPage() {
               </Select>
             </Field>
           </div>
-          <Field label={x.vendor} optional={t.common.optional}>
+          <Field label={x.vendor} error={errors.vendor} optional={t.common.optional}>
             <Input value={draft.vendor} onChange={(e) => set({ vendor: e.target.value })} placeholder={x.vendorPh} />
           </Field>
-          <Field label={x.note} optional={t.common.optional}>
+          <Field label={x.note} error={errors.note} optional={t.common.optional}>
             <Input value={draft.note} onChange={(e) => set({ note: e.target.value })} placeholder={x.notePh} />
           </Field>
           <Checkbox label={x.recurring} checked={draft.recurring} onChange={(e) => set({ recurring: e.target.checked })} />
