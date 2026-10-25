@@ -39,7 +39,7 @@ async function setRule(mode: PayMode, percent?: string) {
   const user = await open("/app/settings/booking", aSmallHotel());
   await screen.findByRole("heading", { name: "Booking & payment rules" });
   const label = { flexible: "Book now, pay later", deposit_first: "Deposit first", check_first: "Check slot first" }[mode];
-  await user.click(rules().getByRole("tab", { name: label }));
+  await user.click(rules().getByRole("tab", { name: new RegExp(`^${label}`) }));
   if (percent !== undefined) {
     await user.clear(rules().getByLabelText(/minimum deposit/i));
     await user.type(rules().getByLabelText(/minimum deposit/i), percent);
@@ -159,4 +159,16 @@ it("speaks Indonesian too", async () => {
   const { appId } = await import("@/app/i18n/id");
   expect(appId.payPolicy.badge).toEqual({ request: "Permintaan", deposit: "Menunggu DP" });
   expect(appId.payPolicy.formInfo.deposit_first("Rp 30.000", 30)).toBe("DP minimal Rp 30.000 (30%). Tanpa DP ini, booking menunggu DP dan belum bisa check-in.");
+});
+
+describe("which rule is in use", () => {
+  it("marks the saved choices, and keeps the mark on them while another is being tried", async () => {
+    const user = await open("/app/settings/booking", aSmallHotel());
+    await screen.findByRole("heading", { name: "Booking & payment rules" });
+    expect(screen.getByRole("tab", { name: /^Per night\s*In use$/ })).toBeInTheDocument();
+    expect(rules().getByRole("tab", { name: /^Book now, pay later\s*In use$/ })).toBeInTheDocument();
+    await user.click(rules().getByRole("tab", { name: "Deposit first" }));
+    expect(rules().getByRole("tab", { name: "Deposit first", selected: true })).toBeInTheDocument();
+    expect(rules().getByRole("tab", { name: /^Book now, pay later\s*In use$/, selected: false })).toBeInTheDocument();
+  });
 });

@@ -1223,6 +1223,7 @@ export const appId: AppMessages = {
     noCheckIn: "Belum bisa check-in sampai booking dipastikan.",
   },
   stayRules: {
+    inUse: "Dipakai sekarang",
     pageTitle: "Pengaturan booking",
     pageLead: "Cara menghitung lama inap, jam antar dan jemput, denda telat jemput, dan cara booking dipastikan.",
     open: "Pengaturan booking",

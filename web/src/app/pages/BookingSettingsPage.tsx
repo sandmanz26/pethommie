@@ -37,6 +37,8 @@ export function BookingSettingsPage() {
   const back = safeBack(params.get("back"));
 
   const [rules, setRules] = useState<StayRules>(data.settings.stayRules);
+  // What is saved now (only once the rules were set), marked on its option so it's easy to come back to.
+  const inUse: Pick<StayRules, "counting" | "late"> = data.settings.stayRules.configured ? data.settings.stayRules : { counting: "" as StayCounting, late: { ...data.settings.stayRules.late, mode: "" as LateMode } };
   const [graceText, setGraceText] = useState(String(data.settings.stayRules.graceMinutes));
   const [perHourText, setPerHourText] = useState(String(data.settings.stayRules.late.perHour));
   const [errors, setErrors] = useState<StayErrors>({});
@@ -108,7 +110,7 @@ export function BookingSettingsPage() {
           label={s.counting}
           value={rules.counting}
           onChange={(counting) => edit({ counting })}
-          options={(["nights", "calendar_days", "hours24"] as const).map((c) => ({ value: c, label: s.countings[c] }))}
+          options={(["nights", "calendar_days", "hours24"] as const).map((c) => ({ value: c, label: s.countings[c], badge: inUse.counting === c ? s.inUse : undefined }))}
         />
         <Muted>{s.explain[rules.counting]}</Muted>
 
@@ -129,7 +131,9 @@ export function BookingSettingsPage() {
           <Field label={s.late}>
             <Select value={rules.late.mode} onChange={(e) => (edit({ late: { ...rules.late, mode: e.target.value as LateMode } }), clear("perHour"))}>
               {(["none", "per_hour", "half_day", "full_day"] as const).map((m) => (
-                <option key={m} value={m}>{s.lates[m]}</option>
+                <option key={m} value={m}>
+                  {inUse.late.mode === m ? `${s.lates[m]} · ${s.inUse}` : s.lates[m]}
+                </option>
               ))}
             </Select>
           </Field>
@@ -155,7 +159,7 @@ export function BookingSettingsPage() {
           label={t.payPolicy.mode}
           value={payMode}
           onChange={(m) => (setPayMode(m), setPaySaved(false), setPercentErr(undefined))}
-          options={(["flexible", "deposit_first", "check_first"] as const).map((m) => ({ value: m, label: t.payPolicy.modes[m] }))}
+          options={(["flexible", "deposit_first", "check_first"] as const).map((m) => ({ value: m, label: t.payPolicy.modes[m], badge: data.settings.payPolicy.mode === m ? s.inUse : undefined }))}
         />
         <Muted>{t.payPolicy.explain[payMode]}</Muted>
         {payMode !== "flexible" && (

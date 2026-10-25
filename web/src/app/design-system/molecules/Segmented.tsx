@@ -7,7 +7,7 @@ export function Segmented<T extends string>({
   onChange,
   label,
 }: {
-  options: { value: T; label: string; count?: number }[];
+  options: { value: T; label: string; count?: number; badge?: string }[];
   value: T;
   onChange: (v: T) => void;
   label: string;
@@ -25,6 +25,7 @@ export function Segmented<T extends string>({
         >
           {o.label}
           {o.count !== undefined && <span className="ds-segmented__count">{o.count}</span>}
+          {o.badge && <> <span className="ds-segmented__badge">{o.badge}</span></>}
         </button>
       ))}
     </div>

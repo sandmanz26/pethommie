@@ -63,6 +63,8 @@
 .ds-segmented__item[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 .ds-segmented__count { min-width: 20px; padding: 2px 6px; border-radius: 999px; background: var(--surface-sunk); font-size: 0.82em; font-variant-numeric: tabular-nums; }
 .ds-segmented__item[aria-selected="true"] .ds-segmented__count { background: var(--ink); color: var(--surface); }
+/* Marks the option that is saved now, so it stays findable while another is being tried. */
+.ds-segmented__badge { padding: 2px 7px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-size: 0.72em; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; }
 
 /* ---------- SearchField ---------- */
 .ds-search {

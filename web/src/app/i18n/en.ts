@@ -1226,6 +1226,7 @@ export const appEn = {
   },
   /** How the hotel counts days and charges a late pick-up (settings.stayRules), and the booking settings page. */
   stayRules: {
+    inUse: "In use",
     pageTitle: "Booking settings",
     pageLead: "How you count a stay, your drop-off and pick-up hours, the late pick-up fee, and how bookings are confirmed.",
     open: "Booking settings",
