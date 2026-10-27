@@ -33,3 +33,6 @@
   .tpl-focus--art .tpl-focus__bar { grid-row: 1; }
   .tpl-focus--art .tpl-focus__main { grid-row: 3; margin-top: -36px; position: relative; padding-top: 0; }
 }
+
+/* Whether a synced hotel is on the server: a quiet line above the page. */
+.tpl-app__sync { margin: 0 0 8px; display: flex; justify-content: flex-end; }

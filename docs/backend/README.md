@@ -1,8 +1,11 @@
 # Backend plan
 
-Status: **prepared, not connected.** The schema, the mapping between the app's data and the server's rows, the sync
-logic and a fake server exist and are tested. Nothing in the running app talks to a server yet. This page says what
-was decided, what is already built, what is next, and what only the owner of the product can decide.
+Status: **Phase 1 sync built, not yet run against a live project.** The schema, the sync functions (`0007`), the
+mapping between the app's data and the server's rows, a Supabase gateway and a synced repository (local copy + outbox
++ pull) exist and are tested on PGlite and with an in-memory server. The app uses them only for an account signed in
+through Supabase (Google) when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are set; every other account stays in
+the browser as before. Nothing has been tried against a real Supabase project yet (see "Not yet proven" below). This
+page says what was decided, what is already built, what is next, and what only the owner of the product can decide.
 
 ## 1. Decision
 
@@ -37,7 +40,11 @@ requirement rules it out (see §6).
 | Data ⇄ rows | `web/src/app/sync/rows.ts` | round-trips the whole sample hotel through the database |
 | Stable UUIDs for old ids | `web/src/app/sync/ids.ts` | unit tests; `newId()` now always makes a UUID |
 | Diff / apply / merge of changes | `web/src/app/sync/diff.ts` | replays a day's actions: each step's diff rebuilds the next state |
-| Server contract + in-memory server | `web/src/app/sync/gateway.ts` | pull, push, "pull first", double booking refused |
+| Server contract + in-memory server | `web/src/app/sync/gateway.ts` | pull, push, "pull first", double booking refused (naming the stay), find / create "my hotel" |
+| Sync functions: `create_hotel`, `my_hotel`, `pull_changes` (rows changed after a cursor, tombstones as removals), `push_changes` (upserts and soft-deletes in one transaction; answers `double_booking`, `forbidden` or `invalid`); all `security invoker`, so row level security applies | `backend/supabase/migrations/0007_sync_functions.sql` | `schema.test.ts`, through the app's own gateway: the sample hotel pushed and pulled back whole; the same push twice changes nothing; a stranger's push and pull are refused; a double booking answers `double_booking` with the stay and keeps nothing of that push; a removal reaches the next pull |
+| Supabase gateway | `web/src/app/sync/supabaseGateway.ts` | the PGlite tests above, plus error mapping (network failure = offline, refusal = final) |
+| Synced repository: local copy (load stays synchronous) + persistent outbox + pull on start / focus / back online + debounced push; status synced / pending / offline / conflict | `web/src/app/sync/syncedRepository.ts` | an offline day sent when back (outbox survives a reload); two devices that both changed the hotel converge ("pull first", then push); a double booking from another device shows as a conflict, keeps the stay, and goes through once it is moved; the first sync makes the hotel once onboarding has, uploads what is local, and a second device finds it |
+| Wiring | `AccountData.tsx` (synced repository only for `account.provider === "supabase"`), `AppStore` (`repo.subscribe` applies remote changes like a restored backup), `SyncIndicator` in `AppLayout` (renders nothing for local accounts), copy in the `sync` block of the app's i18n | type check, lint and the existing UI tests (the local path is unchanged) |
 | Backup restore (also how a hotel's local data will be uploaded) | Settings → Restore a backup | UI tests |
 | `AuthService` interface | `web/src/app/auth/AuthService.ts` | the mock implements it; a Supabase one replaces it |
 
@@ -89,14 +96,26 @@ app: `deleted_at` marks them, so a device that was offline hears about it when i
 
 | Phase | Deliverable | Done when |
 |---|---|---|
-| 0 | Supabase project, apply the migrations (`0001` to `0004`), env vars on Vercel, CSP `connect-src` extended | schema tests green in CI against the real project's migrations |
-| 1 | `supabaseAuthService`; register creates account + hotel (`hotels` insert makes the creator the owner); `createSyncedRepository` (local + outbox + pull); first sign-in on a device with local data offers to upload it | sign up on phone A, see the same hotel on phone B; airplane-mode day ends with everything synced |
+| 0 | Supabase project, apply the migrations (`0001` to `0007`), env vars on Vercel, CSP `connect-src` extended | schema tests green in CI against the real project's migrations |
+| 1 | `supabaseAuthService` (Google); the hotel is made on the server when onboarding saves it (`create_hotel`; the creator becomes the owner); `createSyncedRepository` (local + outbox + pull); the first sync uploads what the device holds | sign up on phone A, see the same hotel on phone B; airplane-mode day ends with everything synced. **Code and tests done (PGlite + in-memory server); not yet proven on a live project.** |
 | 2 | Sign-up form writes `join_requests` (anon insert); owner reads them in the Supabase dashboard | a landing sign-up appears for the owner |
 | 3 | Staff invites (`hotel_members`), Realtime pull | a second person logs in to the same hotel |
 | 4 | Storage (vaccine card, photos in the report), a deposit on the booking link (the link itself already works without a server: requests go to the hotel's WhatsApp), manual QRIS deposit confirmation | an owner books from a link; the cage locks |
 | 5 | Optional: online payments (Xendit/DOKU), WhatsApp API | decided with the owner of the product |
 
-Phase 1 is the real work. It adds: a Supabase client, an implementation of `HotelGateway` over it (`pull` =
+### Not yet proven (Phase 1)
+
+- Nothing has run against a real Supabase project: PostgREST's handling of the `rpc` calls (argument names, jsonb
+  and timestamptz in and out), real JWTs in `auth.uid()`, and the CSP for the project's URL are untested.
+- The pull cursor is the server's `now()` and the next pull reads 5 seconds further back; a push transaction that
+  runs longer than that could be missed until something else touches those rows.
+- Last writer wins per record. `push_changes` never answers `stale` (the in-memory server does, and the sync engine
+  handles it): a device that pushes without having pulled overwrites the same records.
+- A second device opens on onboarding until its first pull arrives (a moment online; offline it stays there).
+- "Delete all data" in a synced hotel removes the records on the server too (as tombstones); the hotel row stays.
+- No Realtime yet: other devices' changes arrive on start, focus and reconnect, not live.
+
+Phase 1 was planned as follows. It adds: a Supabase client, an implementation of `HotelGateway` over it (`pull` =
 select rows with `updated_at > cursor` including tombstones; `push` = one call that upserts and soft-deletes in a single
 transaction, e.g. a Postgres function), a persistent outbox, and a small "synced / offline / conflict" status in the
 app. `HotelRepository.load()` stays synchronous (it returns the local copy); remote changes arrive through

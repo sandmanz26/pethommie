@@ -158,7 +158,7 @@ describe("the in-memory gateway", () => {
     await gateway.push(HOTEL, first, null);
     const clash = aBooking("b2", { petId: "p2", cageId: "s1", checkIn: "2026-10-16", checkOut: "2026-10-19" });
     const changes = diffData(a, { ...a, bookings: [...a.bookings, clash] }, HOTEL);
-    expect(await gateway.push(HOTEL, changes, "1")).toEqual({ ok: false, reason: "double_booking" });
+    expect(await gateway.push(HOTEL, changes, "1")).toMatchObject({ ok: false, reason: "double_booking" });
     expect(gateway.version()).toBe(1);
   });
 });

@@ -1289,5 +1289,17 @@ export const appId: AppMessages = {
     npwp: "NPWP terdiri dari 15 atau 16 angka.",
     depositTooHigh: (total: string) => `DP tidak boleh lebih dari total biaya menginap (${total}).`,
   },
+  sync: {
+    synced: "Tersimpan online",
+    pending: "Menyimpan online…",
+    offline: "Offline · tersimpan di perangkat ini",
+    conflict: {
+      double_booking: "Perangkat lain lebih dulu memesan tempat yang sama untuk malam-malam ini. Pesanan ini tetap ada di sini: pindahkan ke tempat atau tanggal lain.",
+      forbidden: "Akun ini tidak bisa menjangkau hotel ini secara online. Perubahanmu tetap tersimpan di perangkat ini.",
+      invalid: "Server menolak beberapa perubahan. Perubahan itu tetap tersimpan di perangkat ini.",
+    },
+    openStay: "Buka pesanan",
+    retry: "Coba lagi",
+  },
   confirm: { yes: "Ya, lanjutkan", no: "Tidak" },
 };

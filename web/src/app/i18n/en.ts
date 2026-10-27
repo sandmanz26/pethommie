@@ -1292,6 +1292,18 @@ export const appEn = {
     npwp: "An NPWP has 15 or 16 digits.",
     depositTooHigh: (total: string) => `A deposit can't be more than the stay costs (${total}).`,
   },
+  sync: {
+    synced: "Saved online",
+    pending: "Saving online…",
+    offline: "Offline · kept on this device",
+    conflict: {
+      double_booking: "Another device booked the same place for these nights first. This stay is kept here: move it to another place or date.",
+      forbidden: "This account can't reach this hotel online. Your changes are kept on this device.",
+      invalid: "The server refused some changes. They are kept on this device.",
+    },
+    openStay: "Open the stay",
+    retry: "Try again",
+  },
   confirm: { yes: "Yes, continue", no: "No" },
 };
 

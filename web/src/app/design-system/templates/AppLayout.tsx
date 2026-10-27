@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AppNav } from "@/app/design-system/organisms/AppNav";
 import "./templates.css";
 import type { NavKey } from "@/app/design-system/organisms/navItems";
+import { SyncIndicator } from "@/app/sync/SyncIndicator";
 
 /** Signed-in workspace: navigation + one content column. */
 export function AppLayout({
@@ -23,6 +24,7 @@ export function AppLayout({
       <AppNav hotelName={hotelName} onLogout={onLogout} labels={labels} />
       <main className="tpl-app__main">
         <div className="tpl-app__content">
+          <SyncIndicator />
           {banner}
           {children}
         </div>

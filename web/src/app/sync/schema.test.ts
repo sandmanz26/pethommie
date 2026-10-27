@@ -7,7 +7,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sampleData } from "@/app/store/sampleData";
 import { aBooking, aCage, aPet, aSmallHotel, anOwner } from "@/app/testing/fixtures";
 import type { HotelData } from "@/app/domain/types";
-import { fromRows, toRows, TABLES, type HotelRow, type Rows, type Table } from "./rows";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { fromRows, emptyRows, toRows, TABLES, type HotelRow, type Rows, type Table } from "./rows";
+import { applyChanges, diffRows, emptyChanges, type Changes } from "./diff";
+import { SyncRefused } from "./gateway";
+import { createSupabaseGateway } from "./supabaseGateway";
 
 /**
  * The server's schema, run on a real Postgres (PGlite) with Supabase's pieces stubbed. It proves three things the
@@ -480,5 +484,109 @@ describe("the sign-up list", () => {
   it("isn't readable by signed-in users either", async () => {
     const err = await as(ALICE, () => refused(sql("select * from join_requests")));
     expect(err).toMatch(/permission denied/i);
+  });
+});
+
+/**
+ * A Supabase client that answers `rpc` from this database, as the given user: what PostgREST does with the
+ * caller's token. The gateway under test is the one the app uses.
+ */
+function clientAs(user: string): SupabaseClient {
+  return {
+    async rpc(fn: string, args: Record<string, unknown>) {
+      const names = Object.keys(args);
+      const values = names.map((n) => (args[n] !== null && typeof args[n] === "object" ? JSON.stringify(args[n]) : args[n]));
+      try {
+        const res = await as(user, () => sql(`select public.${fn}(${names.map((n, i) => `${n} => $${i + 1}`).join(", ")}) as r`, values));
+        return { data: (res.rows[0] as { r: unknown }).r, error: null };
+      } catch (e) {
+        return { data: null, error: { message: String((e as Error).message), code: (e as { code?: string }).code } };
+      }
+    },
+  } as unknown as SupabaseClient;
+}
+
+describe("syncing through the database's functions", () => {
+  const H3 = "5e1f5e1f-0007-4000-8000-000000000001";
+  const DAVE = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+  const EVE = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+  const data = sampleData();
+  const { hotel, rows } = toRows(data, H3);
+  const everything = diffRows(emptyRows(), rows);
+  const dave = () => createSupabaseGateway(clientAs(DAVE));
+  const eve = () => createSupabaseGateway(clientAs(EVE));
+  const count = async (table: Table) => ((await sql(`select count(*)::int as n from ${table} where hotel_id = $1 and deleted_at is null`, [H3])).rows[0] as { n: number }).n;
+
+  beforeAll(async () => {
+    await sql(`insert into auth.users (id, email) values ('${DAVE}', 'dave@example.com'), ('${EVE}', 'eve@example.com')`);
+  });
+
+  it("lets a signed-in person make their hotel, and find it again", async () => {
+    expect(await dave().myHotel()).toBeNull();
+    expect(await dave().createHotel(hotel)).toBe(H3);
+    expect(await dave().createHotel(hotel)).toBe(H3); // asking twice is harmless
+    expect(await dave().myHotel()).toBe(H3);
+    expect(await eve().myHotel()).toBeNull();
+  });
+
+  it("takes a whole hotel in one push and gives the same hotel back on pull", async () => {
+    expect(await dave().push(H3, everything, null, hotel)).toMatchObject({ ok: true });
+    const pulled = await dave().pull(H3, null);
+    const back = fromRows({ ...pulled.hotel, created_at: hotel.created_at }, applyChanges(emptyRows(), pulled.changes));
+    const sortBy = <T extends { id: string }>(list: T[]) => [...list].sort((a, b) => a.id.localeCompare(b.id));
+    const norm = (d: HotelData) => ({
+      ...d,
+      cages: sortBy(d.cages),
+      owners: sortBy(d.owners),
+      pets: sortBy(d.pets),
+      bookings: sortBy(d.bookings).map((b) => ({ ...b, payments: [...b.payments].sort((x, y) => x.at.localeCompare(y.at) || x.id.localeCompare(y.id)) })),
+      careLog: sortBy(d.careLog),
+      invoices: sortBy(d.invoices),
+      expenses: sortBy(d.expenses),
+      reportsSent: [...d.reportsSent].sort((a, b) => `${a.bookingId}${a.date}`.localeCompare(`${b.bookingId}${b.date}`)),
+    });
+    expect(norm(back)).toEqual(norm(data));
+    expect(Number.isNaN(new Date(pulled.cursor).getTime())).toBe(false);
+  });
+
+  it("changes nothing when the same push arrives twice", async () => {
+    const stamp = async () => (await sql("select max(updated_at)::text as t from bookings where hotel_id = $1", [H3])).rows[0];
+    const before = { stamp: await stamp(), bookings: await count("bookings"), payments: await count("payments") };
+    expect(await dave().push(H3, everything, null, hotel)).toMatchObject({ ok: true });
+    expect({ stamp: await stamp(), bookings: await count("bookings"), payments: await count("payments") }).toEqual(before);
+  });
+
+  it("refuses a stranger's push and pull, and leaves the hotel as it was", async () => {
+    const cage = { ...rows.cages[0], name: "Taken over" };
+    const push = { ...emptyChanges(), cages: { upsert: [cage], remove: [] }, owners: { upsert: [], remove: rows.owners.map((o) => ({ id: o.id })) } };
+    expect(await eve().push(H3, push, null)).toMatchObject({ ok: false, reason: "forbidden" });
+    await expect(eve().pull(H3, null)).rejects.toBeInstanceOf(SyncRefused);
+    // Even into a hotel of her own, row level security won't let her rewrite one of Dave's rows by its id.
+    const E = "5e1f5e1f-0007-4000-8000-000000000002";
+    await eve().createHotel({ ...hotel, id: E, name: "Eve Inn" });
+    expect(await eve().push(E, { ...emptyChanges(), cages: { upsert: [{ ...cage, hotel_id: E }], remove: [] } }, null)).toMatchObject({ ok: false });
+    expect((await sql("select name from cages where id = $1", [cage.id])).rows[0]).toEqual({ name: rows.cages[0].name });
+    expect(await count("owners")).toBe(rows.owners.length);
+  });
+
+  it("answers double_booking for a stay the unit has no room for, and keeps none of that push", async () => {
+    const live = rows.bookings.find((b) => (b.status === "booked" || b.status === "checked_in") && !b.hold && rows.cages.find((c) => c.id === b.cage_id)!.capacity === 1)!;
+    const otherPet = rows.pets.find((p) => !rows.bookings.some((b) => b.pet_id === p.id && b.check_in < live.check_out && live.check_in < b.check_out))!;
+    const clash = { ...live, id: crypto.randomUUID(), pet_id: otherPet.id, created_at: new Date().toISOString() };
+    const extraOwner = { id: crypto.randomUUID(), hotel_id: H3, name: "Not kept", whatsapp: "", language: "id" };
+    const changes: Changes = { ...emptyChanges(), owners: { upsert: [extraOwner], remove: [] }, bookings: { upsert: [clash], remove: [] } };
+    expect(await dave().push(H3, changes, null)).toMatchObject({ ok: false, reason: "double_booking", booking: clash.id });
+    expect((await sql("select count(*)::int as n from owners where id = $1", [extraOwner.id])).rows[0]).toEqual({ n: 0 });
+  });
+
+  it("hands a removal to a device that pulls after it, as a tombstone", async () => {
+    const { cursor } = await dave().pull(H3, null);
+    const gone = rows.expenses[0] ?? null;
+    const target = gone ? { table: "expenses" as const, key: { id: gone.id } } : { table: "care_entries" as const, key: { id: rows.care_entries[0].id } };
+    const changes = emptyChanges();
+    changes[target.table].remove.push(target.key);
+    expect(await dave().push(H3, changes, cursor)).toMatchObject({ ok: true });
+    const later = await dave().pull(H3, cursor);
+    expect(later.changes[target.table].remove).toContainEqual(target.key);
   });
 });

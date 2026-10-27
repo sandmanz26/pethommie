@@ -29,6 +29,9 @@ function useStoreValue(repo: HotelRepository) {
     setSaveFailed(!repo.save(data));
   }, [data, repo]);
 
+  // A synced hotel: what another device did arrives here and replaces the hotel, like a restored backup.
+  useEffect(() => repo.subscribe?.(commit), [repo, commit]);
+
   const api = useMemo(() => {
     /** Applies an action that may refuse, and returns its result. */
     const run = <R,>(fn: (s: HotelData) => actions.Outcome<R>): R => {

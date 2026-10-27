@@ -9,6 +9,8 @@ export type HotelRepository = {
   /** False if the data could not be stored (storage full or blocked), so the app can warn the user. */
   save(data: HotelData): boolean;
   clear(): void;
+  /** Changes that arrive from elsewhere (a synced hotel's server), as the whole new hotel. Returns the unsubscribe. */
+  subscribe?(listener: (data: HotelData) => void): () => void;
 };
 
 /** One document per account, so a second account in the same browser never sees the first one's hotel. */
