@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { DEMO_MODE } from "@/app/config";
 import { useAuth } from "@/app/auth/AuthProvider";
+import { landingAfterLogin } from "@/app/auth/landing";
 import { loginIssues, type Issue } from "@/app/auth/validation";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -11,6 +12,7 @@ import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
 import { PasswordInput } from "@/app/design-system/molecules/PasswordField";
 import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
+import { GoogleSignIn } from "./GoogleSignIn";
 import "./pages.css";
 
 const SCENE = {
@@ -23,7 +25,10 @@ const SCENE = {
 export function LoginPage() {
   const { t } = useAppT();
   const a = t.auth.login;
-  const { login } = useAuth();
+  const { login, methods } = useAuth();
+  const location = useLocation();
+  const next = landingAfterLogin((location.state as { from?: unknown } | null)?.from);
+  const g = t.auth.google;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,6 +64,28 @@ export function LoginPage() {
     }
   }
 
+  const demoLink = DEMO_MODE && (
+    <p className="pg-flow__switch">
+      {a.tryLead} <Link to="/app/try">{a.toTry}</Link>
+    </p>
+  );
+
+  // Real accounts sign in with Google only: no password form at all.
+  if (!methods.password)
+    return (
+      <FocusLayout art={SCENE}>
+        <div className="pg-flow">
+          <div className="pg-flow__head pg-flow__head--center">
+            <Heading level={1}>{a.title}</Heading>
+            <Muted>{g.loginLead}</Muted>
+          </div>
+          <GoogleSignIn next={next} />
+          <p className="pg-flow__switch">{g.newHere}</p>
+          {demoLink}
+        </div>
+      </FocusLayout>
+    );
+
   return (
     <FocusLayout art={SCENE}>
       <form ref={formRef} className="pg-flow" onSubmit={submit} noValidate>
@@ -66,6 +93,12 @@ export function LoginPage() {
           <Heading level={1}>{a.title}</Heading>
           <Muted>{a.lead}</Muted>
         </div>
+        {methods.google && (
+          <>
+            <GoogleSignIn next={next} />
+            <p className="ds-or">{g.or}</p>
+          </>
+        )}
         {failed && <Alert tone="danger">{a.failed}</Alert>}
         <Field label={a.email} error={issueText("email")}>
           <Input name="email" type="email" value={email} onChange={(e) => (setEmail(e.target.value), setFailed(false))} onBlur={() => setTouched((x) => ({ ...x, email: true }))} placeholder={a.emailPh} autoComplete="username" inputMode="email" autoFocus />
@@ -87,11 +120,7 @@ export function LoginPage() {
         <p className="pg-flow__switch">
           {a.noAccount} <Link to="/app/register">{a.toRegister}</Link>
         </p>
-        {DEMO_MODE && (
-          <p className="pg-flow__switch">
-            {a.tryLead} <Link to="/app/try">{a.toTry}</Link>
-          </p>
-        )}
+        {demoLink}
       </form>
     </FocusLayout>
   );

@@ -162,3 +162,15 @@
   .ds-drawer__panel { width: 100%; height: auto; max-height: 85vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: 0 -20px 50px -20px rgba(0, 0, 0, 0.35); padding-bottom: env(safe-area-inset-bottom); animation-name: ds-sheet-in; }
 }
 @media (prefers-reduced-motion: reduce) { .ds-drawer__panel, .ds-drawer__scrim { animation: none; } }
+
+/* ---------- Google sign-in ---------- */
+.ds-google {
+  display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 18px;
+  border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; color: #1f1f1f;
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.ds-google:hover { border-color: var(--ink); }
+.ds-google:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.ds-google:disabled { opacity: 0.6; cursor: progress; }
+.ds-or { display: flex; align-items: center; gap: 12px; color: var(--ink-soft); font-size: 0.85em; }
+.ds-or::before, .ds-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }

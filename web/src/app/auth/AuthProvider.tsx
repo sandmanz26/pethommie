@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AuthService } from "./AuthService";
+import type { AuthMethods, AuthService } from "./AuthService";
 import { authService } from "./defaultService";
 import type { Account, AuthResult, Offer, Registration } from "./types";
 
@@ -10,6 +10,8 @@ type AuthValue = State & {
   login(email: string, password: string): Promise<AuthResult>;
   register(input: Registration, offer?: Offer): Promise<AuthResult>;
   tryDemo(accountId: string): Promise<AuthResult>;
+  methods: AuthMethods;
+  signInWithGoogle: AuthService["signInWithGoogle"];
   /** Ends the session; `leaveTo` is where to go instead of the login screen (leaving the demo, say). */
   logout(leaveTo?: string): Promise<void>;
 };
@@ -28,8 +30,13 @@ export function AuthProvider({ children, service = authService }: { children: Re
       .then((account) => {
         if (current) setState(account ? { status: "signedIn", account } : { status: "signedOut", account: null });
       });
+    // Session changes the app didn't make itself (Google's return, a refresh in another tab).
+    const stop = service.onChange?.((account) => {
+      if (current) setState(account ? { status: "signedIn", account } : { status: "signedOut", account: null });
+    });
     return () => {
       current = false;
+      stop?.();
     };
   }, [service]);
 
@@ -43,6 +50,8 @@ export function AuthProvider({ children, service = authService }: { children: Re
       login: async (email, password) => enter(await service.login(email, password)),
       register: async (input, offer) => enter(await service.register(input, offer)),
       tryDemo: async (accountId) => enter(await service.tryDemo(accountId)),
+      methods: service.methods,
+      signInWithGoogle: (next) => service.signInWithGoogle(next),
       logout: async (leaveTo?: string) => {
         await service.logout();
         setState({ status: "signedOut", account: null, leaveTo });

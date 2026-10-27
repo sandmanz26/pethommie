@@ -82,6 +82,18 @@ export const appId: AppMessages = {
       offer: (percent, until) => `Diskon ${percent}% dari demo tersimpan di akun ini, untuk paket berbayar pertamamu. Berlaku sampai ${until}.`,
     },
     password: { show: "Tampilkan password", hide: "Sembunyikan password" },
+    google: {
+      continue: "Lanjut dengan Google",
+      busy: "Membuka Google…",
+      failed: "Login Google tidak bisa dimulai. Cek koneksi lalu coba lagi.",
+      or: "atau",
+      registerLead: "Sekali ketuk dengan akun Google. Nama hotel dan WhatsApp diisi berikutnya, saat setup.",
+      loginLead: "Masuk dengan akun Google yang kamu pakai saat daftar.",
+      newHere: "Baru di sini? Tombol yang sama langsung membuatkan akunmu.",
+      callbackTitle: "Sedang memasukkanmu…",
+      callbackFailed: "Login Google belum selesai. Coba lagi ya.",
+      backToLogin: "Kembali ke halaman masuk",
+    },
     errors: {
       required: "Wajib diisi.",
       email: "Format email belum benar.",

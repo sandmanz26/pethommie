@@ -82,6 +82,10 @@ export function createLocalAuthService({ storage = localStorage, demo = [], iter
   const demoAccount = (d: DemoAccount): Account => ({ ...d, createdAt: "2026-01-01T00:00:00.000Z", demo: true });
 
   return {
+    methods: { password: true, google: false },
+    async signInWithGoogle() {
+      return { ok: false, error: "unsupported" };
+    },
     async restore() {
       const doc = await load();
       try {

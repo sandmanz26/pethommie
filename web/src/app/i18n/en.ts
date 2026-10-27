@@ -81,6 +81,18 @@ export const appEn = {
       offer: (percent: number, until: string) => `Your ${percent}% demo discount is saved with this account, for your first paid plan. Valid until ${until}.`,
     },
     password: { show: "Show password", hide: "Hide password" },
+    google: {
+      continue: "Continue with Google",
+      busy: "Opening Google…",
+      failed: "Google sign-in couldn't start. Check your connection and try again.",
+      or: "or",
+      registerLead: "One tap with your Google account. Your hotel's name and WhatsApp come next, in setup.",
+      loginLead: "Log in with the Google account you signed up with.",
+      newHere: "New here? The same button creates your account.",
+      callbackTitle: "Signing you in…",
+      callbackFailed: "Google sign-in didn't finish. Please try again.",
+      backToLogin: "Back to log in",
+    },
     errors: {
       required: "Required.",
       email: "That email doesn't look right.",

@@ -10,4 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_CONTACT_EMAIL?: string;
   /** Your WhatsApp for support, in international digits (6281...). Optional. */
   readonly VITE_CONTACT_WHATSAPP?: string;
+  /** Supabase project URL, https://<ref>.supabase.co. With the anon key, turns on Google sign-in and the server. */
+  readonly VITE_SUPABASE_URL?: string;
+  /** Supabase anon (public) key. Never the service-role key. */
+  readonly VITE_SUPABASE_ANON_KEY?: string;
 }

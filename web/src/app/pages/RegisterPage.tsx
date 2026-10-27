@@ -11,6 +11,8 @@ import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
 import { PasswordInput } from "@/app/design-system/molecules/PasswordField";
 import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
+import { PENDING_OFFER_KEY } from "@/app/auth/supabaseAuthService";
+import { GoogleSignIn } from "./GoogleSignIn";
 import "./pages.css";
 
 const SCENE = {
@@ -29,7 +31,8 @@ export function RegisterPage() {
   const { t, locale } = useAppT();
   const a = t.auth.register;
   const e = t.auth.errors;
-  const { register } = useAuth();
+  const { register, methods } = useAuth();
+  const g = t.auth.google;
   const [params] = useSearchParams();
   // Coming from the demo's offer: the discount goes with the new account while it still runs.
   const [offer] = useState(() => (params.get("offer") ? activeOffer() : null));
@@ -83,6 +86,32 @@ export function RegisterPage() {
     }
   }
 
+  // Google's round trip leaves the page: the demo's offer waits in this browser and joins the account on return.
+  const keepOffer = () => {
+    try {
+      if (offer) localStorage.setItem(PENDING_OFFER_KEY, JSON.stringify(offer));
+    } catch {
+      // storage blocked: the offer is a bonus, signing up still works
+    }
+  };
+
+  if (!methods.password)
+    return (
+      <FocusLayout art={SCENE}>
+        <div className="pg-flow">
+          <div className="pg-flow__head pg-flow__head--center">
+            <Heading level={1}>{a.title}</Heading>
+            <Muted>{g.registerLead}</Muted>
+          </div>
+          {offer && <Alert tone="ok">{a.offer(offer.percentOff, new Date(offer.expiresAt).toLocaleString(locale === "id" ? "id-ID" : "en-GB", { dateStyle: "medium", timeStyle: "short" }))}</Alert>}
+          <GoogleSignIn next="/app" beforeLeave={keepOffer} />
+          <p className="pg-flow__switch">
+            {a.haveAccount} <Link to="/app/login">{a.toLogin}</Link>
+          </p>
+        </div>
+      </FocusLayout>
+    );
+
   return (
     <FocusLayout art={SCENE}>
       <form ref={formRef} className="pg-flow" onSubmit={submit} noValidate>
@@ -91,6 +120,12 @@ export function RegisterPage() {
           <Muted>{a.lead}</Muted>
         </div>
         {offer && <Alert tone="ok">{a.offer(offer.percentOff, new Date(offer.expiresAt).toLocaleString(locale === "id" ? "id-ID" : "en-GB", { dateStyle: "medium", timeStyle: "short" }))}</Alert>}
+        {methods.google && (
+          <>
+            <GoogleSignIn next="/app" beforeLeave={keepOffer} />
+            <p className="ds-or">{g.or}</p>
+          </>
+        )}
         <Field label={a.name} error={issueText("name")}>
           <Input name="name" value={form.name} onChange={set("name")} onBlur={leave("name")} maxLength={NAME_LIMITS.name[1] + 20} placeholder={a.namePh} autoComplete="name" autoFocus />
         </Field>

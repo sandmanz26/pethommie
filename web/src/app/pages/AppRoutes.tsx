@@ -17,6 +17,7 @@ import { CurrentStay } from "./CurrentStay";
 import { OnboardingPage } from "./OnboardingPage";
 import { RegisterPage } from "./RegisterPage";
 import { TryPage } from "./TryPage";
+import { AuthCallbackPage } from "./AuthCallbackPage";
 import { TodayPage } from "./TodayPage";
 import { BookingsPage } from "./BookingsPage";
 import { BookingNewPage } from "./BookingNewPage";
@@ -91,6 +92,8 @@ export default function AppRoutes() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Google's return trip: neither guest-only nor signed-in-only, it is where one becomes the other. */}
+        <Route path="auth/callback" element={<AuthCallbackPage />} />
         <Route element={<GuestOnly />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />

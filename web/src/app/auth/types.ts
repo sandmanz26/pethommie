@@ -23,6 +23,10 @@ export type Account = {
   startsWithSampleData?: boolean;
   /** Mock accounts only: which sample hotel ("advanced" opens the busy one, in advanced mode). */
   sampleKind?: "simple" | "advanced";
+  /** Where the account lives: this browser (the mock) or Supabase (Google sign-in). */
+  provider?: "local" | "supabase";
+  /** Profile picture from Google, when there is one. */
+  avatarUrl?: string;
   /** A "Try now" session: one of the demo hotels, kept apart from real accounts and their data. */
   demo?: true;
   /** A discount claimed from the demo, kept with the account until paid plans open. */
@@ -43,5 +47,5 @@ export type Registration = {
   password: string;
 };
 
-export type AuthError = "invalid_credentials" | "email_taken";
+export type AuthError = "invalid_credentials" | "email_taken" | "unsupported" | "network";
 export type AuthResult = { ok: true; account: Account } | { ok: false; error: AuthError };
