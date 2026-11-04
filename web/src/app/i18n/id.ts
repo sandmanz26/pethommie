@@ -268,8 +268,8 @@ export const appId: AppMessages = {
     title: "Check-out",
     earlyQ: (booked: string) => `Dibooking sampai ${booked}, tapi pulang hari ini.`,
     lateQ: (booked: string) => `Dibooking sampai ${booked}: dijemput lebih lambat dari rencana.`,
-    endToday: (n: number, total: string) => `Selesaikan hari ini: ${n} malam, ${total}`,
-    addNights: (extra: number, total: string) => `Tambah ${extra} malam: ${total}`,
+    endToday: (length, total) => `Selesaikan hari ini: ${length}, ${total}`,
+    addNights: (extra, total) => `Tambah ${extra}: ${total}`,
     keepDates: (total: string) => `Tetap sesuai booking: ${total}`,
     owed: (amount: string) => `Masih belum dibayar setelah ini: ${amount}.`,
     settled: "Tidak ada tagihan.",
@@ -310,6 +310,7 @@ export const appId: AppMessages = {
   },
   bookingForm: {
     nights: "Jumlah malam",
+    days: "Jumlah hari",
     source: "Booking lewat",
     sources: { walk_in: "Datang langsung", whatsapp: "WhatsApp", instagram: "Instagram", link: "Link booking", referral: "Rekomendasi", other: "Lainnya" },
     title: "Booking baru",

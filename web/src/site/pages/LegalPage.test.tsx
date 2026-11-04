@@ -4,12 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LocaleProvider } from "@/shared/i18n/LocaleProvider";
 import { LegalPage } from "./LegalPage";
 
-function renderLegal(kind: "privacy" | "terms", locale?: "id") {
+function renderLegal(kind: "privacy" | "terms", locale?: "id", server = false) {
   if (locale) localStorage.setItem("pethommie.locale", locale);
   return render(
     <LocaleProvider>
       <MemoryRouter>
-        <LegalPage kind={kind} />
+        <LegalPage kind={kind} server={server} />
       </MemoryRouter>
     </LocaleProvider>,
   );
@@ -32,6 +32,23 @@ describe("legal pages", () => {
     renderLegal("privacy");
     expect(screen.getByText(/not sent to us or to anyone else/i)).toBeInTheDocument();
     expect(screen.getByText(/do not run advertising or analytics trackers/i)).toBeInTheDocument();
+  });
+
+  it("once accounts live on a server, says what is collected, where it is kept, who sees it and for how long", () => {
+    renderLegal("privacy", undefined, true);
+    const text = screen.getByRole("main").textContent ?? "";
+    expect(text).toMatch(/last updated 4 november 2026/i);
+    expect(text).toMatch(/name, email address and profile picture from Google/);
+    expect(text).toMatch(/Supabase, on servers in Singapore/);
+    expect(text).toMatch(/Try now" stay in your browser only/);
+    expect(text).toMatch(/Law No\. 27 of 2022/);
+    expect(text).not.toMatch(/not sent to us or to anyone else/);
+    expect(text).not.toMatch(/\{company\}|\{contact\}/);
+  });
+
+  it("in Indonesian too, for a server deployment", () => {
+    renderLegal("privacy", "id", true);
+    expect(screen.getByText(/disimpan di Supabase, di server Singapura/)).toBeInTheDocument();
   });
 
   it("has the terms, and says Pethommie never handles money", () => {

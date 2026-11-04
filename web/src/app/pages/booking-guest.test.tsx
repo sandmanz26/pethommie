@@ -39,6 +39,17 @@ async function book(data = hotel()) {
 const save = (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: /save booking/i }));
 
 describe("dates", () => {
+  it("counts days on the stepper when the hotel counts calendar days: 3 days is 2 nights", async () => {
+    const h = hotel();
+    await book({ ...h, settings: { ...h.settings, stayRules: { ...h.settings.stayRules, counting: "calendar_days" } } });
+    const days = screen.getByRole("textbox", { name: "Days" });
+    fireEvent.change(days, { target: { value: "3" } });
+    const checkIn = (screen.getByLabelText("Check-in") as HTMLInputElement).value;
+    const plus = (iso: string, k: number) => new Date(Date.parse(iso) + k * 86_400_000).toISOString().slice(0, 10);
+    expect(screen.getByLabelText("Check-out")).toHaveValue(plus(checkIn, 2));
+    expect(screen.getByRole("textbox", { name: "Days" })).toHaveValue("3");
+  });
+
   it("sets check-out from a number of nights, and keeps the nights when check-in moves", async () => {
     const user = await book();
     fireEvent.change(screen.getByRole("textbox", { name: "Nights" }), { target: { value: "5" } });

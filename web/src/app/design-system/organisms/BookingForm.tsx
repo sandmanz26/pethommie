@@ -112,6 +112,11 @@ export function BookingForm({
   const n = validDates ? nights(checkIn, checkOut) : 0;
   // Priced for the whole party: in a shared room each pet pays, including one not saved yet.
   const counting = data.settings.stayRules.counting;
+  // The stepper speaks the hotel's language: nights, or days. Counting calendar days, the arrival day counts too, so
+  // 2 nights read as 3 days (and the shortest stay, one night, as 2 days).
+  const dayOffset = counting === "calendar_days" ? 1 : 0;
+  const lengthLabel = counting === "nights" ? f.nights : f.days;
+  const lengthValue = Math.max(1, n) + dayOffset;
   const total = bookingTotal({ checkIn, checkOut, companionIds: Array.from({ length: party - 1 }, (_, i) => String(i)) }, cage, counting);
   const states = chosen.map((id) => data.pets.find((p) => p.id === id)).flatMap((p) => (p ? [vaccineState(p, checkIn)] : []));
   const vState = states.includes("expired") ? "expired" : states.includes("soon") ? "soon" : states.includes("unknown") ? "unknown" : null;
@@ -204,8 +209,8 @@ export function BookingForm({
             />
           </Field>
           <div className="ds-field">
-            <span className="ds-field__label" aria-hidden="true">{f.nights}</span>
-            <Stepper label={f.nights} value={Math.max(1, n)} min={1} max={MAX_NIGHTS} onChange={(k) => (setCheckOut(addDays(checkIn, k)), clear("dates"))} />
+            <span className="ds-field__label" aria-hidden="true">{lengthLabel}</span>
+            <Stepper label={lengthLabel} value={lengthValue} min={1 + dayOffset} max={MAX_NIGHTS + dayOffset} onChange={(k) => (setCheckOut(addDays(checkIn, k - dayOffset)), clear("dates"))} />
           </div>
           <Field label={f.checkOut} error={errors.dates ?? (!validDates ? f.errDates : undefined)}>
             <Input type="date" value={checkOut} min={addDays(checkIn, 1)} onChange={(e) => (setCheckOut(e.target.value), clear("dates"))} />

@@ -165,7 +165,7 @@ describe("checking out", () => {
     const user = await open(late);
     await user.click(await screen.findByRole("button", { name: /^check out$/i }));
     const dialog = within(await screen.findByRole("dialog"));
-    expect(dialog.getByLabelText(/add the extra night/i)).toBeChecked();
+    expect(dialog.getByLabelText(/add 1 night more/i)).toBeChecked();
     await user.click(dialog.getByRole("button", { name: /check out anyway/i }));
     expect(stored().bookings[0].checkOut).toBe(today);
   });

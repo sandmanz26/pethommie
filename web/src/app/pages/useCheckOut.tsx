@@ -10,6 +10,7 @@ import { Input } from "@/app/design-system/atoms/Input";
 import { MoneyInput } from "@/app/design-system/atoms/MoneyInput";
 import { useStore } from "@/app/store/AppStore";
 import { useAppT } from "@/app/i18n/useAppT";
+import { stayCount } from "@/app/i18n/stayWords";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Alert } from "@/app/design-system/molecules/Alert";
 
@@ -127,7 +128,9 @@ export function useCheckOut() {
               <legend>{late ? c.lateQ(day(b.checkOut)) : c.earlyQ(day(b.checkOut))}</legend>
               <label className="ds-check">
                 <input type="radio" name="checkout-end" checked={ending === "today"} onChange={() => setEnding("today")} disabled={taken} />
-                <span>{late ? c.addNights(nights(b.checkOut, endToday(b)), rp(totalIf(b, "today"))) : c.endToday(stayDays({ checkIn: b.checkIn, checkOut: endToday(b) }, counting), rp(totalIf(b, "today")))}</span>
+                <span>{late
+                  ? c.addNights(stayCount(t, nights(b.checkOut, endToday(b)), counting), rp(totalIf(b, "today")))
+                  : c.endToday(stayCount(t, stayDays({ checkIn: b.checkIn, checkOut: endToday(b) }, counting), counting), rp(totalIf(b, "today")))}</span>
               </label>
               <label className="ds-check">
                 <input type="radio" name="checkout-end" checked={ending === "booked"} onChange={() => setEnding("booked")} />

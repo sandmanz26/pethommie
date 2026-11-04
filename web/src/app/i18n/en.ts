@@ -267,8 +267,9 @@ export const appEn = {
     title: "Check out",
     earlyQ: (booked: string) => `Booked until ${booked}, but leaving today.`,
     lateQ: (booked: string) => `Booked until ${booked}: picked up later than planned.`,
-    endToday: (n: number, total: string) => `End the stay today: ${n === 1 ? "1 night" : `${n} nights`}, ${total}`,
-    addNights: (extra: number, total: string) => `Add the ${extra === 1 ? "extra night" : `${extra} extra nights`}: ${total}`,
+    /** `length` is already in the hotel's words ("3 nights", "4 days"). */
+    endToday: (length: string, total: string) => `End the stay today: ${length}, ${total}`,
+    addNights: (extra: string, total: string) => `Add ${extra} more: ${total}`,
     keepDates: (total: string) => `Keep the booked dates: ${total}`,
     owed: (amount: string) => `Still owed after this: ${amount}.`,
     settled: "Nothing is owed.",
@@ -309,6 +310,7 @@ export const appEn = {
   },
   bookingForm: {
     nights: "Nights",
+    days: "Days",
     source: "Booked via",
     sources: { walk_in: "Walk-in", whatsapp: "WhatsApp", instagram: "Instagram", link: "Booking link", referral: "Referral", other: "Other" },
     title: "New booking",
