@@ -11,6 +11,8 @@ import { Button } from "@/app/design-system/atoms/Button";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { AppLayout } from "@/app/design-system/templates/AppLayout";
 import "@/app/design-system/tokens.css";
+import { useArrival } from "@/app/sync/SyncContext";
+import { HotelArriving } from "@/app/sync/HotelArriving";
 import { AccountData } from "./AccountData";
 import { LoginPage } from "./LoginPage";
 import { CurrentStay } from "./CurrentStay";
@@ -44,13 +46,20 @@ import { CagesPage } from "./CagesPage";
 import { SettingsPage } from "./SettingsPage";
 import { BookingSettingsPage } from "./BookingSettingsPage";
 
-/** Workspace pages need a set-up hotel; send first-time users to onboarding. */
+/**
+ * Workspace pages need a set-up hotel; send first-time users to onboarding. A synced hotel that isn't on this device
+ * yet waits for the server first: only when it says there is no hotel is there one to set up.
+ */
 function Workspace() {
   const { data, saveFailed } = useStore();
   const { logout, account } = useAuth();
   const { t } = useAppT();
   const sw = useServiceWorker();
-  if (!data.hotel) return <Navigate to="/app/onboarding" replace />;
+  const arrival = useArrival();
+  if (!data.hotel) {
+    if (arrival === "waiting" || arrival === "unreachable") return <HotelArriving arrival={arrival} onSignOut={() => void logout()} />;
+    return <Navigate to="/app/onboarding" replace />;
+  }
   return (
     <AppLayout
       hotelName={data.hotel.name}

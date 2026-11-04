@@ -1305,6 +1305,33 @@ export const appEn = {
     },
     openStay: "Open the stay",
     retry: "Try again",
+    /** A synced hotel that isn't on this device yet (a second phone, a cleared browser). */
+    arriving: {
+      loading: "Loading your hotel…",
+      loadingLead: "Getting it from your account. The first time on a new device this takes a moment.",
+      offlineTitle: "Connect to load your hotel",
+      offlineLead: "The first sign-in on a device needs an internet connection to download your hotel. After that it works offline too.",
+      failedTitle: "Your hotel couldn't be loaded",
+      failedLead: "The server didn't answer as expected. Your hotel is safe online: try again in a moment.",
+      signOut: "Sign out",
+    },
+  },
+  /** "Delete all data" for a hotel saved online: only this device, or everywhere. */
+  syncReset: {
+    title: "Delete all data",
+    lead: "This hotel is saved online and on every device signed in to it. Choose what to delete.",
+    deviceTitle: "Remove from this device only",
+    deviceBody: "The hotel stays online and on your other devices. This device signs out; sign in again to download it.",
+    deviceUnsent: (n: number) => `${n === 1 ? "1 change" : `${n} changes`} on this device haven't reached the server yet and will be lost.`,
+    deviceAction: "Remove from this device",
+    everywhereTitle: "Delete everywhere",
+    everywhereBody: "Deletes the hotel's units, guests, pets, stays, payments, care log and expenses on the server and on every device signed in to it. This can't be undone.",
+    everywhereInvoices: "Issued invoices stay on the server: an invoice can only be voided, never deleted.",
+    everywhereOffline: "This device is offline: the deletion reaches the server once it is back online.",
+    typeName: (name: string) => `Type the hotel name (${name}) to confirm`,
+    mismatch: "That isn't the hotel name.",
+    everywhereAction: "Delete everywhere",
+    cancel: "Cancel",
   },
   confirm: { yes: "Yes, continue", no: "No" },
 };

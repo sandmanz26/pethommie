@@ -6,6 +6,7 @@ import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { cageIssues, hasIssues, hotelIssues, poolIssues, roomIssues, SETUP_LIMITS, type LengthIssue, type PriceIssue, type RoomDraft } from "./onboardingRules";
 import { useAccount } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
+import { useArrival } from "@/app/sync/SyncContext";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
@@ -52,6 +53,7 @@ export function OnboardingPage() {
 
   const [step, setStep] = useState<Step>(0);
   const account = useAccount();
+  const arrival = useArrival();
   const [name, setName] = useState(account.hotelName);
   const [city, setCity] = useState("");
   const [wa, setWa] = useState(formatWhatsapp(account.whatsapp));
@@ -69,8 +71,10 @@ export function OnboardingPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const focus = (field: string) => formRef.current?.querySelector<HTMLElement>(`[name="${field}"]`)?.focus();
 
-  // Already set up and not in the middle of this flow: go to the app.
+  // Already set up and not in the middle of this flow: go to the app. A synced hotel the server hasn't answered for
+  // yet may well exist: wait there (the app shows it loading) rather than set up a second one.
   if (data.hotel && step !== 3) return <Navigate to="/app" replace />;
+  if (!data.hotel && (arrival === "waiting" || arrival === "unreachable")) return <Navigate to="/app" replace />;
 
   const totalCages = SIZE_ORDER.reduce((n, s) => n + spec[s].count, 0);
   const totalPlacesInRooms = rooms.reduce((n, r) => n + r.places, 0);

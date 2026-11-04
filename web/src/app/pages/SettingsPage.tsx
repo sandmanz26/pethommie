@@ -5,6 +5,8 @@ import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { useAccount, useAuth } from "@/app/auth/AuthProvider";
 import { markBackedUp } from "@/app/store/backupNote";
 import { useStore } from "@/app/store/AppStore";
+import { useSync, useSyncedRepository } from "@/app/sync/SyncContext";
+import { DeleteSyncedDialog } from "@/app/sync/DeleteSyncedDialog";
 import { useMode } from "@/app/mode/ModeProvider";
 import type { HotelSettings, Language } from "@/app/domain/types";
 import { parseStored } from "@/app/store/storage";
@@ -31,6 +33,9 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const account = useAccount();
   const { logout } = useAuth();
+  // A hotel saved online: deleting is either "this device only" or "everywhere", never a silent mix of the two.
+  const synced = useSyncedRepository();
+  const { status: syncStatus } = useSync();
   const hotel = data.hotel!;
   const [name, setName] = useState(hotel.name);
   const [city, setCity] = useState(hotel.city);
@@ -309,8 +314,28 @@ export function SettingsPage() {
         }}
       />
 
+      {synced && (
+        <DeleteSyncedDialog
+          open={confirm === "reset"}
+          hotelName={hotel.name}
+          unsent={confirm === "reset" ? synced.unsent() : 0}
+          offline={syncStatus?.state === "offline"}
+          onCancel={() => setConfirm(null)}
+          onRemoveHere={() => {
+            setConfirm(null);
+            synced.forget();
+            void logout();
+          }}
+          onDeleteEverywhere={() => {
+            setConfirm(null);
+            reset();
+            navigate("/app/onboarding");
+          }}
+        />
+      )}
+
       <ConfirmDialog
-        open={confirm !== null}
+        open={confirm === "sample" || (confirm === "reset" && !synced)}
         message={confirm === "reset" ? t.settings.confirmReset : t.settings.confirmSample}
         confirmLabel={t.confirm.yes}
         cancelLabel={t.confirm.no}
