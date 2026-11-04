@@ -18,6 +18,7 @@ import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { Alert } from "@/app/design-system/molecules/Alert";
 import { Field } from "@/app/design-system/molecules/Field";
 import { ProgressSteps } from "@/app/design-system/molecules/ProgressSteps";
+import { OptionCards } from "@/app/design-system/molecules/OptionCards";
 import { Segmented } from "@/app/design-system/molecules/Segmented";
 import { Stepper } from "@/app/design-system/molecules/Stepper";
 import { FocusLayout } from "@/app/design-system/templates/FocusLayout";
@@ -223,14 +224,14 @@ export function OnboardingPage() {
             <Heading level={1}>{o.cages.title}</Heading>
             <Muted>{o.cages.lead}</Muted>
           </div>
-          <Segmented
+          <OptionCards
             label={o.cages.layout.label}
             value={layout}
             onChange={(v) => (setLayout(v), setTried((x) => ({ ...x, cages: false })))}
             options={[
-              { value: "cages", label: o.cages.layout.cages },
-              { value: "rooms", label: o.cages.layout.rooms },
-              { value: "none", label: o.cages.layout.none },
+              { value: "cages", icon: "cages", title: o.cages.layout.cages.title, subtitle: o.cages.layout.cages.subtitle },
+              { value: "rooms", icon: "room", title: o.cages.layout.rooms.title, subtitle: o.cages.layout.rooms.subtitle },
+              { value: "none", icon: "openSpace", title: o.cages.layout.none.title, subtitle: o.cages.layout.none.subtitle },
             ]}
           />
           {layout === "none" ? (

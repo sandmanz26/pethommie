@@ -31,7 +31,7 @@ describe("a cage-free hotel", () => {
     renderApp("/app/onboarding");
     await user.click(await screen.findByRole("button", { name: /start setup/i }));
     await user.click(screen.getByRole("button", { name: /next/i }));
-    await user.click(screen.getByRole("tab", { name: "Shared rooms, no cages" }));
+    await user.click(screen.getByRole("radio", { name: "Shared rooms, no cages" }));
     expect(screen.getByText("14 places in total")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /finish setup/i }));
     const data = stored();

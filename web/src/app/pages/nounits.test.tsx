@@ -43,7 +43,7 @@ describe("a hotel with no cages or rooms", () => {
     renderApp("/app/onboarding");
     await user.click(await screen.findByRole("button", { name: /start setup/i }));
     await user.click(screen.getByRole("button", { name: /next/i }));
-    await user.click(screen.getByRole("tab", { name: /No cages or rooms/ }));
+    await user.click(screen.getByRole("radio", { name: /No cages or rooms/ }));
     const capacity = screen.getByLabelText("Pets at once");
     await user.clear(capacity);
     await user.type(capacity, "1");

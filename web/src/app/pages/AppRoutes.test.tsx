@@ -110,7 +110,7 @@ describe("a signed-in owner's first visit", () => {
     renderApp("/app/onboarding");
     await user.click(await screen.findByRole("button", { name: /start setup/i }));
     await user.click(screen.getByRole("button", { name: /next: your cages/i }));
-    await user.click(screen.getByRole("tab", { name: "Shared rooms, no cages" }));
+    await user.click(screen.getByRole("radio", { name: "Shared rooms, no cages" }));
     const [first, second] = screen.getAllByLabelText(/^room name$/i);
     await user.clear(second);
     await user.type(second, first.getAttribute("value")!.toUpperCase());
