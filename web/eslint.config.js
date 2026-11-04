@@ -43,6 +43,12 @@ export default tseslint.config(
       ],
     },
   },
+  // Vercel functions (api/): Node.js, not the browser; no React. They don't import the app (separate tsconfig).
+  {
+    files: ['api/**/*.ts'],
+    languageOptions: { globals: globals.node },
+    rules: { 'no-restricted-imports': ['error', { patterns: [{ group: ['@/*'], message: 'api/ runs on its own on Vercel: import from api/_lib, not the app.' }] }] },
+  },
   { files: ['src/**/*.{ts,tsx}'], rules: boundary() },
   {
     files: ['src/shared/**/*.{ts,tsx}'],

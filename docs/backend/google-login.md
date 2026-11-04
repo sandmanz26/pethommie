@@ -10,7 +10,9 @@ Time needed: about 20 minutes. You need: a Google account, a Supabase account, a
 1. https://supabase.com/dashboard → **New project**.
    - Region: **Southeast Asia (Singapore)** (closest to Indonesia; see the data-residency note in [README.md §6](README.md)).
    - Save the database password somewhere safe (a password manager). It is not used by the app.
-2. Apply the schema, in order, `0001` → the last file in `backend/supabase/migrations/`. Either:
+2. Apply the schema, in order, `0001` → the last file in `backend/supabase/migrations/`. On a fresh project the
+   simplest is one paste of `backend/supabase/setup.sql` into the SQL Editor (see [setup-supabase.md](setup-supabase.md),
+   in Indonesian). Or:
    - **CLI** (recommended):
      ```bash
      npx supabase login
