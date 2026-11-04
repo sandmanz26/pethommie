@@ -115,7 +115,7 @@ describe("demo hotels (Try now)", () => {
   it("never stores the demo hotels with the real accounts, and the login form can't open them", async () => {
     const auth = createLocalAuthService({ ...FAST, demo });
     await auth.tryDemo("demo-pro");
-    expect(await auth.login("pro@pethommie.id", "Demo1234")).toEqual({ ok: false, error: "invalid_credentials" });
+    expect(await auth.login("pro@siomofu.xyz", "Demo1234")).toEqual({ ok: false, error: "invalid_credentials" });
     expect(JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts).toEqual([]);
   });
 
@@ -128,11 +128,11 @@ describe("demo hotels (Try now)", () => {
 
   it("takes out the demo accounts older versions stored with a password, and leaves real ones alone", async () => {
     const password = await hashPassword("Demo1234", 1000);
-    const old = { id: "demo-rina", name: "Rina", email: "demo@pethommie.id", whatsapp: "", hotelName: "Rumah Meong Bintaro", createdAt: "2026-01-01", password };
+    const old = { id: "demo-rina", name: "Rina", email: "demo@siomofu.xyz", whatsapp: "", hotelName: "Rumah Meong Bintaro", createdAt: "2026-01-01", password };
     const real = { ...old, id: "acct-1", email: "owner@example.com" };
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify({ version: 1, accounts: [old, real] }));
     const auth = createLocalAuthService({ ...FAST, demo });
-    expect(await auth.login("demo@pethommie.id", "Demo1234")).toEqual({ ok: false, error: "invalid_credentials" });
+    expect(await auth.login("demo@siomofu.xyz", "Demo1234")).toEqual({ ok: false, error: "invalid_credentials" });
     expect(await auth.login("owner@example.com", "Demo1234")).toMatchObject({ ok: true });
     expect(JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts.map((a: { id: string }) => a.id)).toEqual(["acct-1"]);
   });

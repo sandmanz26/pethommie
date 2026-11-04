@@ -1,4 +1,4 @@
-# Pethommie
+# Siomofu
 
 Pet hotel management software for operators in Indonesia: bookings and deposits recorded by hand
 (cash, QRIS, transfer), a calendar for cages or shared rooms, check-in, receipts and invoices, daily

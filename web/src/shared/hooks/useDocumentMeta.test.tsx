@@ -6,8 +6,8 @@ const meta = (name: string) => document.head.querySelector(`meta[name="${name}"]
 
 describe("useDocumentMeta", () => {
   it("sets the title and meta tags", () => {
-    renderHook(() => useDocumentMeta({ title: "Pethommie", description: "About", robots: "noindex", themeColor: "#fff" }));
-    expect(document.title).toBe("Pethommie");
+    renderHook(() => useDocumentMeta({ title: "Siomofu", description: "About", robots: "noindex", themeColor: "#fff" }));
+    expect(document.title).toBe("Siomofu");
     expect(meta("description")).toBe("About");
     expect(meta("robots")).toBe("noindex");
     expect(meta("theme-color")).toBe("#fff");

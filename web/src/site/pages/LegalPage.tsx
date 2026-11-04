@@ -15,7 +15,7 @@ export function LegalPage({ kind, server = usesServer }: { kind: "privacy" | "te
   const updated = server ? t.legalCloud.updated : t.legal.updated;
   const contact = company.email || (company.whatsapp ? `WhatsApp +${company.whatsapp}` : locale === "id" ? "melalui formulir waitlist di situs ini" : "through the waitlist form on this site");
   const fill = (text: string) => text.replace("{company}", company.name).replace("{contact}", contact);
-  useDocumentMeta({ title: `${doc.title} · Pethommie`, description: doc.intro });
+  useDocumentMeta({ title: `${doc.title} · Siomofu`, description: doc.intro });
   return (
     <>
       <TopBar onLanding={false} />

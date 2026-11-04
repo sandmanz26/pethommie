@@ -97,7 +97,7 @@ function Workspace() {
  */
 export default function AppRoutes() {
   useBodyTheme("app");
-  useDocumentMeta({ title: "Pethommie", robots: "noindex", themeColor: "#f4efe6" });
+  useDocumentMeta({ title: "Siomofu", robots: "noindex", themeColor: "#f4efe6" });
   return (
     <AuthProvider>
       <Routes>

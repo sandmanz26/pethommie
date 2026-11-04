@@ -10,7 +10,7 @@ export const demoAccounts: DemoAccount[] = [
   {
     id: "demo-rina",
     name: "Rina Kusuma",
-    email: "demo@pethommie.id",
+    email: "demo@siomofu.xyz",
     whatsapp: "6281234567890",
     hotelName: "Rumah Meong Bintaro",
     startsWithSampleData: true,
@@ -18,7 +18,7 @@ export const demoAccounts: DemoAccount[] = [
   {
     id: "demo-pro",
     name: "Dewi Lestari",
-    email: "pro@pethommie.id",
+    email: "pro@siomofu.xyz",
     whatsapp: "6281399001122",
     hotelName: "Kandang Ceria Pet Hotel",
     startsWithSampleData: true,
@@ -27,7 +27,7 @@ export const demoAccounts: DemoAccount[] = [
   {
     id: "demo-baru",
     name: "Budi Santoso",
-    email: "baru@pethommie.id",
+    email: "baru@siomofu.xyz",
     whatsapp: "6285711223344",
     hotelName: "Anabul Sejahtera",
   },

@@ -1,6 +1,6 @@
 # Backend
 
-The server side of Pethommie. Prepared, not connected: see [`docs/backend`](../docs/backend/README.md) for the plan
+The server side of Siomofu. Prepared, not connected: see [`docs/backend`](../docs/backend/README.md) for the plan
 and the decisions.
 
 ```

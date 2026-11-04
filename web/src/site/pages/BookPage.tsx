@@ -57,7 +57,7 @@ export function BookPage() {
           <h1>{b.badTitle}</h1>
           <p>{b.badBody}</p>
           <Link className="btn btn--solid" to="/">
-            Pethommie
+            Siomofu
           </Link>
         </div>
       </main>

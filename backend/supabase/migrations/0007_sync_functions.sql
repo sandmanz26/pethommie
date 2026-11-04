@@ -1,4 +1,4 @@
--- Pethommie, step 7: what a device calls to sync (Phase 1 of docs/backend/README.md).
+-- Siomofu, step 7: what a device calls to sync (Phase 1 of docs/backend/README.md).
 --
 --   * create_hotel(...)       a signed-in person makes their hotel; the 0001 trigger makes them its owner.
 --   * my_hotel()              the hotel the signed-in person belongs to (owner first), or null.

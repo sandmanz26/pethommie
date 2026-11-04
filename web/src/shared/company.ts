@@ -5,7 +5,7 @@
  */
 export const company = {
   /** Shown as the copyright holder. */
-  name: import.meta.env.VITE_COMPANY_NAME || "Pethommie",
+  name: import.meta.env.VITE_COMPANY_NAME || "Siomofu",
   email: import.meta.env.VITE_CONTACT_EMAIL || "",
   /** International digits without "+", e.g. 6281234567890. */
   whatsapp: (import.meta.env.VITE_CONTACT_WHATSAPP || "").replace(/\D/g, ""),

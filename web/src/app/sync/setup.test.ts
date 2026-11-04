@@ -129,7 +129,7 @@ describe("setup.sql", () => {
 
   it("a second run stops at once, with a clear message, and changes nothing", async () => {
     const before = await catalog(fromSetup);
-    await expect(fromSetup.exec(setupSql)).rejects.toThrow(/PETHOMMIE SUDAH TERPASANG/);
+    await expect(fromSetup.exec(setupSql)).rejects.toThrow(/SIOMOFU SUDAH TERPASANG/);
     await fromSetup.exec("rollback"); // what the SQL Editor does with a failed transaction
     expect(await catalog(fromSetup)).toEqual(before);
   });

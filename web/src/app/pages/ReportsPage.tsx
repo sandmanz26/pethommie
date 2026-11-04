@@ -212,10 +212,10 @@ export function ReportsPage() {
         <Heading level={2} size="md">{r.exportTitle}</Heading>
         <Muted>{r.exportNote}</Muted>
         <div className="pg-toolbar">
-          <Button variant="secondary" icon="download" onClick={() => downloadCsv(`pethommie-stays-${period.from}-${lastDay}.csv`, staysCsv(data, inPeriod))} disabled={inPeriod.length === 0}>
+          <Button variant="secondary" icon="download" onClick={() => downloadCsv(`siomofu-stays-${period.from}-${lastDay}.csv`, staysCsv(data, inPeriod))} disabled={inPeriod.length === 0}>
             {r.exportPeriod}
           </Button>
-          <Button variant="ghost" icon="download" onClick={() => downloadCsv(`pethommie-stays-${today}.csv`, staysCsv(data))}>
+          <Button variant="ghost" icon="download" onClick={() => downloadCsv(`siomofu-stays-${today}.csv`, staysCsv(data))}>
             {r.exportCsv}
           </Button>
         </div>

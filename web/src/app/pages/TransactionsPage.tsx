@@ -141,7 +141,7 @@ export function TransactionsPage() {
       )}
 
       <div className="pg-toolbar">
-        <Button variant="secondary" icon="download" disabled={rows.length === 0} onClick={() => downloadCsv(`pethommie-transactions-${period.from}.csv`, ledgerCsv(rows))}>
+        <Button variant="secondary" icon="download" disabled={rows.length === 0} onClick={() => downloadCsv(`siomofu-transactions-${period.from}.csv`, ledgerCsv(rows))}>
           {x.exportCsv}
         </Button>
         <Muted>{x.hint}</Muted>

@@ -31,7 +31,7 @@ describe("a signed-in owner's first visit", () => {
     renderApp("/app");
 
     // 0. Welcome
-    expect(await screen.findByRole("heading", { name: /welcome to pethommie/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /welcome to siomofu/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /start setup/i }));
 
     // 1. Hotel: prefilled, so just carry on
@@ -149,7 +149,7 @@ describe("a hotel that is already set up", () => {
     await signedInAs({ data: aSmallHotel() });
     renderApp("/app/onboarding");
     expect(await screen.findByRole("heading", { name: /^today$/i })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /welcome to pethommie/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /welcome to siomofu/i })).not.toBeInTheDocument();
   });
 
   it("unknown app pages fall back to today", async () => {

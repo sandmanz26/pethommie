@@ -1,6 +1,6 @@
-# Pajak: yang dibutuhkan operator, dan apa yang dibuat Pethommie
+# Pajak: yang dibutuhkan operator, dan apa yang dibuat Siomofu
 
-Tanggal riset: 20 Okt 2026. **Ini bukan nasihat pajak.** Aturan berubah (PP 20/2026 terbit 22 April 2026), dan status pajak tiap usaha berbeda. Fitur di Pethommie menghasilkan **perkiraan dan bahan untuk akuntan atau konsultan pajak**, bukan pelaporan. Layar pajak menampilkan peringatan ini dan tanggal aturan yang dipakai.
+Tanggal riset: 20 Okt 2026. **Ini bukan nasihat pajak.** Aturan berubah (PP 20/2026 terbit 22 April 2026), dan status pajak tiap usaha berbeda. Fitur di Siomofu menghasilkan **perkiraan dan bahan untuk akuntan atau konsultan pajak**, bukan pelaporan. Layar pajak menampilkan peringatan ini dan tanggal aturan yang dipakai.
 
 ## 1. Yang kami pastikan dari sumber
 
@@ -17,10 +17,10 @@ Tanggal riset: 20 Okt 2026. **Ini bukan nasihat pajak.** Aturan berubah (PP 20/2
 
 ## 2. Yang **tidak** kami ketahui
 
-- **Apakah jasa penitipan hewan (pet hotel) dan grooming adalah jasa kena PPN.** Tidak ditemukan sumber. Jasa dokter hewan dibebaskan, tetapi itu bukan penitipan. Jangan berasumsi dari analogi hotel manusia (itu pajak daerah). Tanyakan ke KPP atau konsultan, lihat KLU usaha. Karena itu PPN di Pethommie **mati secara bawaan** dan hanya dinyalakan operator yang sudah PKP.
-- Dasar pengakuan omzet: **kas** (uang diterima) atau **akrual** (jasa diserahkan). Sumber menyebut "peredaran bruto" tanpa menjelaskan. Pethommie menampilkan **keduanya** berdampingan dan memakai yang dipilih operator untuk perkiraan.
+- **Apakah jasa penitipan hewan (pet hotel) dan grooming adalah jasa kena PPN.** Tidak ditemukan sumber. Jasa dokter hewan dibebaskan, tetapi itu bukan penitipan. Jangan berasumsi dari analogi hotel manusia (itu pajak daerah). Tanyakan ke KPP atau konsultan, lihat KLU usaha. Karena itu PPN di Siomofu **mati secara bawaan** dan hanya dinyalakan operator yang sudah PKP.
+- Dasar pengakuan omzet: **kas** (uang diterima) atau **akrual** (jasa diserahkan). Sumber menyebut "peredaran bruto" tanpa menjelaskan. Siomofu menampilkan **keduanya** berdampingan dan memakai yang dipilih operator untuk perkiraan.
 - Tenggat dan tata cara bisa berubah dengan peraturan turunan PP 20/2026. Tanggal 15 dan kode billing di atas harus dicek di DJP/Coretax sebelum menyetor.
-- Perlakuan untuk CV, firma, dan PT biasa selama masa transisi, serta penggabungan omzet pasangan/keluarga (PP 20/2026 memperketat). Pethommie tidak menghitung ini; operator jenis ini dipilih sebagai "lainnya" dan mendapat ringkasan omzet saja.
+- Perlakuan untuk CV, firma, dan PT biasa selama masa transisi, serta penggabungan omzet pasangan/keluarga (PP 20/2026 memperketat). Siomofu tidak menghitung ini; operator jenis ini dipilih sebagai "lainnya" dan mendapat ringkasan omzet saja.
 
 ## 3. Yang dibuat
 
@@ -43,5 +43,5 @@ Tanggal riset: 20 Okt 2026. **Ini bukan nasihat pajak.** Aturan berubah (PP 20/2
 1. Jenis wajib pajak dan rezim yang berlaku untuk usaha Anda sekarang?
 2. Apakah jasa penitipan dan grooming hewan termasuk JKP? Perlu PKP?
 3. Omzet diakui secara kas atau akrual untuk PPh final Anda?
-4. Apakah invoice dari Pethommie cukup sebagai bukti, atau perlu faktur pajak lewat Coretax (untuk PKP)?
+4. Apakah invoice dari Siomofu cukup sebagai bukti, atau perlu faktur pajak lewat Coretax (untuk PKP)?
 5. Berapa lama dokumen ini harus disimpan, dan dalam bentuk apa?

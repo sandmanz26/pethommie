@@ -228,7 +228,7 @@ export function ExpensesPage() {
         <EmptyState art="feature-payments">{all.length ? x.emptyFilter : x.empty}</EmptyState>
       )}
       <div>
-        <Button variant="secondary" icon="download" disabled={!list.length} onClick={() => downloadCsv(`pethommie-expenses-${month}.csv`, expensesCsv(list))}>
+        <Button variant="secondary" icon="download" disabled={!list.length} onClick={() => downloadCsv(`siomofu-expenses-${month}.csv`, expensesCsv(list))}>
           {x.exportCsv}
         </Button>
       </div>

@@ -37,7 +37,7 @@ const service = (client: ReturnType<typeof fakeClient>) =>
   createSupabaseAuthService({
     client,
     local: createLocalAuthService({ demo: demoAccounts, iterations: 1000 }),
-    callbackUrl: (next) => `https://pethommie.test/app/auth/callback?next=${encodeURIComponent(next)}`,
+    callbackUrl: (next) => `https://siomofu.test/app/auth/callback?next=${encodeURIComponent(next)}`,
   });
 
 describe("accounts through Supabase and Google", () => {
@@ -62,7 +62,7 @@ describe("accounts through Supabase and Google", () => {
     expect(await auth.signInWithGoogle("/app/bookings/new")).toEqual({ ok: true });
     expect(client.auth.signInWithOAuth).toHaveBeenCalledWith({
       provider: "google",
-      options: { redirectTo: "https://pethommie.test/app/auth/callback?next=%2Fapp%2Fbookings%2Fnew", queryParams: { prompt: "select_account" } },
+      options: { redirectTo: "https://siomofu.test/app/auth/callback?next=%2Fapp%2Fbookings%2Fnew", queryParams: { prompt: "select_account" } },
     });
     expect(await auth.login("rina@gmail.com", "x")).toEqual({ ok: false, error: "unsupported" });
     expect(await auth.register({ name: "R", hotelName: "H", email: "r@x.co", whatsapp: "62812", password: "abc12345" })).toEqual({ ok: false, error: "unsupported" });

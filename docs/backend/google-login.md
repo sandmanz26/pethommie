@@ -27,10 +27,10 @@ Time needed: about 20 minutes. You need: a Google account, a Supabase account, a
 
 ## 2. Create the Google OAuth client
 
-1. https://console.cloud.google.com → create (or pick) a project, e.g. "Pethommie".
+1. https://console.cloud.google.com → create (or pick) a project, e.g. "Siomofu".
 2. **APIs & Services → OAuth consent screen**:
-   - User type **External**. App name "Pethommie", support email, logo optional.
-   - Authorized domains: `supabase.co` and your own domain (e.g. `vercel.app` for now, or `pethommie.com` later).
+   - User type **External**. App name "Siomofu", support email, logo optional.
+   - Authorized domains: `supabase.co` and your own domain (e.g. `vercel.app` for now, or `siomofu.xyz`).
    - Scopes: the defaults (`email`, `profile`, `openid`) are enough.
    - While the app is in **Testing**, only the test users you add can sign in. **Publish** it before real customers.
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID**:

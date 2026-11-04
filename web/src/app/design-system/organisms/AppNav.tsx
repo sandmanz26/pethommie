@@ -26,7 +26,7 @@ export function AppNav({ hotelName, onLogout, labels = {} }: { hotelName: string
         <a className="ds-sidenav__brand" href="/">
           <Hanko size={32} />
           <div>
-            <b>Pethommie</b>
+            <b>Siomofu</b>
             <span>{hotelName}</span>
           </div>
         </a>

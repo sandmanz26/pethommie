@@ -40,7 +40,7 @@ describe("booking link", () => {
     expect(read.note).toHaveLength(280);
   });
 
-  it("writes the request for the hotel, in the hotel's language, with a one-tap way into Pethommie", () => {
+  it("writes the request for the hotel, in the hotel's language, with a one-tap way into Siomofu", () => {
     const m = requestMessage(card, request, "https://p.app");
     expect(m).toContain("Halo Kandang Ceria · Pet Hotel");
     expect(m).toContain("Pemilik: Sari (0812 3456 7890)");

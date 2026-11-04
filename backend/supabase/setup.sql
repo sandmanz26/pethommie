@@ -1,12 +1,12 @@
 -- ====================================================================================================================
--- PETHOMMIE: SETUP DATABASE SUPABASE (sekali jalan, di project yang masih kosong)
+-- SIOMOFU: SETUP DATABASE SUPABASE (sekali jalan, di project yang masih kosong)
 --
 -- Cara pakai: Supabase -> SQL Editor -> New query -> tempel SELURUH isi file ini -> Run.
 -- Hasil yang benar: tabel "pemeriksaan" kecil di bawah layar, setiap baris status = OK.
 -- Panduan lengkap (bahasa Indonesia): docs/backend/setup-supabase.md
 --
 -- Aman dijalankan ulang: semuanya dalam satu transaksi (gagal di tengah = tidak ada yang tersimpan), dan kalau
--- Pethommie sudah terpasang, file ini berhenti di awal dengan pesan "PETHOMMIE SUDAH TERPASANG" tanpa mengubah apa pun.
+-- Siomofu sudah terpasang, file ini berhenti di awal dengan pesan "SIOMOFU SUDAH TERPASANG" tanpa mengubah apa pun.
 --
 -- Isi: 0001_init.sql, 0002_charges_companions_invoices.sql, 0003_shared_rooms_payment_kinds_sources.sql, 0004_rates_cancellations_archive_expenses.sql, 0005_booking_holds.sql, 0006_stay_rules.sql, 0007_sync_functions.sql, lalu verify.sql.
 -- File ini DIBUAT OTOMATIS dari backend/supabase/migrations/ oleh `cd web && npm run build:setup-sql`.
@@ -19,7 +19,7 @@ begin;
 do $$
 begin
   if to_regclass('public.hotels') is not null then
-    raise exception 'PETHOMMIE SUDAH TERPASANG: tabel public.hotels sudah ada, jadi setup.sql tidak dijalankan lagi. Tidak ada yang diubah.'
+    raise exception 'SIOMOFU SUDAH TERPASANG: tabel public.hotels sudah ada, jadi setup.sql tidak dijalankan lagi. Tidak ada yang diubah.'
       using hint = 'Untuk memeriksa: jalankan backend/supabase/verify.sql. Untuk migrasi baru: jalankan file migrasi yang baru saja, satu per satu.';
   end if;
 end $$;
@@ -28,7 +28,7 @@ end $$;
 -- MIGRASI 0001_init.sql
 -- ====================================================================================================================
 
--- Pethommie: the hotel's data on a server.
+-- Siomofu: the hotel's data on a server.
 --
 -- Target: Postgres 15+ on Supabase (it provides the `auth` schema, `auth.uid()` and the `anon` / `authenticated`
 -- roles). Nothing here is applied by the app yet: see docs/backend/. The shape mirrors web/src/app/domain/types.ts
@@ -275,7 +275,7 @@ grant execute on function public.is_member(uuid), public.is_owner(uuid) to authe
 -- MIGRASI 0002_charges_companions_invoices.sql
 -- ====================================================================================================================
 
--- Pethommie, step 2: what a stay can carry beyond its nights.
+-- Siomofu, step 2: what a stay can carry beyond its nights.
 --   * charges (add-ons and discounts) and companions (pets sharing the cage),
 --   * numbered invoices that can't be altered once made,
 --   * the owner's language and the hotel's business and tax settings.
@@ -594,7 +594,7 @@ where not (settings ? 'stayRules');
 -- MIGRASI 0007_sync_functions.sql
 -- ====================================================================================================================
 
--- Pethommie, step 7: what a device calls to sync (Phase 1 of docs/backend/README.md).
+-- Siomofu, step 7: what a device calls to sync (Phase 1 of docs/backend/README.md).
 --
 --   * create_hotel(...)       a signed-in person makes their hotel; the 0001 trigger makes them its owner.
 --   * my_hotel()              the hotel the signed-in person belongs to (owner first), or null.
@@ -800,7 +800,7 @@ commit;
 -- PEMERIKSAAN (verify.sql): setiap baris harus status = OK
 -- ====================================================================================================================
 
--- Pethommie: pemeriksaan setelah setup (verify).
+-- Siomofu: pemeriksaan setelah setup (verify).
 --
 -- Jalankan di Supabase -> SQL Editor kapan saja (aman, hanya membaca). Hasilnya satu tabel kecil:
 -- setiap baris harus berstatus OK. Kalau ada yang "CEK", lihat kolom "hasil" dan docs/backend/setup-supabase.md.
@@ -832,7 +832,7 @@ public_triggers as (
   where n.nspname = 'public' and not t.tgisinternal
 ),
 checks(no, pemeriksaan, diharapkan, hasil) as (
-  select 1, 'Tabel Pethommie ada', '14 dari 14',
+  select 1, 'Tabel Siomofu ada', '14 dari 14',
     (select count(*) from expected_tables e where e.name in (select name from public_tables)) || ' dari 14'
     || coalesce(' (kurang: ' || (select string_agg(e.name, ', ') from expected_tables e where e.name not in (select name from public_tables)) || ')', '')
   union all

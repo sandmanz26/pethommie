@@ -51,7 +51,7 @@ describe("legal pages", () => {
     expect(screen.getByText(/disimpan di Supabase, di server Singapura/)).toBeInTheDocument();
   });
 
-  it("has the terms, and says Pethommie never handles money", () => {
+  it("has the terms, and says Siomofu never handles money", () => {
     renderLegal("terms");
     expect(screen.getByRole("heading", { name: "Terms of use", level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/does not take, hold or move money/i)).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("legal pages", () => {
     renderLegal("privacy");
     const nav = within(screen.getByRole("banner"));
     expect(nav.getByRole("link", { name: "Features" })).toHaveAttribute("href", "/#features");
-    expect(nav.getByRole("link", { name: "Pethommie" })).toHaveAttribute("href", "/");
+    expect(nav.getByRole("link", { name: "Siomofu" })).toHaveAttribute("href", "/");
     expect(within(screen.getByRole("contentinfo")).getByRole("link", { name: "Terms of use" })).toHaveAttribute("href", "/terms");
   });
 });

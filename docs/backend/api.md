@@ -1,4 +1,4 @@
-# API Pethommie (`/api/...` di Vercel)
+# API Siomofu (`/api/...` di Vercel)
 
 API REST kecil di atas Supabase, untuk hal-hal di luar sinkron aplikasi: alat lain, otomasi, formulir di landing page,
 dan untuk mencoba database. Aplikasi sendiri **tidak** memakai API ini; aplikasi menyinkron langsung ke Supabase

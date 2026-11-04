@@ -1,6 +1,6 @@
-# Pethommie Web
+# Siomofu Web
 
-Frontend foundation for Pethommie, a pet hotel app for Indonesian operators.
+Frontend foundation for Siomofu, a pet hotel app for Indonesian operators.
 React 19 + TypeScript + Vite, no backend yet.
 
 ## Deploy (Vercel)

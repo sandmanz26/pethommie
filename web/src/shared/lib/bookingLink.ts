@@ -101,7 +101,7 @@ const WORDS = {
     notes: "Catatan",
     species: { cat: "kucing", dog: "anjing", rabbit: "kelinci", other: "lainnya" },
     ask: "Apakah masih ada tempat? Terima kasih!",
-    forHotel: "Untuk dicatat di Pethommie:",
+    forHotel: "Untuk dicatat di Siomofu:",
   },
   en: {
     hello: (hotel: string) => `Hi ${hotel} 🐾`,
@@ -114,7 +114,7 @@ const WORDS = {
     notes: "Notes",
     species: { cat: "cat", dog: "dog", rabbit: "rabbit", other: "other" },
     ask: "Is there room? Thank you!",
-    forHotel: "To record it in Pethommie:",
+    forHotel: "To record it in Siomofu:",
   },
 } as const;
 
@@ -131,7 +131,7 @@ const day = (iso: string, lang: "id" | "en") => {
   return new Date(y, m - 1, d).toLocaleDateString(lang === "id" ? "id-ID" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
 };
 
-/** Where the hotel can put the request into Pethommie in one tap: a new booking with the dates and the guest filled in. */
+/** Where the hotel can put the request into Siomofu in one tap: a new booking with the dates and the guest filled in. */
 export function prefillUrl(origin: string, r: LinkRequest) {
   const q = new URLSearchParams({ in: r.checkIn, out: r.checkOut, source: "link", owner: r.ownerName.trim(), wa: normaliseWhatsapp(r.ownerWa) ?? "", petName: r.petName.trim(), species: r.species });
   return `${origin}/app/bookings/new?${q}`;

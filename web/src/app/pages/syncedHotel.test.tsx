@@ -75,7 +75,7 @@ describe("a Google account's hotel on a new device", () => {
     renderApp("/app");
 
     expect(await screen.findByRole("heading", { name: /loading your hotel/i })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /welcome to pethommie/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /welcome to siomofu/i })).not.toBeInTheDocument();
 
     release();
     expect(await screen.findAllByText("Rumah Meong")).not.toHaveLength(0);
@@ -102,7 +102,7 @@ describe("a Google account's hotel on a new device", () => {
     server.gateway = createMemoryGateway(toRows(aSmallHotel(), HOTEL).hotel, { exists: false });
     await signedInWithGoogle();
     renderApp("/app");
-    expect(await screen.findByRole("heading", { name: /welcome to pethommie/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /welcome to siomofu/i })).toBeInTheDocument();
   });
 
   it("offline on the first sign-in: says a connection is needed, and loads the hotel on retry", async () => {
@@ -115,7 +115,7 @@ describe("a Google account's hotel on a new device", () => {
 
     expect(await screen.findByRole("heading", { name: /connect to load your hotel/i })).toBeInTheDocument();
     expect(screen.getByText(/first sign-in on a device needs an internet connection/i)).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /welcome to pethommie/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /welcome to siomofu/i })).not.toBeInTheDocument();
 
     gateway.offline(false);
     await user.click(screen.getByRole("button", { name: /try again/i }));
@@ -162,7 +162,7 @@ describe("deleting a Google account's hotel from Settings", () => {
 
     await user.type(within(dialog).getByLabelText(/type the hotel name/i), "Rumah Meong");
     await user.click(within(dialog).getByRole("button", { name: /delete everywhere/i }));
-    expect(await screen.findByRole("heading", { name: /welcome to pethommie/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /welcome to siomofu/i })).toBeInTheDocument();
     await waitFor(() => expect(gateway.rows().bookings).toHaveLength(0), { timeout: 4000 });
     expect(gateway.rows().cages).toHaveLength(0);
     expect(gateway.rows().pets).toHaveLength(0);

@@ -12,7 +12,7 @@ export type AuthService = {
   methods: AuthMethods;
   /**
    * Leaves for Google's sign-in page; the visitor comes back to /app/auth/callback, signed in. Registering and logging
-   * in are the same step: a new Google account becomes a new Pethommie account. `next` is where to go afterwards.
+   * in are the same step: a new Google account becomes a new Siomofu account. `next` is where to go afterwards.
    */
   signInWithGoogle(next?: string): Promise<{ ok: false; error: AuthError } | { ok: true }>;
   /** Called with the account whenever the session changes outside the app's own calls (a token refresh, another tab). */

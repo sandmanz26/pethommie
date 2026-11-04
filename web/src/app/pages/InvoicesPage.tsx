@@ -60,7 +60,7 @@ export function InvoicesPage() {
           <Input type="month" value={month} disabled={allMonths} onChange={(e) => e.target.value && setMonth(e.target.value)} />
         </Field>
         <Checkbox label={p.allMonths} checked={allMonths} onChange={(e) => setAllMonths(e.target.checked)} />
-        <Button variant="secondary" icon="download" onClick={() => downloadCsv(`pethommie-invoices-${allMonths ? "all" : month}.csv`, invoicesCsv(data, shown.map((r) => r.invoice)))} disabled={shown.length === 0}>
+        <Button variant="secondary" icon="download" onClick={() => downloadCsv(`siomofu-invoices-${allMonths ? "all" : month}.csv`, invoicesCsv(data, shown.map((r) => r.invoice)))} disabled={shown.length === 0}>
           {p.exportCsv}
         </Button>
       </div>

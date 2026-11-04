@@ -247,14 +247,14 @@ describe("restoring a backup", () => {
   it("refuses a file that isn't a backup and changes nothing", async () => {
     const user = await open("/app/settings");
     await user.upload(await screen.findByLabelText("Restore a backup", { selector: "input" }), file("{nope"));
-    expect(await screen.findByText(/isn't a pethommie backup/i)).toBeInTheDocument();
+    expect(await screen.findByText(/isn't a siomofu backup/i)).toBeInTheDocument();
     expect(stored().hotel?.name).toBe("Rumah Meong");
   });
 
   it("refuses a backup from a newer version", async () => {
     const user = await open("/app/settings");
     await user.upload(await screen.findByLabelText("Restore a backup", { selector: "input" }), file(JSON.stringify({ ...aSmallHotel(), version: 9 })));
-    expect(await screen.findByText(/newer version of pethommie/i)).toBeInTheDocument();
+    expect(await screen.findByText(/newer version of siomofu/i)).toBeInTheDocument();
     expect(stored().hotel?.name).toBe("Rumah Meong");
   });
 

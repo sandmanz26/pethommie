@@ -1,4 +1,4 @@
--- Pethommie: pemeriksaan setelah setup (verify).
+-- Siomofu: pemeriksaan setelah setup (verify).
 --
 -- Jalankan di Supabase -> SQL Editor kapan saja (aman, hanya membaca). Hasilnya satu tabel kecil:
 -- setiap baris harus berstatus OK. Kalau ada yang "CEK", lihat kolom "hasil" dan docs/backend/setup-supabase.md.
@@ -30,7 +30,7 @@ public_triggers as (
   where n.nspname = 'public' and not t.tgisinternal
 ),
 checks(no, pemeriksaan, diharapkan, hasil) as (
-  select 1, 'Tabel Pethommie ada', '14 dari 14',
+  select 1, 'Tabel Siomofu ada', '14 dari 14',
     (select count(*) from expected_tables e where e.name in (select name from public_tables)) || ' dari 14'
     || coalesce(' (kurang: ' || (select string_agg(e.name, ', ') from expected_tables e where e.name not in (select name from public_tables)) || ')', '')
   union all

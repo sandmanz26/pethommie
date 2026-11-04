@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-/** Simple stroke icons drawn for Pethommie (24px grid, 1.8 stroke). */
+/** Simple stroke icons drawn for Siomofu (24px grid, 1.8 stroke). */
 const paths = {
   today: "M4 7h16M4 7v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7M4 7l1-3h14l1 3M9 12h6M9 16h4",
   bookings: "M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 12h3M8 16h6",

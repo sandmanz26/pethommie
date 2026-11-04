@@ -26,7 +26,7 @@ Sumber: ringkasan pencarian tentang aplikasi rapor penitipan (AppMaster, Kennel 
 - Pemilik ingin tahu: sudah makan dan minum, kapan obat diberikan, mood, kejadian tidak biasa, cukup main.
 - Kennel Connection membagi kartu rapor menjadi perilaku, makan, buang air, dan main, dengan templat yang bisa diubah.
 - Pet hotel lokal yang disebut (Savvy Pet Hotel, Nowi) mengirim foto atau video dan "daily report".
-- **Dipakai di Pethommie:** delapan jenis catatan (makan, minum, main, BAB/BAK, obat, mood, catatan, kejadian), jawaban satu ketukan untuk yang berulang, dan kejadian selalu dituliskan dengan kata-kata.
+- **Dipakai di Siomofu:** delapan jenis catatan (makan, minum, main, BAB/BAK, obat, mood, catatan, kejadian), jawaban satu ketukan untuk yang berulang, dan kejadian selalu dituliskan dengan kata-kata.
 
 **Keyakinan: sedang.** Sumber lokal adalah artikel gaya hidup, bukan standar. Isi rapor sebaiknya divalidasi dengan 5 operator (lihat metrik).
 
@@ -38,7 +38,7 @@ Sumber: artikel Orami dan Hellosehat tentang pet hotel di Jabodetabek.
 - Anjing: sehat, bebas kutu, vaksin lengkap (Malibu Pet Hotel).
 - Beberapa hanya menerima kucing yang tidak agresif dan terbiasa dititipkan.
 - **Tidak ditemukan:** daftar syarat lengkap F3/F4 untuk kucing atau DHPP untuk anjing dari pet hotel Indonesia. Jangan menuliskan daftar vaksin wajib sebagai fakta.
-- **Dipakai di Pethommie:** catatan check-in berisi sehat (tanpa flu, batuk, mata berair), bebas kutu/caplak, berat, barang bawaan, makanan dari pemilik, dan catatan bebas. Vaksin sengaja hanya berupa tanggal kedaluwarsa, bukan daftar jenis.
+- **Dipakai di Siomofu:** catatan check-in berisi sehat (tanpa flu, batuk, mata berair), bebas kutu/caplak, berat, barang bawaan, makanan dari pemilik, dan catatan bebas. Vaksin sengaja hanya berupa tanggal kedaluwarsa, bukan daftar jenis.
 
 **Keyakinan: sedang untuk isi checklist, rendah untuk syarat vaksin.**
 
@@ -61,7 +61,7 @@ Sumber: jurnal dan artikel (JTIIK UB, UKM Indonesia, Era Space).
 - QRIS statis: kode tetap, pembeli mengetik nominal sendiri, ada risiko salah ketik. Cocok untuk usaha mikro dan kecil.
 - QRIS dinamis: dibuat per transaksi dengan nominal terisi; lebih cocok untuk volume besar.
 - Tidak ditemukan sumber tentang konfirmasi manual lewat tangkapan layar atau uang muka.
-- **Keputusan:** Pethommie **tidak** memproses pembayaran. Operator mencatat pembayaran yang sudah diterima (tunai, QRIS, transfer), dengan pengingat untuk mengecek aplikasi bank sendiri. Pembayaran online butuh penyedia (Xendit/DOKU) dan akun merchant, dan ditunda.
+- **Keputusan:** Siomofu **tidak** memproses pembayaran. Operator mencatat pembayaran yang sudah diterima (tunai, QRIS, transfer), dengan pengingat untuk mengecek aplikasi bank sendiri. Pembayaran online butuh penyedia (Xendit/DOKU) dan akun merchant, dan ditunda.
 
 **Keyakinan: sedang.**
 

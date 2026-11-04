@@ -65,7 +65,7 @@ describe("log in", () => {
   it("shows one message for a wrong password, and does not sign in", async () => {
     const user = userEvent.setup();
     renderApp("/app/login");
-    await user.type(await screen.findByLabelText(/^email$/i), "demo@pethommie.id");
+    await user.type(await screen.findByLabelText(/^email$/i), "demo@siomofu.xyz");
     await user.type(screen.getByLabelText(/^password$/i), "not-the-password-1");
     await user.click(screen.getByRole("button", { name: /^log in$/i }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/wrong email or password/i);
@@ -140,10 +140,10 @@ describe("sign up", () => {
     await user.type(screen.getByLabelText(/pet hotel name/i), "Kucing Manja");
     await user.type(screen.getByLabelText(/^email$/i), "Dewi@Example.com");
     await user.type(screen.getByLabelText(/whatsapp number/i), "0812 7788 4455");
-    await user.type(screen.getByLabelText(/^password$/i), "Pethommie123");
+    await user.type(screen.getByLabelText(/^password$/i), "Siomofu123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(await heading(/welcome to siomofu/i)).toBeInTheDocument();
     expect(accounts().map((a) => a.email)).toContain("dewi@example.com");
     await user.click(screen.getByRole("button", { name: /start setup/i }));
     expect(screen.getByLabelText(/pet hotel name/i)).toHaveValue("Kucing Manja");
@@ -230,7 +230,7 @@ describe("try now (the demo)", () => {
     renderApp("/app/login");
     expect(screen.queryByRole("button", { name: /^use$/i })).toBeNull();
     await user.click(await screen.findByRole("link", { name: /try the demo/i }));
-    expect(await heading(/try pethommie with a sample hotel/i)).toBeInTheDocument();
+    expect(await heading(/try siomofu with a sample hotel/i)).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /open this demo/i })).toHaveLength(3);
   });
 
@@ -269,10 +269,10 @@ describe("try now (the demo)", () => {
     await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[0]);
     await heading(/^today$/i);
     await user.click(screen.getByRole("button", { name: /leave demo/i }));
-    expect(await heading(/try pethommie with a sample hotel/i)).toBeInTheDocument();
+    expect(await heading(/try siomofu with a sample hotel/i)).toBeInTheDocument();
     expect(localStorage.getItem(SESSION_KEY)).toBeNull();
     await user.click(screen.getByRole("button", { name: /open this demo: start from nothing/i }));
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(await heading(/welcome to siomofu/i)).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /^demo$/i })).toBeInTheDocument();
   });
 
@@ -289,9 +289,9 @@ describe("try now (the demo)", () => {
     await user.type(screen.getByLabelText(/pet hotel name/i), "Kucing Manja");
     await user.type(screen.getByLabelText(/^email$/i), "dewi@example.com");
     await user.type(screen.getByLabelText(/whatsapp number/i), "0812 7788 4455");
-    await user.type(screen.getByLabelText(/^password$/i), "Pethommie123");
+    await user.type(screen.getByLabelText(/^password$/i), "Siomofu123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(await heading(/welcome to siomofu/i)).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: /^demo$/i })).toBeNull();
     const stored = JSON.parse(localStorage.getItem(ACCOUNTS_KEY)!).accounts[0];
     expect(stored.offer).toMatchObject({ code: "DEMO50", percentOff: 50 });
@@ -301,10 +301,10 @@ describe("try now (the demo)", () => {
     const user = userEvent.setup();
     renderApp("/app/try");
     await user.click((await screen.findAllByRole("button", { name: /open this demo/i }))[2]);
-    await heading(/welcome to pethommie/i);
+    await heading(/welcome to siomofu/i);
     await user.click(screen.getByRole("button", { name: /start setup/i }));
     await user.click(screen.getByRole("button", { name: /^start over$/i }));
     await user.click(within(screen.getByRole("dialog", { hidden: true })).getByRole("button", { name: /^start over$/i, hidden: true }));
-    expect(await heading(/welcome to pethommie/i)).toBeInTheDocument();
+    expect(await heading(/welcome to siomofu/i)).toBeInTheDocument();
   });
 });

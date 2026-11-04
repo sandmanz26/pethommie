@@ -4,9 +4,9 @@ export const appEn = {
   common: {
     save: "Save",
     cancel: "Cancel",
-    updateReady: "A new version of Pethommie is ready.",
+    updateReady: "A new version of Siomofu is ready.",
     reload: "Reload",
-    offlineReady: "Pethommie is ready to work offline.",
+    offlineReady: "Siomofu is ready to work offline.",
     dismiss: "Dismiss",
     saveFailed: "Your changes can't be saved in this browser (storage is full or blocked). Export a backup from Settings before you close this tab.",
     delete: "Delete",
@@ -55,7 +55,7 @@ export const appEn = {
       password: "Password",
       submit: "Log in",
       busy: "Logging in…",
-      noAccount: "New to Pethommie?",
+      noAccount: "New to Siomofu?",
       toRegister: "Create an account",
       failed: "Wrong email or password. Try again.",
       tryLead: "Just looking around?",
@@ -105,7 +105,7 @@ export const appEn = {
     },
     demo: {
       eyebrow: "Try now",
-      title: "Try Pethommie with a sample hotel",
+      title: "Try Siomofu with a sample hotel",
       lead: "Pick one and you're in. No sign-up, no password.",
       apart: "The demo has its own data, kept apart from real accounts and only in this browser.",
       accounts: {
@@ -145,7 +145,7 @@ export const appEn = {
     stepOf: (i: number, n: number) => `Step ${i} of ${n}`,
     sample: "Explore with sample data instead",
     welcome: {
-      title: "Welcome to Pethommie",
+      title: "Welcome to Siomofu",
       lead: "Let's set up your pet hotel. Three quick steps, about two minutes. You can change everything later.",
       items: [
         { title: "Your hotel", body: "Name and WhatsApp number for owner reports." },
@@ -645,7 +645,7 @@ export const appEn = {
   },
   more: {
     title: "More",
-    lead: "Everything else in Pethommie.",
+    lead: "Everything else in Siomofu.",
   },
   customersPage: {
     title: "Customers",
@@ -706,7 +706,7 @@ export const appEn = {
   },
   linkPage: {
     title: "Booking link",
-    lead: "One link for your Instagram bio, WhatsApp status or Google Maps. Owners send a request; it lands in your WhatsApp, ready to put into Pethommie with one tap.",
+    lead: "One link for your Instagram bio, WhatsApp status or Google Maps. Owners send a request; it lands in your WhatsApp, ready to put into Siomofu with one tap.",
     noNumber: "Add your hotel's WhatsApp number first: requests are sent there.",
     toSettings: "Open Settings",
     optionsTitle: "What the link shows",
@@ -724,7 +724,7 @@ export const appEn = {
     shareText: (hotel: string, url: string) => `Book a stay at ${hotel}: ${url}`,
     honest: "Nothing is booked automatically and no money is taken on the page: you confirm every request in your own chat. Change the options and the link changes with them, so share the new one.",
     howTitle: "How it works",
-    how: ["The owner opens your link and fills in the dates, the pet and their number.", "Their request opens in WhatsApp, written to you. They press send.", "You reply, and tap the link at the bottom of their message: the booking opens in Pethommie, already filled in."],
+    how: ["The owner opens your link and fills in the dates, the pet and their number.", "Their request opens in WhatsApp, written to you. They press send.", "You reply, and tap the link at the bottom of their message: the booking opens in Siomofu, already filled in."],
   },
   expenseCategories: {
     food: "Pet food",
@@ -951,7 +951,7 @@ export const appEn = {
     faq: [
       { q: "Where is my data kept?", a: "In this browser, on this device. It is not sent anywhere yet. If you clear this browser's data you lose it, so download a backup from Settings now and then." },
       { q: "Can I use it without signal?", a: "Yes. Open it once with a connection, and afterwards it opens and works without one. You can also install it on your phone's home screen." },
-      { q: "Does Pethommie send WhatsApp messages for me?", a: "No. It writes the message and opens your own WhatsApp with it filled in. You press send, so it comes from your own number and nothing is sent without you." },
+      { q: "Does Siomofu send WhatsApp messages for me?", a: "No. It writes the message and opens your own WhatsApp with it filled in. You press send, so it comes from your own number and nothing is sent without you." },
       { q: "Does it take payments?", a: "No. You record money you have received (cash, QRIS, transfer). Always check it arrived in your banking app first." },
       { q: "What is the difference between Simple and Advanced?", a: "Simple shows what you need every day, with fewer fields. Advanced adds customers, payments, invoices, tax and every option. It only changes what you see, so you can switch any time without losing anything." },
       { q: "Can two phones share the same hotel?", a: "Not yet. Each browser keeps its own data. Syncing between devices comes with accounts on a server." },
@@ -1172,7 +1172,7 @@ export const appEn = {
   },
   settingsTax: {
     title: "Tax",
-    lead: "Pethommie only estimates. Ask your accountant which of these applies to you.",
+    lead: "Siomofu only estimates. Ask your accountant which of these applies to you.",
     regime: "How the business is taxed",
     regimes: { none: "Not set up", final_umkm: "PPh final 0.5% (small business)", general: "Ordinary income tax" },
     taxpayer: "Taxpayer",
@@ -1198,8 +1198,8 @@ export const appEn = {
     export: "Download a backup (JSON)",
     import: "Restore a backup",
     importConfirm: "Replace everything in this browser with the backup? What is here now will be lost.",
-    importBad: "That file isn't a Pethommie backup, or it is damaged. Nothing was changed.",
-    importNewer: "That backup comes from a newer version of Pethommie. Reload the page to update, then try again. Nothing was changed.",
+    importBad: "That file isn't a Siomofu backup, or it is damaged. Nothing was changed.",
+    importNewer: "That backup comes from a newer version of Siomofu. Reload the page to update, then try again. Nothing was changed.",
     importDone: "Backup restored.",
     loadSample: "Replace with sample data",
     reset: "Delete all data",
@@ -1273,7 +1273,7 @@ export const appEn = {
     saved: "Saved.",
     backToBooking: "Back to the new booking",
     gateTitle: "Set your booking rules first",
-    gateBody: "Before your first booking, tell Pethommie how you count a day, your drop-off and pick-up hours, and the late pick-up fee. It takes a minute.",
+    gateBody: "Before your first booking, tell Siomofu how you count a day, your drop-off and pick-up hours, and the late pick-up fee. It takes a minute.",
     gateButton: "Set booking rules",
     formHint: (from: string, until: string, pickUp: string) => `Drop-off ${from}–${until} · pick up by ${pickUp}`,
     formHint24: (from: string, until: string) => `Drop-off ${from}–${until} · each 24 hours from drop-off is a day`,

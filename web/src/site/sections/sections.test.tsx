@@ -30,8 +30,8 @@ describe("landing sections", () => {
     const tabs = screen.getAllByRole("tab");
     expect(tabs.map((t) => t.textContent)).toEqual(["Today", "One stay", "Calendar"]);
     expect(screen.getAllByRole("tabpanel")).toHaveLength(1);
-    expect(screen.getByRole("img", { name: "Pethommie screen: Today" })).toHaveAttribute("src", "/screens/today-en.webp");
-    expect(screen.getByRole("img", { name: "Pethommie on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
+    expect(screen.getByRole("img", { name: "Siomofu screen: Today" })).toHaveAttribute("src", "/screens/today-en.webp");
+    expect(screen.getByRole("img", { name: "Siomofu on a phone: Today" })).toHaveAttribute("src", "/screens/today-phone-en.webp");
     // a benefit, three numbered points, and the ask beside them
     expect(screen.getByRole("heading", { name: /your day, before the first owner/i })).toBeInTheDocument();
     expect(within(screen.getByRole("list", { name: /what this screen does/i })).getAllByRole("listitem")).toHaveLength(3);
@@ -41,7 +41,7 @@ describe("landing sections", () => {
 
     await userEvent.click(tabs[2]);
     expect(tabs[2]).toHaveAttribute("aria-selected", "true");
-    const img = screen.getByRole("img", { name: "Pethommie screen: Calendar" });
+    const img = screen.getByRole("img", { name: "Siomofu screen: Calendar" });
     expect(img).toHaveAttribute("src", "/screens/calendar-en.webp");
     expect(img).toHaveAttribute("width");
     expect(img).toHaveAttribute("height");
@@ -122,8 +122,8 @@ describe("landing sections", () => {
 
   it("shows the same desk before and after, in pictures, with what changes", () => {
     wrap(<BeforeAfter />);
-    const before = screen.getByRole("article", { name: "Without Pethommie" });
-    const after = screen.getByRole("article", { name: "With Pethommie" });
+    const before = screen.getByRole("article", { name: "Without Siomofu" });
+    const after = screen.getByRole("article", { name: "With Siomofu" });
     expect(before.querySelector("img")).toHaveAttribute("src", "/illustrations/before.webp");
     expect(after.querySelector("img")).toHaveAttribute("src", "/illustrations/after.webp");
     expect(within(before).getAllByRole("listitem")).toHaveLength(4);

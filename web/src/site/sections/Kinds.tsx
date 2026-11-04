@@ -1,7 +1,7 @@
 import { useSiteT } from "@/site/i18n/useSiteT";
 import "./sections.css";
 
-/** Who it is for: four ways of boarding pets, each with its picture and how Pethommie counts it. */
+/** Who it is for: four ways of boarding pets, each with its picture and how Siomofu counts it. */
 export function Kinds() {
   const { kinds } = useSiteT().t;
   return (

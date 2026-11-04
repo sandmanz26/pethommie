@@ -8,12 +8,12 @@ export type Chapter = { at: number; moment: MomentKind; title: string; body: str
 
 export const en = {
   meta: {
-    title: "Pethommie · Pet hotel management software for Indonesia",
+    title: "Siomofu · Pet hotel management software for Indonesia",
     description:
       "Pet hotel management software for Indonesia, with or without cages: a booking calendar, check-in, payments, a daily care log, and reports to owners on WhatsApp. Works offline.",
   },
   brand: {
-    name: "Pethommie",
+    name: "Siomofu",
     tagline: "Pet hotel management software",
   },
   nav: {
@@ -87,11 +87,11 @@ export const en = {
     eyebrow: "Before and after",
     title: "From notebook and chats, to one app.",
     before: {
-      label: "Without Pethommie",
+      label: "Without Siomofu",
       points: ["Flip through the notebook to find a free place", "Scroll old chats to see who hasn't paid", "Type every report by hand, every night", "Guess at the end of the month if you made money"],
     },
     after: {
-      label: "With Pethommie",
+      label: "With Siomofu",
       points: ["Free places show on the calendar", "One list of who still owes, ready to remind", "Reports are written for you, just send", "Money in and out, added up for you"],
     },
   },
@@ -121,8 +121,8 @@ export const en = {
     ],
     tabsLabel: "Screens",
     pointsLabel: "What this screen does for you",
-    phoneAlt: (title: string) => `Pethommie on a phone: ${title}`,
-    imageAlt: (title: string) => `Pethommie screen: ${title}`,
+    phoneAlt: (title: string) => `Siomofu on a phone: ${title}`,
+    imageAlt: (title: string) => `Siomofu screen: ${title}`,
     cta: { href: "/app/register", label: "Try free for 30 days" },
     ctaNote: "No card needed · set up in five minutes",
     prices: { href: "#pricing", label: "See the prices" },
@@ -145,7 +145,7 @@ export const en = {
   kinds: {
     eyebrow: "Made for you",
     title: "However you board, it fits.",
-    lead: "Cages, shared rooms, your own home or a cattery: Pethommie fits how you work.",
+    lead: "Cages, shared rooms, your own home or a cattery: Siomofu fits how you work.",
     items: [
       { art: "kind-cages", title: "Pet hotel with cages", body: "One cage, one guest. A price for each cage size.", tag: "Cages" },
       { art: "kind-rooms", title: "Cage-free & daycare", body: "Shared rooms for several pets. Each pet counts as one place.", tag: "Shared rooms" },
@@ -256,7 +256,7 @@ export const en = {
     errPet: "Please write your pet's name.",
     errDates: "Pick-up must be after drop-off, and not in the past.",
     sent: "WhatsApp opened with your request. Press send there, and the hotel will reply.",
-    poweredBy: "Booking page by Pethommie",
+    poweredBy: "Booking page by Siomofu",
   },
   notFound: {
     title: "This page isn't on the scroll.",
@@ -268,9 +268,9 @@ export const en = {
     back: "Back to home",
     privacy: {
       title: "Privacy policy",
-      intro: "This page says what Pethommie does with information today. It will be updated before that changes.",
+      intro: "This page says what Siomofu does with information today. It will be updated before that changes.",
       sections: [
-        { h: "Who we are", p: ["Pethommie is pet hotel management software for operators in Indonesia, run by {company}."] },
+        { h: "Who we are", p: ["Siomofu is pet hotel management software for operators in Indonesia, run by {company}."] },
         { h: "What stays on your device", p: ["Everything you type into the app (your hotel, cages, pets, owners' names and WhatsApp numbers, bookings, payments, care notes) and what you enter in the sign-up form on this website is stored in your own browser. At this stage it is not sent to us or to anyone else.", "That means we cannot see it, and we cannot recover it for you. Use Settings → Download backup to keep a copy."] },
         { h: "What we do receive", p: ["Our website host (Vercel) keeps ordinary server logs, such as the address of your device and the pages requested, for security and reliability. We do not run advertising or analytics trackers, and the fonts are served from this site, not from a third party."] },
         { h: "The owners' details you enter", p: ["When you save a pet owner's name or WhatsApp number, you decide why and how it is used. Tell your customers you keep these details, and use them only for their pet's stay."] },
@@ -281,14 +281,14 @@ export const en = {
     },
     terms: {
       title: "Terms of use",
-      intro: "Plain terms for using Pethommie while it is in early access.",
+      intro: "Plain terms for using Siomofu while it is in early access.",
       sections: [
-        { h: "Early access", p: ["Pethommie is in early access. It can change, and some features are not ready yet. We try to keep it working, but we cannot promise it will always be available or free of mistakes."] },
+        { h: "Early access", p: ["Siomofu is in early access. It can change, and some features are not ready yet. We try to keep it working, but we cannot promise it will always be available or free of mistakes."] },
         { h: "Your data and backups", p: ["Your data is kept on your own device. You are responsible for keeping backups. Clearing your browser's data, losing the device or switching browsers can erase it."] },
         { h: "Your messages and your customers", p: ["Messages go out from your own WhatsApp account, when you press send. You are responsible for what you send and for following WhatsApp's own rules. You are also responsible for the personal details of your customers that you enter."] },
-        { h: "Money", p: ["Pethommie does not take, hold or move money. It only records what you tell it. Check every payment in your own bank or e-wallet."] },
-        { h: "Using it properly", p: ["Do not use Pethommie to break the law, to send spam, or to harm other people or the service."] },
-        { h: "Limits", p: ["To the extent the law allows, Pethommie is provided as it is, and we are not liable for lost business, lost data or indirect loss that comes from using it."] },
+        { h: "Money", p: ["Siomofu does not take, hold or move money. It only records what you tell it. Check every payment in your own bank or e-wallet."] },
+        { h: "Using it properly", p: ["Do not use Siomofu to break the law, to send spam, or to harm other people or the service."] },
+        { h: "Limits", p: ["To the extent the law allows, Siomofu is provided as it is, and we are not liable for lost business, lost data or indirect loss that comes from using it."] },
         { h: "Changes and law", p: ["We may update these terms, and will change the date above when we do. These terms are governed by the laws of Indonesia."] },
         { h: "Contact", p: ["Questions about these terms: {contact}."] },
       ],
@@ -299,9 +299,9 @@ export const en = {
     updated: "Last updated 4 November 2026",
     privacy: {
       title: "Privacy policy",
-      intro: "What Pethommie collects, why, where it is kept and for how long, in plain words.",
+      intro: "What Siomofu collects, why, where it is kept and for how long, in plain words.",
       sections: [
-        { h: "Who we are", p: ["Pethommie is pet hotel management software for operators in Indonesia, run by {company}. For the data your account holds, we are the controller; for your customers' details that you enter, you are, and we process them for you."] },
+        { h: "Who we are", p: ["Siomofu is pet hotel management software for operators in Indonesia, run by {company}. For the data your account holds, we are the controller; for your customers' details that you enter, you are, and we process them for you."] },
         { h: "What we collect", p: ["Your account: when you sign in with Google, we receive your name, email address and profile picture from Google. We never see your Google password.", "Your hotel: what you enter in the app, such as the hotel's name and WhatsApp number, units and prices, pets, owners' names and WhatsApp numbers, bookings, payments, invoices, care notes and expenses.", "The sign-up form on this website: what you type into it.", "Technical data: our hosts keep ordinary server logs (such as your device's address and the pages or requests made) for security and reliability. We run no advertising or analytics trackers."] },
         { h: "Why", p: ["To run the service you signed up for: to sign you in, keep your hotel's data and bring it to each device you use, and answer your questions. We do not sell your data or use it for advertising."] },
         { h: "Where it is kept", p: ["Hotel data and accounts are stored with Supabase, on servers in Singapore. The website and its small API run on Vercel. Google handles sign-in. Your browser also keeps a copy of your hotel so the app works offline.", "The demo hotels behind \"Try now\" stay in your browser only and are never sent to us."] },
@@ -316,15 +316,15 @@ export const en = {
     },
     terms: {
       title: "Terms of use",
-      intro: "Plain terms for using Pethommie while it is in early access.",
+      intro: "Plain terms for using Siomofu while it is in early access.",
       sections: [
-        { h: "Early access", p: ["Pethommie is in early access. It can change, and some features are not ready yet. We try to keep it working, but we cannot promise it will always be available or free of mistakes."] },
+        { h: "Early access", p: ["Siomofu is in early access. It can change, and some features are not ready yet. We try to keep it working, but we cannot promise it will always be available or free of mistakes."] },
         { h: "Your account", p: ["You sign in with Google. Keep that account safe: whoever can sign in to it can open your hotel."] },
         { h: "Your data and backups", p: ["Your hotel's data is kept on our servers and on your devices. Keep a backup now and then (Settings → Download backup): early access software can have mistakes."] },
         { h: "Your messages and your customers", p: ["Messages go out from your own WhatsApp account, when you press send. You are responsible for what you send and for following WhatsApp's own rules. You are also responsible for the personal details of your customers that you enter."] },
-        { h: "Money", p: ["Pethommie does not take, hold or move money. It only records what you tell it. Check every payment in your own bank or e-wallet."] },
-        { h: "Using it properly", p: ["Do not use Pethommie to break the law, to send spam, or to harm other people or the service."] },
-        { h: "Limits", p: ["To the extent the law allows, Pethommie is provided as it is, and we are not liable for lost business, lost data or indirect loss that comes from using it."] },
+        { h: "Money", p: ["Siomofu does not take, hold or move money. It only records what you tell it. Check every payment in your own bank or e-wallet."] },
+        { h: "Using it properly", p: ["Do not use Siomofu to break the law, to send spam, or to harm other people or the service."] },
+        { h: "Limits", p: ["To the extent the law allows, Siomofu is provided as it is, and we are not liable for lost business, lost data or indirect loss that comes from using it."] },
         { h: "Changes and law", p: ["We may update these terms, and will change the date above when we do. These terms are governed by the laws of Indonesia."] },
         { h: "Contact", p: ["Questions about these terms: {contact}."] },
       ],
@@ -341,7 +341,7 @@ export const en = {
     email: "Email",
     whatsapp: "WhatsApp",
     rights: "All rights reserved.",
-    art: "Ink illustrations made for Pethommie",
+    art: "Ink illustrations made for Siomofu",
   },
   validation: {
     tooShort: (n: number) => `Use at least ${n} characters.`,

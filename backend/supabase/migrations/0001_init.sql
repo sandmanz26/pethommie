@@ -1,4 +1,4 @@
--- Pethommie: the hotel's data on a server.
+-- Siomofu: the hotel's data on a server.
 --
 -- Target: Postgres 15+ on Supabase (it provides the `auth` schema, `auth.uid()` and the `anon` / `authenticated`
 -- roles). Nothing here is applied by the app yet: see docs/backend/. The shape mirrors web/src/app/domain/types.ts

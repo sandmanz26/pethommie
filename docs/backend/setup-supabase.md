@@ -1,9 +1,9 @@
-# Pasang Supabase untuk Pethommie (langkah demi langkah)
+# Pasang Supabase untuk Siomofu (langkah demi langkah)
 
 Panduan ini untuk pemilik produk, bukan untuk developer. Ikuti dari atas ke bawah, klik demi klik. Kira-kira **30–45
 menit**. Hasil akhirnya:
 
-- database Pethommie di Supabase (semua tabel, aturan keamanan, dan fungsi sinkron),
+- database Siomofu di Supabase (semua tabel, aturan keamanan, dan fungsi sinkron),
 - login Google di aplikasi,
 - API kecil di Vercel (`/api/...`) yang bisa dicoba dengan `curl` atau dari browser.
 
@@ -14,7 +14,7 @@ Yang Anda perlukan: akun Supabase (gratis), akun Google, akses ke project Vercel
 > - **Project ref**: kode acak project Supabase Anda, misalnya `abcdxyzqwerty`. Terlihat di alamat
 >   `https://abcdxyzqwerty.supabase.co`. Di panduan ini ditulis `<project-ref>`: ganti dengan milik Anda.
 > - **Anon key / Publishable key**: kunci *publik*. Aman ada di browser; keamanan data dijaga oleh aturan di database (RLS).
-> - **Service role key / Secret key**: kunci *rahasia* yang bisa melewati semua aturan. **Tidak dipakai** oleh Pethommie
+> - **Service role key / Secret key**: kunci *rahasia* yang bisa melewati semua aturan. **Tidak dipakai** oleh Siomofu
 >   saat ini. Jangan disalin ke mana pun.
 
 ---
@@ -25,7 +25,7 @@ Yang Anda perlukan: akun Supabase (gratis), akun Google, akses ke project Vercel
 2. Klik **New project**.
 3. Isi:
    - **Organization**: organisasi Anda (buat baru kalau belum ada).
-   - **Project name**: `pethommie`.
+   - **Project name**: `siomofu`.
    - **Database Password**: klik **Generate a password**, lalu **simpan di password manager**. Aplikasi tidak memakainya,
      tetapi Anda butuh kalau suatu saat ada masalah.
    - **Region**: **Southeast Asia (Singapore)** (paling dekat ke Indonesia; baca catatan lokasi data di
@@ -59,7 +59,7 @@ Tabel hasil harus seperti ini (kolom **status** = **OK** di semua baris):
 
 | no | pemeriksaan | diharapkan | status |
 |---|---|---|---|
-| 1 | Tabel Pethommie ada | 14 dari 14 | OK |
+| 1 | Tabel Siomofu ada | 14 dari 14 | OK |
 | 2 | Row Level Security (RLS) menyala di semua tabel | 14 dari 14 | OK |
 | 3 | Aturan akses (policies) | 20 | OK |
 | 4 | Fungsi (create_hotel, my_hotel, pull_changes, push_changes, ...) | 12 dari 12 | OK |
@@ -78,7 +78,7 @@ Mau memeriksa lagi nanti? Buka query baru, tempel isi **`backend/supabase/verify
 membaca, tidak mengubah apa pun.
 
 > **Jangan jalankan `setup.sql` dua kali.** Kalau tidak sengaja, tidak apa-apa: file itu langsung berhenti dengan pesan
-> `PETHOMMIE SUDAH TERPASANG` dan tidak mengubah apa pun. Semua isi `setup.sql` berjalan dalam satu transaksi: kalau
+> `SIOMOFU SUDAH TERPASANG` dan tidak mengubah apa pun. Semua isi `setup.sql` berjalan dalam satu transaksi: kalau
 > gagal di tengah, tidak ada yang tersimpan, jadi Anda bisa memperbaiki penyebabnya lalu menjalankannya lagi.
 >
 > Nanti kalau developer menambah migrasi baru (misalnya `0008_...sql`), **jangan** jalankan ulang `setup.sql`:
@@ -254,7 +254,7 @@ await api("owners");
 
 | Yang terlihat | Artinya | Yang dilakukan |
 |---|---|---|
-| `PETHOMMIE SUDAH TERPASANG` saat Run `setup.sql` | Database sudah terpasang sebelumnya | Tidak ada yang berubah. Jalankan `verify.sql` untuk memeriksa. |
+| `SIOMOFU SUDAH TERPASANG` saat Run `setup.sql` | Database sudah terpasang sebelumnya | Tidak ada yang berubah. Jalankan `verify.sql` untuk memeriksa. |
 | `relation "auth.users" does not exist` | SQL dijalankan bukan di project Supabase | Jalankan di **SQL Editor** project Supabase Anda. |
 | Error lain saat Run `setup.sql` | Ada yang gagal; tidak ada yang tersimpan (satu transaksi) | Salin pesan error-nya ke developer. Setelah diperbaiki, jalankan lagi. |
 | Ada baris **CEK** di pemeriksaan | Sebagian tidak terpasang | Lihat kolom `hasil` (misalnya "kurang: ..."), kirim tangkapan layar ke developer. |
@@ -283,3 +283,23 @@ await api("owners");
   dengan menjalankan migrasi satu per satu, semua pemeriksaan OK (juga dengan default grant Supabase), dan menjalankan
   ulang tidak mengubah apa pun.
 - Belum pernah dijalankan di project Supabase sungguhan dari repo ini: langkah 3 di atas adalah pemeriksaan nyata pertama.
+
+## Domain siomofu.xyz
+
+Setelah domain dihubungkan, semua alamat di bawah memakai `https://siomofu.xyz`. Alamat lama
+`pethommie-web.vercel.app` tetap jalan, jadi biarkan keduanya terdaftar selama masa transisi.
+
+1. **Vercel** → project → **Settings → Domains** → **Add** → `siomofu.xyz` (dan `www.siomofu.xyz`, arahkan ke
+   `siomofu.xyz`). Vercel menampilkan record DNS yang harus diisi.
+2. **Penjual domain** (tempat membeli siomofu.xyz) → pengaturan DNS → isi record dari Vercel (biasanya `A` untuk
+   `@` ke `76.76.21.21` dan `CNAME` untuk `www` ke `cname.vercel-dns.com`). Tunggu sampai Vercel menulis **Valid**
+   (beberapa menit sampai beberapa jam).
+3. **Supabase** → Authentication → URL Configuration:
+   - **Site URL**: `https://siomofu.xyz`
+   - **Redirect URLs**: tambahkan `https://siomofu.xyz/app/auth/callback` (biarkan yang lama).
+4. **Google Cloud** → OAuth client:
+   - **Authorized JavaScript origins**: tambahkan `https://siomofu.xyz`.
+   - **OAuth consent screen → Authorized domains**: tambahkan `siomofu.xyz`.
+   - Redirect URI tetap `https://<project-ref>.supabase.co/auth/v1/callback` (tidak berubah).
+
+Kode aplikasi tidak perlu diubah: semua link (booking link, login Google, API) memakai alamat yang sedang dibuka.

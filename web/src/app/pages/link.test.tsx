@@ -51,7 +51,7 @@ describe("the booking link page", () => {
   });
 });
 
-describe("a request from the link, opened in Pethommie", () => {
+describe("a request from the link, opened in Siomofu", () => {
   it("fills in a new owner and pet, the dates and the source", async () => {
     const user = await open("/app/bookings/new?in=2099-03-01&out=2099-03-04&source=link&owner=Sari&wa=6285711112222&petName=Rex&species=dog");
     expect(await screen.findByLabelText(/owner name/i)).toHaveValue("Sari");

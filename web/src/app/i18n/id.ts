@@ -5,9 +5,9 @@ export const appId: AppMessages = {
   common: {
     save: "Simpan",
     cancel: "Batal",
-    updateReady: "Versi baru Pethommie sudah siap.",
+    updateReady: "Versi baru Siomofu sudah siap.",
     reload: "Muat ulang",
-    offlineReady: "Pethommie siap dipakai tanpa internet.",
+    offlineReady: "Siomofu siap dipakai tanpa internet.",
     dismiss: "Tutup",
     saveFailed: "Perubahanmu tidak bisa disimpan di browser ini (penyimpanan penuh atau diblokir). Ekspor cadangan dari Pengaturan sebelum menutup tab ini.",
     delete: "Hapus",
@@ -56,7 +56,7 @@ export const appId: AppMessages = {
       password: "Password",
       submit: "Masuk",
       busy: "Sedang masuk…",
-      noAccount: "Baru di Pethommie?",
+      noAccount: "Baru di Siomofu?",
       toRegister: "Buat akun",
       failed: "Email atau password salah. Coba lagi.",
       tryLead: "Mau lihat-lihat dulu?",
@@ -106,7 +106,7 @@ export const appId: AppMessages = {
     },
     demo: {
       eyebrow: "Coba sekarang",
-      title: "Coba Pethommie dengan hotel contoh",
+      title: "Coba Siomofu dengan hotel contoh",
       lead: "Pilih satu, langsung masuk. Tanpa daftar, tanpa password.",
       apart: "Demo punya datanya sendiri, terpisah dari akun asli dan hanya tersimpan di browser ini.",
       accounts: {
@@ -146,7 +146,7 @@ export const appId: AppMessages = {
     stepOf: (i, n) => `Langkah ${i} dari ${n}`,
     sample: "Coba dengan data contoh dulu",
     welcome: {
-      title: "Selamat datang di Pethommie",
+      title: "Selamat datang di Siomofu",
       lead: "Ayo siapkan pet hotel-mu. Tiga langkah singkat, sekitar dua menit. Semuanya bisa diubah nanti.",
       items: [
         { title: "Hotel-mu", body: "Nama dan nomor WhatsApp untuk rapor ke pemilik." },
@@ -643,7 +643,7 @@ export const appId: AppMessages = {
   },
   more: {
     title: "Lainnya",
-    lead: "Semua yang lain di Pethommie.",
+    lead: "Semua yang lain di Siomofu.",
   },
   customersPage: {
     title: "Pelanggan",
@@ -704,7 +704,7 @@ export const appId: AppMessages = {
   },
   linkPage: {
     title: "Link booking",
-    lead: "Satu link untuk bio Instagram, status WhatsApp, atau Google Maps. Pemilik mengirim permintaan; masuk ke WhatsApp-mu, siap dicatat di Pethommie dengan sekali ketuk.",
+    lead: "Satu link untuk bio Instagram, status WhatsApp, atau Google Maps. Pemilik mengirim permintaan; masuk ke WhatsApp-mu, siap dicatat di Siomofu dengan sekali ketuk.",
     noNumber: "Isi dulu nomor WhatsApp hotelmu: permintaan dikirim ke sana.",
     toSettings: "Buka Pengaturan",
     optionsTitle: "Isi link",
@@ -722,7 +722,7 @@ export const appId: AppMessages = {
     shareText: (hotel: string, url: string) => `Booking penitipan di ${hotel}: ${url}`,
     honest: "Tidak ada yang otomatis terbooking dan tidak ada pembayaran di halaman itu: kamu yang mengonfirmasi setiap permintaan lewat chat. Kalau isinya diubah, link-nya ikut berubah, jadi bagikan yang baru.",
     howTitle: "Cara kerjanya",
-    how: ["Pemilik membuka link-mu lalu mengisi tanggal, anabul, dan nomornya.", "Permintaannya terbuka di WhatsApp, ditujukan ke kamu. Mereka tinggal tekan kirim.", "Kamu membalas, lalu ketuk link di bagian bawah pesannya: booking terbuka di Pethommie, sudah terisi."],
+    how: ["Pemilik membuka link-mu lalu mengisi tanggal, anabul, dan nomornya.", "Permintaannya terbuka di WhatsApp, ditujukan ke kamu. Mereka tinggal tekan kirim.", "Kamu membalas, lalu ketuk link di bagian bawah pesannya: booking terbuka di Siomofu, sudah terisi."],
   },
   expenseCategories: {
     food: "Pakan",
@@ -949,7 +949,7 @@ export const appId: AppMessages = {
     faq: [
       { q: "Di mana datanya disimpan?", a: "Di browser ini, di perangkat ini. Belum dikirim ke mana pun. Kalau data browser dihapus, datanya hilang, jadi unduh cadangan dari Pengaturan sesekali." },
       { q: "Bisa dipakai tanpa sinyal?", a: "Bisa. Buka sekali saat ada koneksi, setelah itu aplikasi terbuka dan jalan tanpa koneksi. Kamu juga bisa memasangnya di layar utama HP." },
-      { q: "Apakah Pethommie mengirim pesan WhatsApp untukku?", a: "Tidak. Pethommie menuliskan pesannya dan membuka WhatsApp-mu sendiri dengan pesan sudah terisi. Kamu yang menekan kirim, jadi pesan datang dari nomormu dan tidak ada yang terkirim tanpa kamu." },
+      { q: "Apakah Siomofu mengirim pesan WhatsApp untukku?", a: "Tidak. Siomofu menuliskan pesannya dan membuka WhatsApp-mu sendiri dengan pesan sudah terisi. Kamu yang menekan kirim, jadi pesan datang dari nomormu dan tidak ada yang terkirim tanpa kamu." },
       { q: "Apakah menerima pembayaran?", a: "Tidak. Kamu mencatat uang yang sudah kamu terima (tunai, QRIS, transfer). Selalu cek dulu uangnya masuk di aplikasi bank." },
       { q: "Apa bedanya mode Sederhana dan Lengkap?", a: "Sederhana menampilkan yang dipakai setiap hari, dengan isian lebih sedikit. Lengkap menambah pelanggan, tagihan, invoice, pajak, dan semua opsi. Ini hanya mengubah tampilan, jadi boleh ganti kapan saja tanpa kehilangan apa pun." },
       { q: "Bisakah dua HP memakai hotel yang sama?", a: "Belum. Tiap browser menyimpan datanya sendiri. Sinkron antar-perangkat hadir bersama akun di server." },
@@ -1170,7 +1170,7 @@ export const appId: AppMessages = {
   },
   settingsTax: {
     title: "Pajak",
-    lead: "Pethommie hanya memperkirakan. Tanyakan ke akuntanmu mana yang berlaku untukmu.",
+    lead: "Siomofu hanya memperkirakan. Tanyakan ke akuntanmu mana yang berlaku untukmu.",
     regime: "Cara usaha dikenai pajak",
     regimes: { none: "Belum diatur", final_umkm: "PPh final 0,5% (UMKM)", general: "PPh umum" },
     taxpayer: "Wajib pajak",
@@ -1196,8 +1196,8 @@ export const appId: AppMessages = {
     export: "Unduh cadangan (JSON)",
     import: "Pulihkan cadangan",
     importConfirm: "Ganti semua data di browser ini dengan cadangan? Data yang ada sekarang akan hilang.",
-    importBad: "Berkas itu bukan cadangan Pethommie, atau rusak. Tidak ada yang diubah.",
-    importNewer: "Cadangan itu berasal dari Pethommie versi lebih baru. Muat ulang halaman untuk memperbarui, lalu coba lagi. Tidak ada yang diubah.",
+    importBad: "Berkas itu bukan cadangan Siomofu, atau rusak. Tidak ada yang diubah.",
+    importNewer: "Cadangan itu berasal dari Siomofu versi lebih baru. Muat ulang halaman untuk memperbarui, lalu coba lagi. Tidak ada yang diubah.",
     importDone: "Cadangan dipulihkan.",
     loadSample: "Ganti dengan data contoh",
     reset: "Hapus semua data",
@@ -1269,7 +1269,7 @@ export const appId: AppMessages = {
     saved: "Tersimpan.",
     backToBooking: "Kembali ke booking baru",
     gateTitle: "Atur aturan booking dulu, ya",
-    gateBody: "Sebelum booking pertama, kasih tahu Pethommie cara kamu menghitung satu hari, jam antar dan jemput, dan denda telat jemput. Cuma sebentar.",
+    gateBody: "Sebelum booking pertama, kasih tahu Siomofu cara kamu menghitung satu hari, jam antar dan jemput, dan denda telat jemput. Cuma sebentar.",
     gateButton: "Atur aturan booking",
     formHint: (from: string, until: string, pickUp: string) => `Antar ${from}–${until} · jemput paling lambat ${pickUp}`,
     formHint24: (from: string, until: string) => `Antar ${from}–${until} · tiap 24 jam sejak diantar = 1 hari`,

@@ -28,7 +28,7 @@ export async function open(browser, locale, { phone = false, viewport = { width:
   return { context, page }
 }
 
-/** Signs in to the small sample hotel as it comes (demo@pethommie.id, filled with sample data, simple mode). */
+/** Signs in to the small sample hotel as it comes (demo@siomofu.xyz, filled with sample data, simple mode). */
 /** Opens a "Try now" sample hotel (the first, small one unless told otherwise); `show` hides the demo strip and offer. */
 export async function signIn(page, demo = 0) {
   await page.goto(`${base}/app/try`)

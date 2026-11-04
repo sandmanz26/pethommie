@@ -23,6 +23,7 @@ function hash128(text: string): number[] {
  */
 export function uuidFor(id: string, scope = ""): string {
   if (isUuid(id)) return id.toLowerCase();
+  // Kept as "pethommie:" on purpose (the product's first name): changing it would change every id already synced.
   const hex = hash128(`pethommie:${scope}:${id}`).map((w) => w.toString(16).padStart(8, "0")).join("");
   // Mark it as version 4, variant 1, so it passes any UUID check.
   const v = `${hex.slice(0, 12)}4${hex.slice(13, 16)}${((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16)}${hex.slice(17, 32)}`;

@@ -1,4 +1,4 @@
--- Pethommie, step 2: what a stay can carry beyond its nights.
+-- Siomofu, step 2: what a stay can carry beyond its nights.
 --   * charges (add-ons and discounts) and companions (pets sharing the cage),
 --   * numbered invoices that can't be altered once made,
 --   * the owner's language and the hotel's business and tax settings.

@@ -83,7 +83,7 @@ export function FinancePage() {
         lead={x.lead}
         actions={
           <>
-            <Button variant="secondary" icon="download" onClick={() => downloadCsv(`pethommie-profit-loss-${months[0]}-${months[months.length - 1]}.csv`, profitLossCsv(pl))}>
+            <Button variant="secondary" icon="download" onClick={() => downloadCsv(`siomofu-profit-loss-${months[0]}-${months[months.length - 1]}.csv`, profitLossCsv(pl))}>
               {x.exportCsv}
             </Button>
             <Button variant="ghost" icon="printer" onClick={() => window.print()}>

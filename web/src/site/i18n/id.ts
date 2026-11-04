@@ -3,12 +3,12 @@ import type { Messages } from "./en";
 
 export const id: Messages = {
   meta: {
-    title: "Pethommie · Aplikasi manajemen pet hotel untuk Indonesia",
+    title: "Siomofu · Aplikasi manajemen pet hotel untuk Indonesia",
     description:
       "Aplikasi manajemen pet hotel untuk Indonesia, dengan atau tanpa kandang: kalender booking, check-in, pembayaran, catatan harian, dan rapor ke WhatsApp pemilik. Jalan tanpa sinyal.",
   },
   brand: {
-    name: "Pethommie",
+    name: "Siomofu",
     tagline: "Aplikasi manajemen pet hotel",
   },
   nav: {
@@ -80,11 +80,11 @@ export const id: Messages = {
     eyebrow: "Sebelum dan sesudah",
     title: "Dari buku dan chat, ke satu aplikasi.",
     before: {
-      label: "Tanpa Pethommie",
+      label: "Tanpa Siomofu",
       points: ["Bolak-balik buku untuk cari tempat kosong", "Scroll chat lama untuk cari yang belum bayar", "Ketik rapor satu per satu tiap malam", "Akhir bulan baru menebak untung atau rugi"],
     },
     after: {
-      label: "Dengan Pethommie",
+      label: "Dengan Siomofu",
       points: ["Tempat kosong langsung terlihat di kalender", "Satu daftar yang belum bayar, siap diingatkan", "Rapor sudah tertulis, tinggal kirim", "Uang masuk dan keluar dihitung otomatis"],
     },
   },
@@ -114,8 +114,8 @@ export const id: Messages = {
     ],
     tabsLabel: "Layar",
     pointsLabel: "Yang layar ini kerjakan untukmu",
-    phoneAlt: (title: string) => `Pethommie di HP: ${title}`,
-    imageAlt: (title: string) => `Layar Pethommie: ${title}`,
+    phoneAlt: (title: string) => `Siomofu di HP: ${title}`,
+    imageAlt: (title: string) => `Layar Siomofu: ${title}`,
     cta: { href: "/app/register", label: "Coba gratis 30 hari" },
     ctaNote: "Tanpa kartu kredit · siap dalam lima menit",
     prices: { href: "#pricing", label: "Lihat harga" },
@@ -138,7 +138,7 @@ export const id: Messages = {
   kinds: {
     eyebrow: "Untuk kamu",
     title: "Apa pun cara penitipanmu, pas.",
-    lead: "Pakai kandang, ruang bersama, rumah sendiri, atau cattery: Pethommie menyesuaikan caramu bekerja.",
+    lead: "Pakai kandang, ruang bersama, rumah sendiri, atau cattery: Siomofu menyesuaikan caramu bekerja.",
     items: [
       { art: "kind-cages", title: "Pet hotel dengan kandang", body: "Satu kandang, satu tamu. Harga per ukuran kandang.", tag: "Kandang" },
       { art: "kind-rooms", title: "Tanpa kandang & daycare", body: "Ruang bersama untuk beberapa anabul. Tiap anabul dihitung satu tempat.", tag: "Ruang bersama" },
@@ -192,8 +192,8 @@ export const id: Messages = {
       { q: "Bisa dipakai di HP?", a: "Bisa. Buka di browser HP Android lalu tambahkan ke layar utama. Di laptop juga bisa." },
       { q: "Perlu internet?", a: "Hanya saat pertama kali dibuka. Setelah itu terbuka dan jalan tanpa koneksi." },
       { q: "Di mana datanya disimpan?", a: "Di perangkatmu sendiri untuk sekarang, bukan di server kami. Unduh cadangan dari Pengaturan sesekali." },
-      { q: "Apakah mengirim WhatsApp sendiri?", a: "Tidak. Pethommie menuliskan pesan lalu membuka WhatsApp-mu. Kamu yang menekan kirim, dari nomormu sendiri." },
-      { q: "Apakah mengurus pajak saya?", a: "Pethommie memperkirakan PPh final dan mengekspor lembar untuk akuntanmu. Tidak melaporkan apa pun." },
+      { q: "Apakah mengirim WhatsApp sendiri?", a: "Tidak. Siomofu menuliskan pesan lalu membuka WhatsApp-mu. Kamu yang menekan kirim, dari nomormu sendiri." },
+      { q: "Apakah mengurus pajak saya?", a: "Siomofu memperkirakan PPh final dan mengekspor lembar untuk akuntanmu. Tidak melaporkan apa pun." },
       { q: "Staf saya bisa ikut memakai?", a: "Bisa di perangkat yang sama untuk sekarang. Login staf terpisah dan sinkron antar-HP segera hadir." },
     ],
   },
@@ -249,7 +249,7 @@ export const id: Messages = {
     errPet: "Tulis nama anabulmu dulu ya.",
     errDates: "Tanggal jemput harus setelah tanggal antar, dan bukan tanggal yang sudah lewat.",
     sent: "WhatsApp sudah terbuka dengan permintaanmu. Tekan kirim di sana, nanti hotel membalas.",
-    poweredBy: "Halaman booking oleh Pethommie",
+    poweredBy: "Halaman booking oleh Siomofu",
   },
   notFound: {
     title: "Halaman ini tidak ada di gulungan.",
@@ -261,9 +261,9 @@ export const id: Messages = {
     back: "Kembali ke beranda",
     privacy: {
       title: "Kebijakan privasi",
-      intro: "Halaman ini menjelaskan apa yang dilakukan Pethommie terhadap informasi saat ini. Akan diperbarui sebelum hal itu berubah.",
+      intro: "Halaman ini menjelaskan apa yang dilakukan Siomofu terhadap informasi saat ini. Akan diperbarui sebelum hal itu berubah.",
       sections: [
-        { h: "Siapa kami", p: ["Pethommie adalah aplikasi manajemen pet hotel untuk operator di Indonesia, dijalankan oleh {company}."] },
+        { h: "Siapa kami", p: ["Siomofu adalah aplikasi manajemen pet hotel untuk operator di Indonesia, dijalankan oleh {company}."] },
         { h: "Yang tetap di perangkatmu", p: ["Semua yang kamu ketik di aplikasi (hotel, kandang, anabul, nama dan nomor WhatsApp pemilik, booking, pembayaran, catatan perawatan) dan yang kamu isi di formulir daftar di situs ini disimpan di browsermu sendiri. Pada tahap ini data itu tidak dikirim ke kami maupun ke pihak lain.", "Artinya kami tidak bisa melihatnya, dan tidak bisa memulihkannya untukmu. Gunakan Pengaturan → Unduh cadangan untuk menyimpan salinan."] },
         { h: "Yang kami terima", p: ["Penyedia hosting situs kami (Vercel) menyimpan log server biasa, seperti alamat perangkat dan halaman yang diminta, untuk keamanan dan keandalan. Kami tidak memakai pelacak iklan maupun analitik, dan font disajikan dari situs ini, bukan dari pihak ketiga."] },
         { h: "Data pemilik hewan yang kamu masukkan", p: ["Saat kamu menyimpan nama atau nomor WhatsApp pemilik hewan, kamulah yang menentukan tujuan dan cara pemakaiannya. Beri tahu pelangganmu bahwa kamu menyimpan data ini, dan pakai hanya untuk penitipan hewannya."] },
@@ -274,14 +274,14 @@ export const id: Messages = {
     },
     terms: {
       title: "Ketentuan penggunaan",
-      intro: "Ketentuan sederhana untuk memakai Pethommie selama masa akses awal.",
+      intro: "Ketentuan sederhana untuk memakai Siomofu selama masa akses awal.",
       sections: [
-        { h: "Akses awal", p: ["Pethommie masih dalam akses awal. Bisa berubah, dan sebagian fitur belum siap. Kami berusaha menjaganya tetap jalan, tetapi tidak bisa menjanjikan selalu tersedia atau bebas kesalahan."] },
+        { h: "Akses awal", p: ["Siomofu masih dalam akses awal. Bisa berubah, dan sebagian fitur belum siap. Kami berusaha menjaganya tetap jalan, tetapi tidak bisa menjanjikan selalu tersedia atau bebas kesalahan."] },
         { h: "Datamu dan cadangan", p: ["Datamu disimpan di perangkatmu sendiri. Kamu bertanggung jawab menyimpan cadangan. Menghapus data browser, kehilangan perangkat, atau berganti browser dapat menghapusnya."] },
         { h: "Pesan dan pelangganmu", p: ["Pesan terkirim dari akun WhatsApp-mu sendiri, saat kamu menekan kirim. Kamu bertanggung jawab atas isi pesan dan atas kepatuhan pada aturan WhatsApp. Kamu juga bertanggung jawab atas data pribadi pelanggan yang kamu masukkan."] },
-        { h: "Uang", p: ["Pethommie tidak menerima, menyimpan, atau memindahkan uang. Aplikasi hanya mencatat yang kamu masukkan. Cek setiap pembayaran di bank atau dompet digitalmu sendiri."] },
-        { h: "Pemakaian yang wajar", p: ["Jangan memakai Pethommie untuk melanggar hukum, mengirim spam, atau merugikan orang lain maupun layanan."] },
-        { h: "Batasan", p: ["Sejauh diizinkan hukum, Pethommie disediakan apa adanya, dan kami tidak bertanggung jawab atas kerugian usaha, kehilangan data, atau kerugian tidak langsung akibat pemakaiannya."] },
+        { h: "Uang", p: ["Siomofu tidak menerima, menyimpan, atau memindahkan uang. Aplikasi hanya mencatat yang kamu masukkan. Cek setiap pembayaran di bank atau dompet digitalmu sendiri."] },
+        { h: "Pemakaian yang wajar", p: ["Jangan memakai Siomofu untuk melanggar hukum, mengirim spam, atau merugikan orang lain maupun layanan."] },
+        { h: "Batasan", p: ["Sejauh diizinkan hukum, Siomofu disediakan apa adanya, dan kami tidak bertanggung jawab atas kerugian usaha, kehilangan data, atau kerugian tidak langsung akibat pemakaiannya."] },
         { h: "Perubahan dan hukum", p: ["Kami dapat memperbarui ketentuan ini dan akan mengubah tanggal di atas ketika melakukannya. Ketentuan ini tunduk pada hukum Indonesia."] },
         { h: "Kontak", p: ["Pertanyaan tentang ketentuan ini: {contact}."] },
       ],
@@ -291,9 +291,9 @@ export const id: Messages = {
     updated: "Terakhir diperbarui 4 November 2026",
     privacy: {
       title: "Kebijakan privasi",
-      intro: "Apa yang dikumpulkan Pethommie, untuk apa, disimpan di mana dan berapa lama, dengan bahasa sederhana.",
+      intro: "Apa yang dikumpulkan Siomofu, untuk apa, disimpan di mana dan berapa lama, dengan bahasa sederhana.",
       sections: [
-        { h: "Siapa kami", p: ["Pethommie adalah perangkat lunak pengelolaan pet hotel untuk operator di Indonesia, dijalankan oleh {company}. Untuk data akunmu, kami pengendalinya; untuk data pelangganmu yang kamu masukkan, kamu pengendalinya dan kami memprosesnya untukmu."] },
+        { h: "Siapa kami", p: ["Siomofu adalah perangkat lunak pengelolaan pet hotel untuk operator di Indonesia, dijalankan oleh {company}. Untuk data akunmu, kami pengendalinya; untuk data pelangganmu yang kamu masukkan, kamu pengendalinya dan kami memprosesnya untukmu."] },
         { h: "Apa yang kami kumpulkan", p: ["Akunmu: saat kamu masuk dengan Google, kami menerima nama, alamat email, dan foto profilmu dari Google. Kami tidak pernah melihat password Google-mu.", "Hotelmu: yang kamu isi di aplikasi, seperti nama dan WhatsApp hotel, unit dan harga, anabul, nama dan WhatsApp pemilik, booking, pembayaran, invoice, catatan perawatan, dan pengeluaran.", "Formulir pendaftaran di situs ini: apa yang kamu ketik di sana.", "Data teknis: penyedia hosting kami menyimpan log server biasa (seperti alamat perangkat dan halaman atau permintaan yang dibuat) untuk keamanan dan keandalan. Kami tidak memakai pelacak iklan atau analitik."] },
         { h: "Untuk apa", p: ["Untuk menjalankan layanan yang kamu pakai: memasukkanmu, menyimpan data hotelmu dan membawanya ke setiap perangkat yang kamu pakai, serta menjawab pertanyaanmu. Kami tidak menjual datamu atau memakainya untuk iklan."] },
         { h: "Disimpan di mana", p: ["Data hotel dan akun disimpan di Supabase, di server Singapura. Situs dan API kecilnya berjalan di Vercel. Login ditangani Google. Browser-mu juga menyimpan salinan hotelmu agar aplikasi tetap jalan tanpa internet.", "Hotel contoh di \"Coba demo\" hanya ada di browser-mu dan tidak pernah dikirim ke kami."] },
@@ -308,15 +308,15 @@ export const id: Messages = {
     },
     terms: {
       title: "Syarat penggunaan",
-      intro: "Syarat sederhana untuk memakai Pethommie selama masa akses awal.",
+      intro: "Syarat sederhana untuk memakai Siomofu selama masa akses awal.",
       sections: [
-        { h: "Akses awal", p: ["Pethommie masih dalam masa akses awal. Fiturnya bisa berubah dan sebagian belum siap. Kami berusaha menjaganya tetap berjalan, tapi tidak bisa menjamin selalu tersedia atau bebas kesalahan."] },
+        { h: "Akses awal", p: ["Siomofu masih dalam masa akses awal. Fiturnya bisa berubah dan sebagian belum siap. Kami berusaha menjaganya tetap berjalan, tapi tidak bisa menjamin selalu tersedia atau bebas kesalahan."] },
         { h: "Akunmu", p: ["Kamu masuk dengan Google. Jaga akun itu: siapa pun yang bisa masuk ke akun itu bisa membuka hotelmu."] },
         { h: "Data dan cadangan", p: ["Data hotelmu disimpan di server kami dan di perangkatmu. Sesekali simpan cadangan (Pengaturan → Unduh cadangan): perangkat lunak akses awal bisa punya kesalahan."] },
         { h: "Pesan dan pelangganmu", p: ["Pesan dikirim dari akun WhatsApp-mu sendiri, saat kamu menekan kirim. Kamu bertanggung jawab atas isi pesan dan aturan WhatsApp. Kamu juga bertanggung jawab atas data pribadi pelanggan yang kamu masukkan."] },
-        { h: "Uang", p: ["Pethommie tidak menerima, menyimpan, atau memindahkan uang. Pethommie hanya mencatat yang kamu masukkan. Cek setiap pembayaran di bank atau dompet digitalmu sendiri."] },
-        { h: "Pemakaian yang benar", p: ["Jangan memakai Pethommie untuk melanggar hukum, mengirim spam, atau merugikan orang lain maupun layanan ini."] },
-        { h: "Batasan", p: ["Sejauh diizinkan hukum, Pethommie disediakan apa adanya, dan kami tidak bertanggung jawab atas kehilangan usaha, kehilangan data, atau kerugian tidak langsung dari pemakaiannya."] },
+        { h: "Uang", p: ["Siomofu tidak menerima, menyimpan, atau memindahkan uang. Siomofu hanya mencatat yang kamu masukkan. Cek setiap pembayaran di bank atau dompet digitalmu sendiri."] },
+        { h: "Pemakaian yang benar", p: ["Jangan memakai Siomofu untuk melanggar hukum, mengirim spam, atau merugikan orang lain maupun layanan ini."] },
+        { h: "Batasan", p: ["Sejauh diizinkan hukum, Siomofu disediakan apa adanya, dan kami tidak bertanggung jawab atas kehilangan usaha, kehilangan data, atau kerugian tidak langsung dari pemakaiannya."] },
         { h: "Perubahan dan hukum", p: ["Kami bisa memperbarui syarat ini dan akan mengubah tanggal di atas saat melakukannya. Syarat ini tunduk pada hukum Indonesia."] },
         { h: "Kontak", p: ["Pertanyaan soal syarat ini: {contact}."] },
       ],
@@ -333,7 +333,7 @@ export const id: Messages = {
     email: "Email",
     whatsapp: "WhatsApp",
     rights: "Hak cipta dilindungi.",
-    art: "Ilustrasi tinta dibuat untuk Pethommie",
+    art: "Ilustrasi tinta dibuat untuk Siomofu",
   },
   validation: {
     tooShort: (n: number) => `Minimal ${n} karakter.`,

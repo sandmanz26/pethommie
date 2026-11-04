@@ -1,6 +1,6 @@
 # Architecture
 
-How Pethommie is put together, the rules that keep it that way, and what to change when it grows.
+How Siomofu is put together, the rules that keep it that way, and what to change when it grows.
 
 ## 1. Shape
 
@@ -67,10 +67,10 @@ API-backed `AuthService` (sessions in an HttpOnly cookie, the same rules in `val
 server, rate limiting, email verification, password reset) and change one line in `defaultService.ts`.
 
 Mock data is gated by `DEMO_MODE` (`VITE_DEMO_MODE`, on by default for now): three seeded accounts and a
-sign-up helper. `demo@pethommie.id` starts with `store/sampleData.ts` (a small hotel, Simple mode),
-`pro@pethommie.id` with `store/sampleAdvanced.ts` (a big hotel with cages and shared rooms and six months of history,
+sign-up helper. `demo@siomofu.xyz` starts with `store/sampleData.ts` (a small hotel, Simple mode),
+`pro@siomofu.xyz` with `store/sampleAdvanced.ts` (a big hotel with cages and shared rooms and six months of history,
 generated from a fixed seed around today's date, every stay within the booking rules; Advanced mode), and
-`baru@pethommie.id` with nothing, so it goes to onboarding. Turn it off for a real launch and delete `demoAccounts.ts`
+`baru@siomofu.xyz` with nothing, so it goes to onboarding. Turn it off for a real launch and delete `demoAccounts.ts`
 with the mock service.
 
 ### State
@@ -309,3 +309,11 @@ Honest list, roughly by importance:
    until the hotel confirms (all need a server, §3).
 8. Expenses are typed in by hand, and the finance report and the tax page are estimates from what was recorded, not
    bookkeeping. The backup reminder only knows about downloads made in the same browser.
+
+## The name
+
+The product was first called Pethommie and is now **Siomofu** (siomofu.xyz). Some internal names keep the old one on
+purpose, because changing them would lose people's data: the browser storage keys (`pethommie.app.v1.<account>`,
+`pethommie.auth.*`, `pethommie.locale`, …), the seed of the stable ids in `web/src/app/sync/ids.ts`, the GitHub
+repository and the Vercel project (`pethommie-web`). Everything a person sees says Siomofu.
+

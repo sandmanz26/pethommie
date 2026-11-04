@@ -15,8 +15,8 @@ export default defineConfig({
       scope: '/app',
       injectRegister: false,
       manifest: {
-        name: 'Pethommie',
-        short_name: 'Pethommie',
+        name: 'Siomofu',
+        short_name: 'Siomofu',
         description: 'Pet hotel management: bookings, cage calendar, check-in, daily care log and WhatsApp reports.',
         lang: 'id',
         start_url: '/app/',
