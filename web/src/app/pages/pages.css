@@ -13,7 +13,7 @@
   padding: 8px 8px 8px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow);
 }
 .pg-alerts li span { font-size: 0.85em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.pg-settings { max-width: 720px; }
+.pg-settings { max-width: 720px; margin-inline: auto; width: 100%; }
 
 /* ---------- Onboarding ---------- */
 .pg-flow { display: grid; gap: 18px; animation: pg-flow-in 0.35s ease both; }
