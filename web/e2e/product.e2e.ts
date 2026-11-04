@@ -69,6 +69,8 @@ test('an invoice for a stay shows up in the register and in the tax estimate', a
   await signInWithSampleData(page)
   await openNav(page)
   await page.getByRole('link', { name: 'Invoices' }).click()
+  // the sample invoice is dated at its stay's check-out, which can fall in last month: show every month
+  await page.getByLabel(/all months/i).check()
   await expect(page.getByRole('link', { name: /^INV-\d{4}-0001$/ })).toBeVisible()
   await page.getByRole('link', { name: /^INV-\d{4}-0001$/ }).click()
   await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeVisible()
@@ -109,6 +111,7 @@ for (const [name, viewport, locale] of [
       await page.goto('/app/transactions')
       const receiptHref = (await page.locator('a[href^="/app/receipts/"]').first().getAttribute('href')) ?? '/app'
       await page.goto('/app/invoices')
+      await page.getByLabel(/all months|semua bulan/i).check() // the sample invoice may be dated last month
       const invoiceHref = (await page.locator('a[href^="/app/invoices/"]').first().getAttribute('href')) ?? '/app'
       const paths = [receiptHref, invoiceHref,
         '/app', '/app/calendar', '/app/bookings', '/app/bookings/new', '/app/pets', '/app/cages', '/app/settings', '/app/settings/booking',
@@ -200,6 +203,8 @@ test.describe('after the film', () => {
     await page.goto('/')
     await expect(page.locator('.topbar a[href="/app/login"]')).toBeVisible()
     await expect(page.locator('.topbar a[href="/app/try"]')).toHaveCount(0)
+    // the hero sits in the film's deck: wait until the film has loaded and the deck has settled
+    await page.locator('.film__veil.is-done').waitFor({ state: 'attached', timeout: 60_000 })
     await page.locator('.hero__try a').click()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(/hotel contoh|sample hotel/i)
     await expect(page.getByRole('button', { name: /buka demo ini|open this demo/i })).toHaveCount(3)
