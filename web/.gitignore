@@ -28,3 +28,6 @@ media/turntable-hd/
 
 test-results
 playwright-report
+
+# Working video masters too large for git (GitHub refuses files over 100 MB); frames in public/films are the shipped copy.
+media/*-4k.mp4
