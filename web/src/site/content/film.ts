@@ -20,7 +20,8 @@ export type Film = {
 const frames = (id: FilmId) => (i: number) => `/films/${id}/f${String(i + 1).padStart(4, "0")}.webp`;
 
 export const films: Record<FilmId, Film> = {
-  // a flat illustrated pop-up turntable, 17.75 s: 9 HD keyframe-to-keyframe clips (Wan 3.0, 1080p)
+  // a flat illustrated pop-up turntable, 17.75 s: 9 HD keyframe-to-keyframe clips (Wan 3.0, 1080p), upscaled to 4K
+  // (Topaz, same picture) and cropped around the diorama, so frames are 1800x1512 and sharp on 2x screens
   turntable: {
     id: "turntable",
     frameCount: 213,
@@ -28,8 +29,8 @@ export const films: Record<FilmId, Film> = {
     paper: "#f6ebd8",
     frameSrc: frames("turntable"),
     poster: "/films/turntable/f0205.webp",
-    // the diorama, measured over every frame (it stays within x 511-1067, y 180-825), plus a margin
-    focus: { x: 470, y: 150, w: 640, h: 710 },
+    // the diorama, plus a margin, in these frames' pixels (the crop's edges are plain paper on every frame)
+    focus: { x: 306, y: 162, w: 1152, h: 1278 },
   },
 };
 
