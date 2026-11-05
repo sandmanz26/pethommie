@@ -2,12 +2,15 @@ import { company } from "@/shared/company";
 import { useAppT } from "@/app/i18n/useAppT";
 import { Heading, Muted } from "@/app/design-system/atoms/Text";
 import { PageHeader } from "@/app/design-system/organisms/PageHeader";
+import { useSyncedRepository } from "@/app/sync/SyncContext";
 import "./pages.css";
 
-/** A short guide, the questions people ask first, and how to reach us. Static: no data. */
+/** A short guide, and the questions people ask first. A server account answers a couple of them differently. */
 export function HelpPage() {
   const { t } = useAppT();
   const h = t.help;
+  const synced = useSyncedRepository();
+  const faq = synced ? h.faq.map((f) => (f.key in h.faqSynced ? { ...f, a: h.faqSynced[f.key as keyof typeof h.faqSynced] } : f)) : h.faq;
   const hasContact = Boolean(company.email || company.whatsapp);
   return (
     <>
@@ -24,8 +27,8 @@ export function HelpPage() {
 
         <section className="ds-panel" aria-labelledby="help-faq">
           <Heading level={2} size="md"><span id="help-faq">{h.faqTitle}</span></Heading>
-          {h.faq.map((f) => (
-            <details key={f.q} className="ds-earlier">
+          {faq.map((f) => (
+            <details key={f.key} className="ds-earlier">
               <summary>{f.q}</summary>
               <p className="ds-muted">{f.a}</p>
             </details>

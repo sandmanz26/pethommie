@@ -280,7 +280,7 @@ export function SettingsPage() {
 
       <section className="ds-form__section pg-settings" id="data">
         <Heading level={2} size="md">{t.settings.data}</Heading>
-        <Muted>{t.settings.dataLead}</Muted>
+        <Muted>{synced ? t.settings.dataLeadSynced : t.settings.dataLead}</Muted>
         <div className="ds-form__actions">
           <Button variant="secondary" icon="download" onClick={exportJson}>
             {t.settings.export}
