@@ -232,15 +232,34 @@ disclaimer needed because nothing is estimated):
   Google OAuth JavaScript origin `https://siomofu.xyz`; authorized domain `siomofu.xyz` (Search Console TXT if Google
   asks, needed to Publish). Google consent screen is still **Testing** (only test users can log in) → Publish later.
 
-**In progress (a background agent was building it; check `git status` — uncommitted files belong to it):**
-- **Email system** (Resend): migration **0008** (booking_requests table for public link requests, notification_outbox,
-  enqueue triggers, claim RPC), `/api/requests` (public, anon), `/api/email/dispatch` (secret header, service role
-  server-side, retries 1m/10m/1h), bilingual templates, Settings toggles, Requests list in the app,
-  `docs/backend/email-setup.md` (Resend domain `mail.siomofu.xyz`, DNS records in Vercel, env vars RESEND_API_KEY,
-  EMAIL_FROM, EMAIL_DISPATCH_SECRET, SUPABASE_SERVICE_ROLE_KEY, APP_URL; owner pastes **0008 only**).
-  If the agent's work is incomplete, verify/finish it, run all checks, then commit.
+**LOST WORK, 24 Nov 2026 — important lesson:** the email-system build described below as "in progress" on 4 Nov was
+never committed (it was being held back correctly, per the rule below, until it passed all checks). The cloud
+session it ran in was reclaimed between then and 24 Nov, and an ephemeral session's uncommitted working tree does
+**not** survive that — so the entire thing (migration 0008, the API routes, the UI, the docs) was lost and had to be
+restarted from zero on 24 Nov. Nothing here was anyone's mistake; it's just how this environment works. **New rule,
+going forward: a multi-file build that will take more than one sitting must commit in small, independently-working
+checkpoints as it goes** (e.g. "migration 0008 alone, tests green" → commit; "API routes using it" → commit; "UI using
+the API" → commit), each with its own §6 line here, instead of holding everything uncommitted until the whole feature
+is done. A checkpoint commit can be imperfect/unused-by-the-UI-yet as long as it doesn't break tsc/eslint/vitest/e2e
+on its own — "all checks green" gates *that commit*, not "the whole feature is finished."
 
-**Next candidates:** server guard for `create_hotel` (0008/0009), synced "sample data" and Settings data text,
+**In progress (rebuild started 24 Nov 2026, committing incrementally this time — see commit list as it grows):**
+- **Email system** (Resend), rebuilding from the 4 Nov plan: migration **0008** (booking_requests table for public
+  link requests, notification_outbox, enqueue triggers, claim RPC), `/api/requests` (public, anon),
+  `/api/email/dispatch` (secret header, service role server-side, retries 1m/10m/1h), bilingual templates, Settings
+  toggle, Requests list in the app, `docs/backend/email-setup.md` (Resend domain `mail.siomofu.xyz`, DNS records in
+  Vercel, env vars RESEND_API_KEY, EMAIL_FROM, EMAIL_DISPATCH_SECRET, SUPABASE_SERVICE_ROLE_KEY, APP_URL; owner
+  pastes **0008 only** into Supabase SQL Editor once it exists).
+- **PostHog** (analytics), starting from zero: not yet in the codebase at all as of 24 Nov. Plan: `posthog-js`
+  client lib, init gated behind an env var (so it's a no-op with nothing configured, same pattern as Supabase),
+  an owner setup guide in Indonesian for creating the PostHog project and pasting the key.
+- **Google OAuth security review**, requested by the owner 24 Nov: checking the current Google sign-in setup
+  (`docs/backend/google-login.md`, `web/src/app/supabase/client.ts`, `supabaseAuthService.ts`,
+  `AuthCallbackPage.tsx`) for misconfiguration, plus a click-by-click Indonesian checklist for what the owner should
+  verify in Google Cloud Console / Supabase dashboard (authorized origins, redirect URIs, consent screen publish
+  state, authorized domains).
+
+**Next candidates:** server guard for `create_hotel` (needs a migration after 0008), synced "sample data" text,
 Realtime sync, staff accounts, deposits on the booking link, payments (Xendit/DOKU), Search Console verification,
 privacy review by a lawyer, Dribbble/portfolio assets refresh with the Siomofu name (earlier assets in the session
 scratchpad say Pethommie and `app.pethommie.com`).
@@ -251,6 +270,9 @@ scratchpad say Pethommie and `app.pethommie.com`).
 - Vercel returns 200 HTML for missing paths (SPA fallback): check real content, not status codes.
 - Invoice e2e tests must tick "All months": the sample invoice can be dated last month.
 - The film's hero link needs the film veil to finish before clicking (`.film__veil.is-done`).
+- A cloud session's container is ephemeral: uncommitted work does not survive the session ending/being reclaimed.
+  A long build must commit in small working checkpoints as it goes (see §6, "LOST WORK, 24 Nov 2026"), not wait
+  for the whole feature to be done before the first commit.
 - Google rejects `vercel.app` as an authorized domain; use `<ref>.supabase.co` and your own domain.
 - Supabase SQL Editor warns "destructive operation" for `drop constraint` in 0003 and about RLS: both safe to run.
 - Higgsfield uploads: `media_upload` → curl PUT with `If-None-Match: *` and the content type → `media_confirm`.
