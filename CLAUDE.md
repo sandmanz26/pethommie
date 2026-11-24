@@ -226,13 +226,16 @@ disclaimer needed because nothing is estimated):
   Indonesian pet-hotel owners — treat the *existence* of the frictions as reasonably supported, don't add any
   frequency/percentage claim to the copy. **Waiting on the owner's go-ahead before touching any file.**
 
-**Owner's setup progress (as of 4 Nov 2026):**
-- Supabase project created, `setup.sql` (0001–0007) run, Google sign-in configured, Vercel env vars set (owner says
-  "the rest is done"). Not yet verified by me on the live site.
-- Domain siomofu.xyz: Vercel nameservers active, DNS resolving; waiting for HTTPS/"Valid Configuration".
-  After it's valid: Supabase Site URL → `https://siomofu.xyz` + redirect `https://siomofu.xyz/app/auth/callback`;
-  Google OAuth JavaScript origin `https://siomofu.xyz`; authorized domain `siomofu.xyz` (Search Console TXT if Google
-  asks, needed to Publish). Google consent screen is still **Testing** (only test users can log in) → Publish later.
+**Owner's setup progress:**
+- Supabase project created, `setup.sql` (0001–0007, now 0001–0008) run, Google sign-in configured, Vercel env vars
+  set (owner says "the rest is done"). Not yet verified by me against the live Supabase project (no credentials
+  here) — the owner needs to do the checks in google-login.md §5–6 and email-setup.md §6 themselves.
+- Domain siomofu.xyz: **HTTPS confirmed live 24 Nov 2026** (`curl -sI https://siomofu.xyz` → 200, title "Siomofu") —
+  this was still "waiting for Valid Configuration" as of 4 Nov. Still open, per the new §6 security checklist in
+  [google-login.md](docs/backend/google-login.md): whether Supabase's Site URL/Redirect URLs and Google's
+  Authorized domains/JavaScript origins have actually been updated to `siomofu.xyz` now that it's live, and whether
+  the Google consent screen has been moved from **Testing** to **Published** — I can't check either dashboard
+  myself (no login), so ask the owner to walk through that checklist and report back.
 
 **LOST WORK, 24 Nov 2026 — important lesson:** the email-system build described below as "in progress" on 4 Nov was
 never committed (it was being held back correctly, per the rule below, until it passed all checks). The cloud
@@ -279,12 +282,17 @@ CSP (`vercel.json`) gained `https://*.posthog.com https://*.i.posthog.com` in `c
 module: proves nothing is called without a key, `init` runs exactly once even if `initAnalytics` is called twice,
 and the exact privacy-relevant options). Not yet tried against a live PostHog project.
 
-**In progress:**
-- **Google OAuth security review**, requested by the owner 24 Nov: checking the current Google sign-in setup
-  (`docs/backend/google-login.md`, `web/src/app/supabase/client.ts`, `supabaseAuthService.ts`,
-  `AuthCallbackPage.tsx`) for misconfiguration, plus a click-by-click Indonesian checklist for what the owner should
-  verify in Google Cloud Console / Supabase dashboard (authorized origins, redirect URIs, consent screen publish
-  state, authorized domains).
+**Shipped 24 Nov 2026 — Google OAuth security review**, requested by the owner: code-level review of
+`web/src/app/supabase/client.ts`, `supabaseAuthService.ts`, `AuthCallbackPage.tsx`, `landing.ts` found nothing to
+fix (PKCE flow; the OAuth redirect target is always this site's own origin, built from `window.location.origin`,
+never from user input — `landing.ts`'s `landingAfterLogin` also refuses any `next` that doesn't start with `/app`,
+so no open-redirect even indirectly; no secret key in the browser). Added a **§6 Security checklist** to
+[google-login.md](docs/backend/google-login.md): 7 rows, each naming one dashboard setting (Google Cloud Console
+or Supabase), what it should be, and the exact error a visitor sees if it's wrong — plus updated every authorized-
+domain/origin/redirect-URL example in that doc from `pethommie-web.vercel.app`-only to include `siomofu.xyz` now
+that its HTTPS is confirmed live (see above). This is a documentation/checklist deliverable, not code — nothing to
+test; the owner still needs to walk the checklist against the real dashboards themselves, which I can't do without
+their login.
 
 **Next candidates:** server guard for `create_hotel` (needs a migration after 0008), synced "sample data" text,
 Realtime sync, staff accounts, deposits on the booking link, payments (Xendit/DOKU), Search Console verification,
