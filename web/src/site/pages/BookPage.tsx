@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useDocumentMeta } from "@/shared/hooks/useDocumentMeta";
-import { decodeCard, requestMessage, type LinkRequest, type LinkSpecies } from "@/shared/lib/bookingLink";
+import { decodeCard, postBookingRequest, requestMessage, type LinkRequest, type LinkSpecies } from "@/shared/lib/bookingLink";
 import { formatWhatsapp, normaliseWhatsapp } from "@/shared/lib/phone";
 import { isValidISODate, LIMITS, textIssue } from "@/shared/lib/validate";
 import { useFocusInvalid } from "@/shared/hooks/useFocusInvalid";
@@ -86,6 +86,7 @@ export function BookPage() {
     if (Object.keys(err).length) return void focusInvalid();
     const text = requestMessage(card!, r, window.location.origin);
     window.open(`https://wa.me/${card!.wa}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+    void postBookingRequest(card!, r);
     setSent(true);
   }
 

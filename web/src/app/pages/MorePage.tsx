@@ -9,6 +9,7 @@ import { PageHeader } from "@/app/design-system/organisms/PageHeader";
 import { Link } from "react-router-dom";
 import "./pages.css";
 import { useUnitWords } from "@/app/i18n/useUnitWords";
+import { useSyncedRepository } from "@/app/sync/SyncContext";
 
 /** Everything that isn't on the phone's tab bar, plus the mode switch. Also reachable on a wide screen. */
 export function MorePage() {
@@ -17,11 +18,12 @@ export function MorePage() {
   const { advanced } = useMode();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const synced = useSyncedRepository() !== null;
   return (
     <>
       <PageHeader title={t.more.title} lead={t.more.lead} />
       <nav className="pg-morelist" aria-label={t.more.title}>
-        {moreItems(advanced).map((i) => (
+        {moreItems(advanced, synced).map((i) => (
           <Link key={i.to} to={i.to} className="pg-morelist__item">
             <NavIcon name={i.art} />
             <span>{i.key === "cages" ? units.many : t.nav[i.key]}</span>

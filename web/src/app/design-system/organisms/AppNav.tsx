@@ -5,6 +5,7 @@ import { NavIcon } from "@/app/design-system/atoms/NavIcon";
 import { Button } from "@/app/design-system/atoms/Button";
 import { useMode } from "@/app/mode/ModeProvider";
 import { useAppT } from "@/app/i18n/useAppT";
+import { useSyncedRepository } from "@/app/sync/SyncContext";
 import { sideNav, tabItems, type NavGroup, type NavItem, type NavKey } from "./navItems";
 import "./organisms.css";
 
@@ -12,7 +13,8 @@ import "./organisms.css";
 export function AppNav({ hotelName, onLogout, labels = {} }: { hotelName: string; onLogout: () => void; labels?: Partial<Record<NavKey, string>> }) {
   const { t } = useAppT();
   const { advanced } = useMode();
-  const nav = sideNav(advanced);
+  const synced = useSyncedRepository() !== null;
+  const nav = sideNav(advanced, synced);
   const link = (i: NavItem) => (
     <NavLink key={i.to} to={i.to} end={i.end} className="ds-sidenav__link">
       <NavIcon name={i.art} />

@@ -30,8 +30,11 @@ export function priceList(data: Pick<HotelData, "cages" | "settings">, lang: Lan
   return [...bySize, ...rooms];
 }
 
-/** The card a link carries, or null while the hotel has no WhatsApp number for requests to go to. */
-export function cardFor(data: HotelData, o: LinkOptions): LinkCard | null {
+/**
+ * The card a link carries, or null while the hotel has no WhatsApp number for requests to go to. `hotelId` is the
+ * synced hotel's server id (undefined for a local-only hotel) — see LinkCard.hid.
+ */
+export function cardFor(data: HotelData, o: LinkOptions, hotelId?: string): LinkCard | null {
   if (!data.hotel?.whatsapp) return null;
   return {
     v: 1,
@@ -44,5 +47,6 @@ export function cardFor(data: HotelData, o: LinkOptions): LinkCard | null {
     prices: o.showPrices ? priceList(data, o.lang) : [],
     species: o.species,
     note: o.note.trim(),
+    hid: hotelId,
   };
 }

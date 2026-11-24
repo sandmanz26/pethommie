@@ -34,6 +34,7 @@ import { DashboardPage } from "./DashboardPage";
 import { TransactionsPage } from "./TransactionsPage";
 import { ReceiptPage } from "./ReceiptPage";
 import { LinkPage } from "./LinkPage";
+import { RequestsPanel } from "./RequestsPanel";
 import { ExpensesPage } from "./ExpensesPage";
 import { FinancePage } from "./FinancePage";
 import { InvoicesPage } from "./InvoicesPage";
@@ -129,6 +130,7 @@ export default function AppRoutes() {
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="transactions" element={<TransactionsPage />} />
               <Route path="link" element={<LinkPage />} />
+              <Route path="requests" element={<RequestsPanel />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="finance" element={<FinancePage />} />
               <Route path="receipts/:bookingId/:paymentId" element={<ReceiptPage />} />

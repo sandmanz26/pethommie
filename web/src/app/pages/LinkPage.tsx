@@ -7,6 +7,7 @@ import { linkFor, type LinkSpecies } from "@/shared/lib/bookingLink";
 import { formatWhatsapp } from "@/shared/lib/phone";
 import { useAuth } from "@/app/auth/AuthProvider";
 import { useStore } from "@/app/store/AppStore";
+import { useSyncedRepository } from "@/app/sync/SyncContext";
 import { useAppT, messagesFor } from "@/app/i18n/useAppT";
 import { Button } from "@/app/design-system/atoms/Button";
 import { Checkbox } from "@/app/design-system/atoms/Checkbox";
@@ -34,6 +35,7 @@ function readOptions(key: string, fallback: LinkOptions): LinkOptions {
 export function LinkPage() {
   const { data } = useStore();
   const { account } = useAuth();
+  const synced = useSyncedRepository();
   const { t } = useAppT();
   const p = t.linkPage;
   const key = keyFor(account?.id ?? "local");
@@ -49,7 +51,7 @@ export function LinkPage() {
     }
   }, [key, o]);
 
-  const card = useMemo(() => cardFor(data, o), [data, o]);
+  const card = useMemo(() => cardFor(data, o, synced?.hotelId() ?? undefined), [data, o, synced]);
   const url = card ? linkFor(window.location.origin, card) : "";
   const shown = messagesFor(o.lang);
 

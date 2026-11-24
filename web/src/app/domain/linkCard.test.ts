@@ -24,4 +24,14 @@ describe("the booking link card", () => {
   it("can't be made without a WhatsApp number to send requests to", () => {
     expect(cardFor({ ...data, hotel: { ...data.hotel!, whatsapp: "" } }, defaultLinkOptions(data))).toBeNull();
   });
+
+  it("carries the hotel's server id when it's synced, and nothing when it's local-only", () => {
+    const hotelId = "11111111-1111-4111-8111-111111111111";
+    const synced = cardFor(data, defaultLinkOptions(data), hotelId)!;
+    expect(synced.hid).toBe(hotelId);
+    expect(decodeCard(encodeCard(synced))!.hid).toBe(hotelId);
+    const local = cardFor(data, defaultLinkOptions(data))!;
+    expect(local.hid).toBeUndefined();
+    expect(decodeCard(encodeCard(local))!.hid).toBeUndefined();
+  });
 });

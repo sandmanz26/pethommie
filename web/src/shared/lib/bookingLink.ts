@@ -21,6 +21,13 @@ export type LinkCard = {
   prices: { label: string; price: number }[];
   species: LinkSpecies[];
   note: string;
+  /**
+   * The hotel's id on the server, only present once the hotel is synced (a Google account). When set, a request
+   * also becomes a booking_requests row (see docs/backend/email-setup.md) that emails the owner, alongside the
+   * WhatsApp message every link already sends. A local-only hotel has no id to attach that to, so its links work
+   * exactly as before this field existed.
+   */
+  hid?: string;
 };
 
 const SPECIES: LinkSpecies[] = ["cat", "dog", "rabbit", "other"];
@@ -42,6 +49,7 @@ function fromBase64Url(code: string) {
 export const encodeCard = (card: LinkCard) => toBase64Url(JSON.stringify(card));
 
 const text = (x: unknown, max = MAX_TEXT) => (typeof x === "string" ? x.trim().slice(0, max) : null);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** The card in a link, or null when the link is cut off, edited by hand or not one of ours. */
 export function decodeCard(code: string): LinkCard | null {
@@ -68,6 +76,7 @@ export function decodeCard(code: string): LinkCard | null {
       prices,
       species: species.length ? species : SPECIES,
       note: text(raw.note) ?? "",
+      hid: typeof raw.hid === "string" && UUID.test(raw.hid) ? raw.hid : undefined,
     };
   } catch {
     return null;
@@ -157,4 +166,38 @@ export function requestMessage(card: LinkCard, r: LinkRequest, origin: string): 
     w.forHotel,
     prefillUrl(origin, r),
   ].join("\n");
+}
+
+/**
+ * Alongside the WhatsApp message, a synced hotel's link (one with `hid`) also saves the request on the server, which
+ * emails the owner (see docs/backend/email-setup.md). Best-effort and silent on failure: the WhatsApp message is
+ * what the visitor actually sees succeed, so a flaky connection or a project without email set up must never block
+ * or show an error for that. A local-only hotel has no `hid`, so this does nothing for it — callers check `card.hid`
+ * before bothering to call this at all.
+ */
+export async function postBookingRequest(card: LinkCard, r: LinkRequest): Promise<void> {
+  if (!card.hid) return;
+  const wa = normaliseWhatsapp(r.ownerWa);
+  if (!wa) return;
+  try {
+    await fetch("/api/requests", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        hotelId: card.hid,
+        ownerName: r.ownerName.trim(),
+        ownerWa: wa,
+        petName: r.petName.trim(),
+        species: r.species,
+        breed: r.breed.trim(),
+        checkIn: r.checkIn,
+        checkOut: r.checkOut,
+        preference: r.preference,
+        notes: r.notes.trim(),
+        locale: card.lang,
+      }),
+    });
+  } catch {
+    // Silent: see the doc comment above.
+  }
 }

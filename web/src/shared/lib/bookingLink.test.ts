@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { decodeCard, encodeCard, linkFor, prefillUrl, requestMessage, type LinkCard, type LinkRequest } from "./bookingLink";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { decodeCard, encodeCard, linkFor, postBookingRequest, prefillUrl, requestMessage, type LinkCard, type LinkRequest } from "./bookingLink";
 
 const card: LinkCard = {
   v: 1,
@@ -56,5 +56,44 @@ describe("booking link", () => {
     const url = new URL(prefillUrl("https://p.app", request));
     expect(url.pathname).toBe("/app/bookings/new");
     expect(Object.fromEntries(url.searchParams)).toEqual({ in: "2026-11-10", out: "2026-11-13", source: "link", owner: "Sari", wa: "6281234567890", petName: "Mochi", species: "cat" });
+  });
+});
+
+describe("postBookingRequest", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("does nothing for a local-only hotel (no hid)", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    await postBookingRequest(card, request);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("posts the request's own fields for a synced hotel", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(new Response("{}"));
+    vi.stubGlobal("fetch", fetchSpy);
+    const hid = "11111111-1111-4111-8111-111111111111";
+    await postBookingRequest({ ...card, hid }, request);
+    expect(fetchSpy).toHaveBeenCalledWith("/api/requests", expect.objectContaining({ method: "POST" }));
+    const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(body).toEqual({
+      hotelId: hid,
+      ownerName: "Sari",
+      ownerWa: "6281234567890",
+      petName: "Mochi",
+      species: "cat",
+      breed: "Persia",
+      checkIn: "2026-11-10",
+      checkOut: "2026-11-13",
+      preference: "Ruang kucing (per anabul)",
+      notes: "Alergi ayam",
+      locale: "id",
+    });
+  });
+
+  it("never throws, even when the network fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    const hid = "11111111-1111-4111-8111-111111111111";
+    await expect(postBookingRequest({ ...card, hid }, request)).resolves.toBeUndefined();
   });
 });
