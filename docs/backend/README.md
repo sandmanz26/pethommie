@@ -64,6 +64,9 @@ owner's setup guide is [email-setup.md](email-setup.md) (Indonesian). Everything
 [notifications.md](notifications.md) (daily digests, vaccine reminders, browser push) is still only a plan, not
 built.
 
+Anonymous page-view analytics (PostHog, `web/src/shared/analytics.ts`) is built too, off until
+[analytics-setup.md](analytics-setup.md) (Indonesian) is followed.
+
 ## 3. Shape
 
 ```

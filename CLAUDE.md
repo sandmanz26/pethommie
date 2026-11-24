@@ -77,13 +77,15 @@ web/                    the app (React 19 + TypeScript strict + Vite 6 + react-r
   public/screens/       app screenshots for the landing tour (scripts/capture-screens.mjs + prepare-resources.py --screens)
   media/                video masters (*-4k.mp4 is gitignored: >100 MB)
 backend/supabase/
-  migrations/0001…0007  schema, RLS, triggers, sync RPCs. Never edit an applied migration: add the next number.
-  setup.sql             GENERATED (npm run build:setup-sql in web/) = 0001–0007 in one transaction + verify.sql
+  migrations/0001…0008  schema, RLS, triggers, sync RPCs, booking_requests/notification_outbox. Never edit an
+                        applied migration: add the next number.
+  setup.sql             GENERATED (npm run build:setup-sql in web/) = 0001–0008 in one transaction + verify.sql
   verify.sql            11 read-only checks, all should say OK
 docs/
   ARCHITECTURE.md       module boundaries, storage, "The name" section
   backend/README.md     backend plan & status; setup-supabase.md (owner guide, ID); google-login.md; api.md;
-                        notifications.md (email/push plan); email-setup.md (being written, see §6)
+                        notifications.md (email/push plan, mostly unbuilt); email-setup.md (owner guide, ID, built);
+                        analytics-setup.md (owner guide, ID, PostHog, built)
 ```
 
 Module boundaries are lint-enforced: `shared` depends on neither; `site` may use `shared`; `app` may use `shared`;
@@ -265,10 +267,19 @@ each verified tsc+eslint+vitest+e2e green and confirmed deployed before the next
   (`web/src/app/pages/requestsPanel.test.tsx`); **nothing here has been run against a live Supabase + Resend
   project** — the owner needs to follow email-setup.md and do the Langkah 6 test themselves before trusting it.
 
+**Shipped 24 Nov 2026 — PostHog analytics**, from zero: `web/src/shared/analytics.ts` (`initAnalytics`/
+`trackPageview`), wired into `App.tsx` (`RouteAnalytics`, one `$pageview` per route change). `posthog-js` is
+dynamically imported (`import("posthog-js")` inside `initAnalytics`, not a top-level import) so it adds nothing to
+any bundle when `VITE_POSTHOG_KEY` is unset (true today) and loads as its own chunk even once it is. Deliberately
+narrow given the privacy policy hasn't had its lawyer review yet: page views only, `autocapture: false`,
+`capture_pageview: false` (tracked by hand instead), `disable_session_recording: true`, `respect_dnt: true`,
+`person_profiles: "identified_only"` and no `identify()` call anywhere — no profile is ever built for a person.
+CSP (`vercel.json`) gained `https://*.posthog.com https://*.i.posthog.com` in `connect-src`. Owner guide:
+`docs/backend/analytics-setup.md` (Indonesian). Tests: `web/src/shared/analytics.test.ts` (mocks the `posthog-js`
+module: proves nothing is called without a key, `init` runs exactly once even if `initAnalytics` is called twice,
+and the exact privacy-relevant options). Not yet tried against a live PostHog project.
+
 **In progress:**
-- **PostHog** (analytics), starting from zero: not yet in the codebase at all as of 24 Nov. Plan: `posthog-js`
-  client lib, init gated behind an env var (so it's a no-op with nothing configured, same pattern as Supabase),
-  an owner setup guide in Indonesian for creating the PostHog project and pasting the key.
 - **Google OAuth security review**, requested by the owner 24 Nov: checking the current Google sign-in setup
   (`docs/backend/google-login.md`, `web/src/app/supabase/client.ts`, `supabaseAuthService.ts`,
   `AuthCallbackPage.tsx`) for misconfiguration, plus a click-by-click Indonesian checklist for what the owner should

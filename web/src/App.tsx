@@ -1,5 +1,6 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { initAnalytics, trackPageview } from "@/shared/analytics";
 import { ErrorBoundary } from "@/shared/errors/ErrorBoundary";
 import { LocaleProvider, useLocale } from "@/shared/i18n/LocaleProvider";
 import { Loading } from "@/shared/ui/Loading";
@@ -17,11 +18,20 @@ function AppLoading() {
   return <Loading label={locale === "id" ? "Memuat…" : "Loading…"} />;
 }
 
+/** One page view per route change, only once PostHog is configured (see shared/analytics.ts). */
+function RouteAnalytics() {
+  const location = useLocation();
+  useEffect(() => trackPageview(location.pathname), [location.pathname]);
+  return null;
+}
+
 export default function App() {
+  useEffect(() => void initAnalytics(), []);
   return (
     <LocaleProvider>
       <ErrorBoundary>
         <BrowserRouter>
+          <RouteAnalytics />
           <Routes>
             <Route element={<SiteShell />}>
               <Route path="/" element={<LandingPage />} />
