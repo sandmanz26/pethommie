@@ -243,13 +243,29 @@ the API" → commit), each with its own §6 line here, instead of holding everyt
 is done. A checkpoint commit can be imperfect/unused-by-the-UI-yet as long as it doesn't break tsc/eslint/vitest/e2e
 on its own — "all checks green" gates *that commit*, not "the whole feature is finished."
 
-**In progress (rebuild started 24 Nov 2026, committing incrementally this time — see commit list as it grows):**
-- **Email system** (Resend), rebuilding from the 4 Nov plan: migration **0008** (booking_requests table for public
-  link requests, notification_outbox, enqueue triggers, claim RPC), `/api/requests` (public, anon),
-  `/api/email/dispatch` (secret header, service role server-side, retries 1m/10m/1h), bilingual templates, Settings
-  toggle, Requests list in the app, `docs/backend/email-setup.md` (Resend domain `mail.siomofu.xyz`, DNS records in
-  Vercel, env vars RESEND_API_KEY, EMAIL_FROM, EMAIL_DISPATCH_SECRET, SUPABASE_SERVICE_ROLE_KEY, APP_URL; owner
-  pastes **0008 only** into Supabase SQL Editor once it exists).
+**Rebuilt and shipped, 24 Nov 2026 (the email feature lost on 4 Nov, redone from zero in 4 committed checkpoints,
+each verified tsc+eslint+vitest+e2e green and confirmed deployed before the next one started):**
+- `5b2fc60` — migration 0008: `booking_requests` (anon-insertable, hotel members read/update via plain RLS, no
+  separate "claim" RPC — a simplification from the original 4 Nov plan) and `notification_outbox` (RLS on, zero
+  policies, service-role only). `setup.sql`/`verify.sql` regenerated, counts bumped.
+- `d72a4ca` — `/api/requests` (public, rate-limited, honeypot, same shape as `/api/join`) and
+  `/api/email/dispatch` (GET+POST, `x-dispatch-secret` header): Resend over plain `fetch` (no SDK), bilingual
+  templates, backoff 1m/10m/1h then gives up. A request tries to send its own email inline first; dispatch is the
+  retry/catch-up path.
+- `edce843` — wired into the UI: `LinkCard.hid` (the hotel's server id, only set for a synced hotel —
+  `web/src/shared/lib/bookingLink.ts`), `BookPage.tsx` posts to `/api/requests` best-effort alongside the existing
+  WhatsApp message, new `/app/requests` page (`RequestsPanel.tsx`) listing/claiming/dismissing requests, shown in
+  the sidebar only for a synced hotel (`navItems.ts` gained a `synced` filter alongside `advanced`).
+- `8c1b43c` — owner guide `docs/backend/email-setup.md` (Indonesian, click-by-click): Resend account + domain
+  verification, the five env vars, pasting migration 0008, and an external-scheduler note for the optional
+  retry safety net (Vercel's own Cron can't attach the secret header this needs).
+- **Known gaps, stated honestly**: no Settings toggle to turn the email off (always sends); the synced branch of
+  `RequestsPanel` (real rows, claim/dismiss) has no automated test — this harness has no synced-account/Supabase
+  test infrastructure, only the local-only early-return path is covered
+  (`web/src/app/pages/requestsPanel.test.tsx`); **nothing here has been run against a live Supabase + Resend
+  project** — the owner needs to follow email-setup.md and do the Langkah 6 test themselves before trusting it.
+
+**In progress:**
 - **PostHog** (analytics), starting from zero: not yet in the codebase at all as of 24 Nov. Plan: `posthog-js`
   client lib, init gated behind an env var (so it's a no-op with nothing configured, same pattern as Supabase),
   an owner setup guide in Indonesian for creating the PostHog project and pasting the key.
