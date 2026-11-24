@@ -7,14 +7,17 @@
 with
 expected_tables(name) as (
   values ('hotels'), ('hotel_members'), ('cages'), ('owners'), ('pets'), ('bookings'), ('payments'), ('care_entries'),
-         ('reports_sent'), ('join_requests'), ('booking_pets'), ('charges'), ('invoices'), ('expenses')
+         ('reports_sent'), ('join_requests'), ('booking_pets'), ('charges'), ('invoices'), ('expenses'),
+         ('booking_requests'), ('notification_outbox')
 ),
 expected_functions(name) as (
   values ('create_hotel'), ('my_hotel'), ('pull_changes'), ('push_changes'), ('sync_tables'), ('is_member'), ('is_owner'),
-         ('touch_updated_at'), ('add_creator_as_owner'), ('keep_unit_within_capacity'), ('refuse_archived_unit'), ('protect_invoice')
+         ('touch_updated_at'), ('add_creator_as_owner'), ('keep_unit_within_capacity'), ('refuse_archived_unit'), ('protect_invoice'),
+         ('enqueue_booking_request_email')
 ),
 expected_triggers(name) as (
-  values ('hotels_creator_is_owner'), ('bookings_unit_capacity'), ('bookings_not_in_archived_unit'), ('invoices_protect')
+  values ('hotels_creator_is_owner'), ('bookings_unit_capacity'), ('bookings_not_in_archived_unit'), ('invoices_protect'),
+         ('booking_requests_enqueue_email')
 ),
 public_tables as (
   select c.relname as name, c.relrowsecurity as rls
@@ -30,23 +33,23 @@ public_triggers as (
   where n.nspname = 'public' and not t.tgisinternal
 ),
 checks(no, pemeriksaan, diharapkan, hasil) as (
-  select 1, 'Tabel Siomofu ada', '14 dari 14',
-    (select count(*) from expected_tables e where e.name in (select name from public_tables)) || ' dari 14'
+  select 1, 'Tabel Siomofu ada', '16 dari 16',
+    (select count(*) from expected_tables e where e.name in (select name from public_tables)) || ' dari 16'
     || coalesce(' (kurang: ' || (select string_agg(e.name, ', ') from expected_tables e where e.name not in (select name from public_tables)) || ')', '')
   union all
-  select 2, 'Row Level Security (RLS) menyala di semua tabel', '14 dari 14',
-    (select count(*) from public_tables t where t.rls and t.name in (select name from expected_tables)) || ' dari 14'
+  select 2, 'Row Level Security (RLS) menyala di semua tabel', '16 dari 16',
+    (select count(*) from public_tables t where t.rls and t.name in (select name from expected_tables)) || ' dari 16'
     || coalesce(' (mati: ' || (select string_agg(t.name, ', ') from public_tables t where not t.rls and t.name in (select name from expected_tables)) || ')', '')
   union all
-  select 3, 'Aturan akses (policies)', '20',
+  select 3, 'Aturan akses (policies)', '23',
     (select count(*) from pg_policies where schemaname = 'public')::text
   union all
-  select 4, 'Fungsi (create_hotel, my_hotel, pull_changes, push_changes, ...)', '12 dari 12',
-    (select count(*) from expected_functions e where e.name in (select name from public_functions)) || ' dari 12'
+  select 4, 'Fungsi (create_hotel, my_hotel, pull_changes, push_changes, ...)', '13 dari 13',
+    (select count(*) from expected_functions e where e.name in (select name from public_functions)) || ' dari 13'
     || coalesce(' (kurang: ' || (select string_agg(e.name, ', ') from expected_functions e where e.name not in (select name from public_functions)) || ')', '')
   union all
-  select 5, 'Trigger penting (pemilik hotel, kapasitas kandang, unit diarsip, invoice)', '4 dari 4',
-    (select count(*) from expected_triggers e where e.name in (select name from public_triggers)) || ' dari 4'
+  select 5, 'Trigger penting (pemilik hotel, kapasitas kandang, unit diarsip, invoice)', '5 dari 5',
+    (select count(*) from expected_triggers e where e.name in (select name from public_triggers)) || ' dari 5'
   union all
   select 6, 'Ekstensi btree_gist terpasang', 'ya',
     case when exists (select 1 from pg_extension where extname = 'btree_gist') then 'ya' else 'tidak' end

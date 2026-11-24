@@ -8,7 +8,7 @@
 -- Aman dijalankan ulang: semuanya dalam satu transaksi (gagal di tengah = tidak ada yang tersimpan), dan kalau
 -- Siomofu sudah terpasang, file ini berhenti di awal dengan pesan "SIOMOFU SUDAH TERPASANG" tanpa mengubah apa pun.
 --
--- Isi: 0001_init.sql, 0002_charges_companions_invoices.sql, 0003_shared_rooms_payment_kinds_sources.sql, 0004_rates_cancellations_archive_expenses.sql, 0005_booking_holds.sql, 0006_stay_rules.sql, 0007_sync_functions.sql, lalu verify.sql.
+-- Isi: 0001_init.sql, 0002_charges_companions_invoices.sql, 0003_shared_rooms_payment_kinds_sources.sql, 0004_rates_cancellations_archive_expenses.sql, 0005_booking_holds.sql, 0006_stay_rules.sql, 0007_sync_functions.sql, 0008_booking_requests_email.sql, lalu verify.sql.
 -- File ini DIBUAT OTOMATIS dari backend/supabase/migrations/ oleh `cd web && npm run build:setup-sql`.
 -- Jangan diedit langsung: ubah / tambah file migrasi, lalu jalankan perintah itu lagi.
 -- ====================================================================================================================
@@ -794,6 +794,93 @@ revoke all on function public.sync_tables(), public.create_hotel(uuid, text, tex
 grant execute on function public.sync_tables(), public.create_hotel(uuid, text, text, text, jsonb), public.my_hotel(),
   public.pull_changes(uuid, timestamptz), public.push_changes(uuid, jsonb, timestamptz) to authenticated;
 
+-- ====================================================================================================================
+-- MIGRASI 0008_booking_requests_email.sql
+-- ====================================================================================================================
+
+-- Siomofu, step 8: booking requests from the public link, and the email notifications they queue.
+--
+-- A synced hotel's booking link embeds its id (web/src/shared/lib/bookingLink.ts, `hid`). A visitor's request on
+-- /book then becomes a row here, alongside the WhatsApp message the page already sends. The owner sees new requests
+-- in the app and gets an email for each one; the email side is worked by /api/email/dispatch (service role),
+-- documented in docs/backend/email-setup.md. A local-only hotel has no `hid` in its link, so its visitors only get
+-- the WhatsApp message, exactly as before this migration.
+
+create table public.booking_requests (
+  id uuid primary key default gen_random_uuid(),
+  hotel_id uuid not null references public.hotels (id) on delete cascade,
+  owner_name text not null check (length(btrim(owner_name)) between 1 and 60),
+  owner_wa text not null check (owner_wa ~ '^62[0-9]{7,13}$'),
+  pet_name text not null check (length(btrim(pet_name)) between 1 and 40),
+  species text not null check (species in ('cat', 'dog', 'rabbit', 'other')),
+  breed text not null default '' check (length(breed) <= 40),
+  check_in date not null,
+  check_out date not null check (check_out > check_in),
+  preference text not null default '' check (length(preference) <= 60),
+  notes text not null default '' check (length(notes) <= 500),
+  locale text not null default 'id' check (locale in ('id', 'en')),
+  -- new: nobody has looked at it yet. claimed: an owner is handling it (no place is held by this alone).
+  -- dismissed: the owner hid it (a duplicate, a prank, already handled over WhatsApp).
+  status text not null default 'new' check (status in ('new', 'claimed', 'dismissed')),
+  claimed_by uuid references auth.users (id),
+  claimed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index booking_requests_hotel_idx on public.booking_requests (hotel_id, created_at desc);
+
+alter table public.booking_requests enable row level security;
+-- Anyone with the link may add a request (same shape as join_requests); only the hotel's own members may read or
+-- update one (mark it claimed/dismissed is a plain update, no RPC: it's an ordinary hotel record like any other).
+create policy booking_requests_insert on public.booking_requests for insert to anon, authenticated with check (true);
+create policy booking_requests_select on public.booking_requests for select to authenticated using (public.is_member(hotel_id));
+create policy booking_requests_update on public.booking_requests for update to authenticated using (public.is_member(hotel_id)) with check (public.is_member(hotel_id));
+
+revoke all on public.booking_requests from authenticated;
+grant select, update on public.booking_requests to authenticated;
+grant insert on public.booking_requests to anon, authenticated;
+
+-- ---------------------------------------------------------------- notifications
+-- A to-do list of emails to send. Only /api/email/dispatch (service role key, bypasses row level security) ever
+-- reads or writes this table: it is not reachable through the anon/authenticated PostgREST roles at all, which is
+-- why it has no policies of its own rather than row level security plus a deny-all policy.
+
+create table public.notification_outbox (
+  id uuid primary key default gen_random_uuid(),
+  hotel_id uuid not null references public.hotels (id) on delete cascade,
+  kind text not null check (kind in ('booking_request')),
+  payload jsonb not null,
+  status text not null default 'pending' check (status in ('pending', 'sent', 'failed')),
+  attempts integer not null default 0,
+  next_attempt_at timestamptz not null default now(),
+  last_error text,
+  created_at timestamptz not null default now(),
+  sent_at timestamptz
+);
+create index notification_outbox_due_idx on public.notification_outbox (status, next_attempt_at);
+
+-- Row level security on, with no policies at all: anon/authenticated get nothing, whatever privileges they're
+-- granted elsewhere. Only the service role (which row level security never restricts) can see this table.
+alter table public.notification_outbox enable row level security;
+revoke all on public.notification_outbox from anon, authenticated;
+
+-- A new request queues its own notification. security definer: anon (who made the request) has no access to
+-- notification_outbox at all; this trigger is the one and only way a row gets in.
+create or replace function public.enqueue_booking_request_email() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.notification_outbox (hotel_id, kind, payload) values (
+    new.hotel_id, 'booking_request',
+    jsonb_build_object(
+      'request_id', new.id, 'owner_name', new.owner_name, 'owner_wa', new.owner_wa, 'pet_name', new.pet_name,
+      'species', new.species, 'breed', new.breed, 'check_in', new.check_in, 'check_out', new.check_out,
+      'preference', new.preference, 'notes', new.notes, 'locale', new.locale
+    )
+  );
+  return new;
+end $$;
+create trigger booking_requests_enqueue_email after insert on public.booking_requests
+  for each row execute function public.enqueue_booking_request_email();
+
 commit;
 
 -- ====================================================================================================================
@@ -809,14 +896,17 @@ commit;
 with
 expected_tables(name) as (
   values ('hotels'), ('hotel_members'), ('cages'), ('owners'), ('pets'), ('bookings'), ('payments'), ('care_entries'),
-         ('reports_sent'), ('join_requests'), ('booking_pets'), ('charges'), ('invoices'), ('expenses')
+         ('reports_sent'), ('join_requests'), ('booking_pets'), ('charges'), ('invoices'), ('expenses'),
+         ('booking_requests'), ('notification_outbox')
 ),
 expected_functions(name) as (
   values ('create_hotel'), ('my_hotel'), ('pull_changes'), ('push_changes'), ('sync_tables'), ('is_member'), ('is_owner'),
-         ('touch_updated_at'), ('add_creator_as_owner'), ('keep_unit_within_capacity'), ('refuse_archived_unit'), ('protect_invoice')
+         ('touch_updated_at'), ('add_creator_as_owner'), ('keep_unit_within_capacity'), ('refuse_archived_unit'), ('protect_invoice'),
+         ('enqueue_booking_request_email')
 ),
 expected_triggers(name) as (
-  values ('hotels_creator_is_owner'), ('bookings_unit_capacity'), ('bookings_not_in_archived_unit'), ('invoices_protect')
+  values ('hotels_creator_is_owner'), ('bookings_unit_capacity'), ('bookings_not_in_archived_unit'), ('invoices_protect'),
+         ('booking_requests_enqueue_email')
 ),
 public_tables as (
   select c.relname as name, c.relrowsecurity as rls
@@ -832,23 +922,23 @@ public_triggers as (
   where n.nspname = 'public' and not t.tgisinternal
 ),
 checks(no, pemeriksaan, diharapkan, hasil) as (
-  select 1, 'Tabel Siomofu ada', '14 dari 14',
-    (select count(*) from expected_tables e where e.name in (select name from public_tables)) || ' dari 14'
+  select 1, 'Tabel Siomofu ada', '16 dari 16',
+    (select count(*) from expected_tables e where e.name in (select name from public_tables)) || ' dari 16'
     || coalesce(' (kurang: ' || (select string_agg(e.name, ', ') from expected_tables e where e.name not in (select name from public_tables)) || ')', '')
   union all
-  select 2, 'Row Level Security (RLS) menyala di semua tabel', '14 dari 14',
-    (select count(*) from public_tables t where t.rls and t.name in (select name from expected_tables)) || ' dari 14'
+  select 2, 'Row Level Security (RLS) menyala di semua tabel', '16 dari 16',
+    (select count(*) from public_tables t where t.rls and t.name in (select name from expected_tables)) || ' dari 16'
     || coalesce(' (mati: ' || (select string_agg(t.name, ', ') from public_tables t where not t.rls and t.name in (select name from expected_tables)) || ')', '')
   union all
-  select 3, 'Aturan akses (policies)', '20',
+  select 3, 'Aturan akses (policies)', '23',
     (select count(*) from pg_policies where schemaname = 'public')::text
   union all
-  select 4, 'Fungsi (create_hotel, my_hotel, pull_changes, push_changes, ...)', '12 dari 12',
-    (select count(*) from expected_functions e where e.name in (select name from public_functions)) || ' dari 12'
+  select 4, 'Fungsi (create_hotel, my_hotel, pull_changes, push_changes, ...)', '13 dari 13',
+    (select count(*) from expected_functions e where e.name in (select name from public_functions)) || ' dari 13'
     || coalesce(' (kurang: ' || (select string_agg(e.name, ', ') from expected_functions e where e.name not in (select name from public_functions)) || ')', '')
   union all
-  select 5, 'Trigger penting (pemilik hotel, kapasitas kandang, unit diarsip, invoice)', '4 dari 4',
-    (select count(*) from expected_triggers e where e.name in (select name from public_triggers)) || ' dari 4'
+  select 5, 'Trigger penting (pemilik hotel, kapasitas kandang, unit diarsip, invoice)', '5 dari 5',
+    (select count(*) from expected_triggers e where e.name in (select name from public_triggers)) || ' dari 5'
   union all
   select 6, 'Ekstensi btree_gist terpasang', 'ya',
     case when exists (select 1 from pg_extension where extname = 'btree_gist') then 'ya' else 'tidak' end
