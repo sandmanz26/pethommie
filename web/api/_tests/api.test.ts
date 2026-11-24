@@ -302,6 +302,8 @@ describe("on Vercel", () => {
       [await import("../bookings.js"), ["GET", "POST"]],
       [await import("../cages.js"), ["GET"]],
       [await import("../join.js"), ["POST"]],
+      [await import("../requests.js"), ["POST"]],
+      [await import("../email/dispatch.js"), ["GET", "POST"]],
     ];
     for (const [mod, methods] of files) {
       expect(Object.keys(mod).sort()).toEqual(methods);

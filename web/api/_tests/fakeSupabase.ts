@@ -8,7 +8,7 @@ export type Call = {
   table?: string;
   rpc?: string;
   args?: unknown;
-  op: "select" | "insert" | "rpc";
+  op: "select" | "insert" | "update" | "rpc";
   columns?: string;
   payload?: unknown;
   filters: [string, ...unknown[]][];
@@ -21,7 +21,7 @@ export type Responder = (call: Call) => Answer | undefined;
  * Just enough of supabase-js for the handlers: from().select/insert with filters, rpc(), auth.getUser(). Every call
  * is recorded; `respond` decides what the "database" answers (nothing: { data: null }).
  */
-export function fakeSupabase(opts: { users?: Record<string, { id: string; email?: string }>; respond?: Responder } = {}) {
+export function fakeSupabase(opts: { users?: Record<string, { id: string; email?: string }>; usersById?: Record<string, { id: string; email?: string }>; respond?: Responder } = {}) {
   const calls: Call[] = [];
   const tokens: (string | undefined)[] = [];
   const answer = (call: Call) => {
@@ -45,6 +45,11 @@ export function fakeSupabase(opts: { users?: Record<string, { id: string; email?
         this.call.payload = payload;
         return this;
       }
+      update(payload: unknown) {
+        this.call.op = "update";
+        this.call.payload = payload;
+        return this;
+      }
       eq(...a: unknown[]) {
         this.call.filters.push(["eq", ...a]);
         return this;
@@ -55,6 +60,10 @@ export function fakeSupabase(opts: { users?: Record<string, { id: string; email?
       }
       lt(...a: unknown[]) {
         this.call.filters.push(["lt", ...a]);
+        return this;
+      }
+      lte(...a: unknown[]) {
+        this.call.filters.push(["lte", ...a]);
         return this;
       }
       gt(...a: unknown[]) {
@@ -89,6 +98,12 @@ export function fakeSupabase(opts: { users?: Record<string, { id: string; email?
           const user = opts.users?.[jwt];
           return user ? { data: { user }, error: null } : { data: { user: null }, error: { message: "invalid JWT", status: 401 } };
         },
+        admin: {
+          getUserById: async (id: string) => {
+            const user = opts.usersById?.[id];
+            return user ? { data: { user }, error: null } : { data: { user: null }, error: { message: "user not found", status: 404 } };
+          },
+        },
       },
     } as unknown as SupabaseClient;
   };
@@ -112,6 +127,24 @@ export function testDeps(fake: ReturnType<typeof fakeSupabase>, over: Partial<De
     fetch: async () => new Response("{}"),
     now: () => new Date("2026-11-03T20:00:00Z"), // 4 November, 03:00 in Jakarta
     newId: () => NEW_ID,
+    ...over,
+  };
+}
+
+/** Like testDeps, plus a service-role client and the email env — for /api/requests and /api/email/dispatch. */
+export function testEmailDeps(fake: ReturnType<typeof fakeSupabase>, over: Partial<import("../_lib/deps.js").EmailDeps> = {}) {
+  return {
+    ...testDeps(fake),
+    env: {
+      supabaseUrl: "https://demo.supabase.co",
+      anonKey: "anon-key",
+      serviceRoleKey: "service-role-key",
+      resendApiKey: "resend-key",
+      emailFrom: "Siomofu <notifications@mail.siomofu.xyz>",
+      dispatchSecret: "dispatch-secret",
+      appUrl: "https://siomofu.xyz",
+    },
+    supabaseService: () => fake.supabase({ supabaseUrl: "https://demo.supabase.co", anonKey: "anon-key" }),
     ...over,
   };
 }
