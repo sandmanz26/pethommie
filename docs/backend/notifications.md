@@ -1,6 +1,8 @@
 # Rencana notifikasi: email dan notifikasi browser
 
-Status: **rencana, belum dibuat.** Keduanya butuh server (lihat `README.md`). Tidak ada yang di sini yang berjalan di aplikasi hari ini, dan landing/Bantuan tidak boleh menjanjikannya sampai ada.
+Status: **satu baris sudah dibuat** (permintaan booking dari link publik → email, lihat tabel di bawah dan
+[email-setup.md](email-setup.md)); sisanya masih **rencana, belum dibuat**. Keduanya butuh server (lihat `README.md`).
+Baris yang belum dibuat tidak boleh dijanjikan di landing/Bantuan sampai ada.
 
 ## 0. Prinsip
 
@@ -14,7 +16,7 @@ Status: **rencana, belum dibuat.** Keduanya butuh server (lihat `README.md`). Ti
 | Kejadian | Penerima | Email | Push | Catatan |
 |---|---|---|---|---|
 | Verifikasi email, atur ulang kata sandi, undangan staf | Pengguna | **Ya** | - | Disediakan Supabase Auth; hanya perlu SMTP sendiri. |
-| Permintaan booking baru dari link publik | Operator | Ya | Ya | Bergantung pada roadmap I. |
+| Permintaan booking baru dari link publik | Operator | **Sudah dibuat** | Belum | Lihat [email-setup.md](email-setup.md); push belum, hanya email + daftar di `/app/requests`. |
 | Booking dikonfirmasi / ditolak | Pemilik hewan | Ya (jika punya email) | - | |
 | Pengingat check-in besok / check-out hari ini | Operator | - | Ya | Ringkasan pagi, satu notifikasi. |
 | Sisa tagihan saat hewan sudah pulang | Operator | - | Ya | Dari data pembayaran yang sama dengan halaman Tagihan. |

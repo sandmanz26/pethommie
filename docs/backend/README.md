@@ -59,7 +59,10 @@ Setting up a fresh Supabase project: [setup-supabase.md](setup-supabase.md) (Ind
 `web/src/app/sync/setup.test.ts`) and `backend/supabase/verify.sql`. A small REST API on Vercel (`web/api/`, for
 tools, the sign-up form and testing; the app itself syncs directly): [api.md](api.md).
 
-Email and browser notifications are planned in [notifications.md](notifications.md) (not built).
+Email for booking-request notifications is built (migration 0008, `web/api/email/`, `web/api/requests.ts`); the
+owner's setup guide is [email-setup.md](email-setup.md) (Indonesian). Everything else in
+[notifications.md](notifications.md) (daily digests, vaccine reminders, browser push) is still only a plan, not
+built.
 
 ## 3. Shape
 
